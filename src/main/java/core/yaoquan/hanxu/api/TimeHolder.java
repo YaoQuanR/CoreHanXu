@@ -88,17 +88,17 @@ public class TimeHolder {
 
     public static int returnRemainingSeconds(String timerId) {
         TimerData timerData = registeredTimer.get(timerId);
-        return timerData != null? timerData.returnRemainingTicks() * TICKS_PER_SECOND : -1;
+        return timerData != null? timerData.returnRemainingTicks() / TICKS_PER_SECOND : -1;
     }
 
     public static int returnRemainingMinutes(String timerId) {
         TimerData timerData = registeredTimer.get(timerId);
-        return timerData != null? timerData.returnRemainingTicks() * TICKS_PER_MINUTE : -1;
+        return timerData != null? timerData.returnRemainingTicks() / TICKS_PER_MINUTE : -1;
     }
 
     public static int returnRemainingHours(String timerId) {
         TimerData timerData = registeredTimer.get(timerId);
-        return timerData != null? timerData.returnRemainingTicks() * TICKS_PER_HOUR : -1;
+        return timerData != null? timerData.returnRemainingTicks() / TICKS_PER_HOUR : -1;
     }
 
     public static int returnInitialTicks(String timerId) {
@@ -108,17 +108,17 @@ public class TimeHolder {
 
     public static int returnInitialSeconds(String timerId) {
         TimerData timerData = registeredTimer.get(timerId);
-        return timerData != null? timerData.returnInitialTicks() * TICKS_PER_SECOND : -1;
+        return timerData != null? timerData.returnInitialTicks() / TICKS_PER_SECOND : -1;
     }
 
     public static int returnInitialMinutes(String timerId) {
         TimerData timerData = registeredTimer.get(timerId);
-        return timerData != null? timerData.returnInitialTicks() * TICKS_PER_MINUTE : -1;
+        return timerData != null? timerData.returnInitialTicks() / TICKS_PER_MINUTE : -1;
     }
 
     public static int returnInitialHours(String timerId) {
         TimerData timerData = registeredTimer.get(timerId);
-        return timerData != null? timerData.returnInitialTicks() * TICKS_PER_HOUR : -1;
+        return timerData != null? timerData.returnInitialTicks() / TICKS_PER_HOUR : -1;
     }
 
     public static boolean isItCounting(String timerId) {

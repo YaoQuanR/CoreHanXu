@@ -81,5 +81,14 @@
   "commands.chx-a.timer_help_innertext7": "/chx-a timer delete ![id]: Delete timer.",
 
   "commands.core_hanxu.not_player": "Only player are allowed to use this command.",
-  "commands.core_hanxu.not_yet_agreed": "Accept the license '/chx license agree' and re-execute this command again."
+  "commands.core_hanxu.not_yet_agreed": "Accept the license '/chx license agree' and re-execute this command again.",
+  "commands.core_hanxu.invalid_unit_argument": "Invalid unit argument used!",
+
+  "commands.core_hanxu.timer_already_exist": "Timer has already exist!",
+  "commands.core_hanxu.timer_not_exist": "Timer does not exist!",
+  "commands.core_hanxu.timer_time_out": "Time out:",
+  "commands.core_hanxu.timer_created": "Timer create success!",
+  "commands.core_hanxu.timer_read_remaining_time": "Remaining time",
+  "commands.core_hanxu.timer_read_initial_time": "Initial time",
+  "commands.core_hanxu.timer_state": "Timer state"
 }

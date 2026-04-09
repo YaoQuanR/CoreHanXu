@@ -1,5 +1,6 @@
 package core.yaoquan.hanxu.command;
 
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -86,6 +87,15 @@ public class CommandBuilder {
                                                     Commands.argument("time_amount", IntegerArgumentType.integer(1))
                                                         .then(
                                                             Commands.argument("time_unit", StringArgumentType.word())
+                                                                .then(
+                                                                    Commands.argument("end_behavior", StringArgumentType.word())
+                                                                        .then(
+                                                                            Commands.argument("behavior_content", StringArgumentType.word())
+                                                                                .executes(CommandExecute::executeAdminCommandTimer_Template_Create)
+                                                                        )
+                                                                        .suggests(CommandSuggest::suggestEndBehaviorCategory)
+                                                                        .executes(CommandExecute::executeAdminCommandTimer_Template_Create)
+                                                                )
                                                                 .suggests(CommandSuggest::suggestUnit)
                                                                 .executes(CommandExecute::executeAdminCommandTimer_Template_Create)
                                                         )

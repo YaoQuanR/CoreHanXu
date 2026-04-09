@@ -53,4 +53,13 @@ class CommandSuggest {
 
         return builder.buildFuture();
     }
+
+    // Add end behavior suggestion.
+    static <S> CompletableFuture<Suggestions> suggestEndBehaviorCategory(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("remind");
+        builder.suggest("execute");
+        builder.suggest("null");
+
+        return builder.buildFuture();
+    }
 }

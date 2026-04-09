@@ -1,10 +1,12 @@
 package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.CoreHanXu;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +22,7 @@ public class TimeHolder {
 
     // UUID constant.
     public static final UUID GLOBAL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-    public static final UUID TEMPORARY_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    public static final UUID TEMPORARY_UUID = UUID.fromString("00000000-0000-0000-0000-00000000000f");
 
     // Storage template timer (in safety method).
     private static final Map<String, TimerData> templateTimer = new ConcurrentHashMap<>();
@@ -69,33 +71,8 @@ public class TimeHolder {
         return true;
     }
 
-    // Method of using template timer:
-    public static void startTemplateTimer(String templateId, ServerPlayer player) {
-        TimerData timerData = templateTimer.get(templateId);
-        // Start timer when existed.
-        if (timerData != null) {
-            timerData.start(player);
-        }
-    }
-
-    public static void stopTemplateTimer(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        // Stop timer when existed.
-        if (timerData != null) {
-            timerData.stop();
-        }
-    }
-
-    public static void resetTemplateTimer(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        // Reset timer when existed.
-        if (timerData != null) {
-            // Reminder: Timer will stop counting, and reset to the initial ticks.
-            timerData.reset();
-        }
-    }
-
-    public static boolean removeTemplateTimer(String templateId) {
+    // Method of using template timer.
+    public static boolean deleteTemplateTimer(String templateId) {
         TimerData timerData = templateTimer.get(templateId);
         // Stop and remove timer.
         if (timerData != null) {
@@ -107,9 +84,78 @@ public class TimeHolder {
         return false;
     }
 
-    // Method of using instance timer.
-    public static void startTimer(UUID masterId, String templateId, ServerPlayer player) {
-        Map<String, TimerData> map = instantiatedTimer.get(masterId);
+    // Method of using instance timer:
+    public static boolean startInstanceTimer(UUID masterId, String templateId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+
+        // Determine if map existed.
+        if (instantiatedData == null) {
+            return false;
+        }
+        // Else get inner data and also determine if existed.
+        TimerData timerData = instantiatedData.get(templateId);
+        if (timerData == null) {
+            return false;
+        }
+        // Else start depend on master id.
+        if (masterId.equals(GLOBAL_UUID) || masterId.equals(TEMPORARY_UUID)) {
+            timerData.start(null);
+        }
+        else {
+            MinecraftServer minecraftServer = ServerLifecycleHooks.getCurrentServer();
+            if (minecraftServer != null) {
+                ServerPlayer player = minecraftServer.getPlayerList().getPlayer(masterId);
+                if (player != null) {
+                    timerData.start(player);
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean stopInstanceTimer(UUID masterId, String templateId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+
+        // Determine if map existed.
+        if (instantiatedData == null) {
+            return false;
+        }
+        // Else get inner data and also determine if existed.
+        TimerData timerData = instantiatedData.get(templateId);
+        if (timerData == null) {
+            return false;
+        }
+        // Else stop.
+        timerData.stop();
+        return true;
+    }
+
+    public static boolean resetInstanceTimer(UUID masterId, String templateId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+
+        // Determine if map existed.
+        if (instantiatedData == null) {
+            return false;
+        }
+        // Else get inner data and also determine if existed.
+        TimerData timerData = instantiatedData.get(templateId);
+        if (timerData == null) {
+            return false;
+        }
+        // Else stop.
+        timerData.reset();
+        return true;
+    }
+
+    public static boolean deleteInstanceTimer(UUID masterId, String templateId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+
+        if (instantiatedData == null) {
+            return false;
+        }
+
+        return instantiatedData.remove(templateId) != null;
     }
 
     // Method of getting timer's information:
@@ -118,54 +164,88 @@ public class TimeHolder {
         return timerData != null? timerData.templateId : "Null";
     }
 
-    public static int returnRemainingTicks(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnRemainingTicks() : -1;
+    public static String returnInstanceId(UUID masterId, String templateId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return "Null";
+        }
+        TimerData timerData = instantiatedData.get(templateId);
+        return timerData != null? timerData.templateId : "Null";
     }
 
-    public static int returnRemainingSeconds(String templateId) {
+    public static int returnRemainingTimeFromTemplate(String templateId, String timeUnit) {
         TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnRemainingTicks() / TICKS_PER_SECOND : -1;
+        return forReturnRemainingTime(timeUnit, timerData);
     }
 
-    public static int returnRemainingMinutes(String templateId) {
+    public static int returnInitialTimeFromTemplate(String templateId, String timeUnit) {
         TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnRemainingTicks() / TICKS_PER_MINUTE : -1;
+        return forReturnInitialTime(timeUnit, timerData);
     }
 
-    public static int returnRemainingHours(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnRemainingTicks() / TICKS_PER_HOUR : -1;
+    public static int returnRemainingTimeFromInstance(UUID masterId, String templateId, String timeUnit) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return -1;
+        }
+        TimerData timerData = instantiatedData.get(templateId);
+        return forReturnRemainingTime(timeUnit, timerData);
     }
 
-    public static int returnInitialTicks(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnInitialTicks() : -1;
+    public static int returnInitialTimeFromInstance(UUID masterId, String templateId, String timeUnit) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return -1;
+        }
+        TimerData timerData = instantiatedData.get(templateId);
+        return forReturnInitialTime(timeUnit, timerData);
     }
 
-    public static int returnInitialSeconds(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnInitialTicks() / TICKS_PER_SECOND : -1;
+    private static int forReturnRemainingTime(String timeUnit, TimerData timerData) {
+        return switch (timeUnit) {
+            case "t", "tick" -> timerData != null? timerData.returnRemainingTicks() : -1;
+            case "s", "second" -> timerData != null? timerData.returnRemainingTicks() / TICKS_PER_SECOND : -1;
+            case "m", "minute" -> timerData != null? timerData.returnRemainingTicks() / TICKS_PER_MINUTE : -1;
+            case "h", "hour" -> timerData != null? timerData.returnRemainingTicks() / TICKS_PER_HOUR : -1;
+            default -> -1;
+        };
     }
 
-    public static int returnInitialMinutes(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnInitialTicks() / TICKS_PER_MINUTE : -1;
+    private static int forReturnInitialTime(String timeUnit, TimerData timerData) {
+        return switch (timeUnit) {
+            case "t", "tick" -> timerData != null? timerData.returnInitialTicks() : -1;
+            case "s", "second" -> timerData != null? timerData.returnInitialTicks() / TICKS_PER_SECOND : -1;
+            case "m", "minute" -> timerData != null? timerData.returnInitialTicks() / TICKS_PER_MINUTE : -1;
+            case "h", "hour" -> timerData != null? timerData.returnInitialTicks() / TICKS_PER_HOUR : -1;
+            default -> -1;
+        };
     }
 
-    public static int returnInitialHours(String templateId) {
+    public static boolean isTemplateTimerCounting(String templateId) {
         TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.returnInitialTicks() / TICKS_PER_HOUR : -1;
+        return timerData != null && timerData.isItCounting();
     }
 
-    public static boolean isItCounting(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
+    public static boolean isInstanceTimerCounting(UUID masterId, String templateId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return false;
+        }
+        TimerData timerData = instantiatedData.get(templateId);
         return timerData != null && timerData.isItCounting();
     }
 
     // Collect all registered timer by id and return.
     public static String[] returnAllTemplateIds() {
         return templateTimer.keySet().toArray(new String[0]);
+    }
+
+    public static String[] returnAllInstanceIds(UUID masterId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return new String[0];
+        }
+        return instantiatedData.keySet().toArray(new String[0]);
     }
 
     // Define an actual timer data system.

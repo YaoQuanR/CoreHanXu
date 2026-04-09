@@ -22,8 +22,8 @@ class CommandSuggest {
 
     // Add UUID suggestion.
     static <S> CompletableFuture<Suggestions> suggestUUIDOwner(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        builder.suggest("0");
-        builder.suggest("1");
+        builder.suggest("-global");
+        builder.suggest("-temporary");
 
         // Suggest player id.
         CommandSourceStack source = context.getSource();

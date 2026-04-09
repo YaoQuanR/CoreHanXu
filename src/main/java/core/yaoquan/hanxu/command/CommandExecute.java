@@ -175,8 +175,6 @@ class CommandExecute {
     }
 
     static int executeAdminCommandTimer_Template_Create(CommandContext<CommandSourceStack> context) {
-        Player player = context.getSource().getPlayer();
-
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         int timeAmount = IntegerArgumentType.getInteger(context, "time_amount");
@@ -193,7 +191,7 @@ class CommandExecute {
         }
 
         // Check if timer exist.
-        if (TimeHolder.returnRemainingTicks(timerId) != -1) {
+        if (TimeHolder.returnRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
             context.getSource().sendFailure(Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_already_exist"));
             return 0;
         }
@@ -216,46 +214,13 @@ class CommandExecute {
 
         switch (infoCategory) {
             case "remaining_time":
-                int remainingTicks = TimeHolder.returnRemainingTicks(timerId);
-                if (remainingTicks != -1) {
-                    switch (timeUnit) {
-                        case "t", "tick":
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_remaining_time")
-                                            .append(Component.literal(" (" + timerId + "): " + remainingTicks + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        case "s", "second":
-                            int remainingSeconds = TimeHolder.returnRemainingSeconds(timerId);
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_remaining_time")
-                                            .append(Component.literal(" (" + timerId + "): " + remainingSeconds + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        case "m", "minute":
-                            int remainingMinutes = TimeHolder.returnRemainingMinutes(timerId);
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_remaining_time")
-                                            .append(Component.literal(" (" + timerId + "): " + remainingMinutes + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        case "h", "hour":
-                            int remainingHours = TimeHolder.returnRemainingHours(timerId);
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_remaining_time")
-                                            .append(Component.literal(" (" + timerId + "): " + remainingHours + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        default:
-                            context.getSource().sendFailure(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".invalid_unit_argument")
-                            );
-                            return 0;
-                    }
+                int remainingTime = TimeHolder.returnRemainingTimeFromTemplate(timerId, timeUnit);
+                if (remainingTime != -1) {
+                    context.getSource().sendSystemMessage(
+                            Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_remaining_time")
+                                    .append(Component.literal(" (" + timerId + "): " + remainingTime + " " + timeUnit))
+                                    .withColor(0xFFD700)
+                    );
                 }
                 else {
                     context.getSource().sendFailure(Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_not_exist"));
@@ -263,46 +228,13 @@ class CommandExecute {
                 }
                 break;
             case "initial_time":
-                int initialTicks = TimeHolder.returnInitialTicks(timerId);
-                if (initialTicks != -1) {
-                    switch (timeUnit) {
-                        case "t", "tick":
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_initial_time")
-                                            .append(Component.literal(" (" + timerId + "): " + initialTicks + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        case "s", "second":
-                            int initialSeconds = TimeHolder.returnInitialSeconds(timerId);
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_initial_time")
-                                            .append(Component.literal(" (" + timerId + "): " + initialSeconds + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        case "m", "minute":
-                            int initialMinutes = TimeHolder.returnInitialMinutes(timerId);
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_initial_time")
-                                            .append(Component.literal(" (" + timerId + "): " + initialMinutes + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        case "h", "hour":
-                            int initialHours = TimeHolder.returnInitialHours(timerId);
-                            context.getSource().sendSystemMessage(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_initial_time")
-                                            .append(Component.literal(" (" + timerId + "): " + initialHours + " " + timeUnit))
-                                            .withColor(0xFFD700)
-                            );
-                            break;
-                        default:
-                            context.getSource().sendFailure(
-                                    Component.translatable("commands." + CoreHanXu.MOD_ID + ".invalid_unit_argument")
-                            );
-                            return 0;
-                    }
+                int initialTime = TimeHolder.returnInitialTimeFromTemplate(timerId, timeUnit);
+                if (initialTime != -1) {
+                    context.getSource().sendSystemMessage(
+                            Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_read_initial_time")
+                                    .append(Component.literal(" (" + timerId + "): " + initialTime + " " + timeUnit))
+                                    .withColor(0xFFD700)
+                    );
                 }
                 else {
                     context.getSource().sendFailure(Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_not_exist"));
@@ -310,9 +242,9 @@ class CommandExecute {
                 }
                 break;
             case "state":
-                boolean isCounting = TimeHolder.isItCounting(timerId);
+                boolean isCounting = TimeHolder.isTemplateTimerCounting(timerId);
 
-                if (TimeHolder.returnRemainingTicks(timerId) != -1) {
+                if (TimeHolder.returnRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
                     context.getSource().sendSystemMessage(
                             Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_state")
                                     .append(Component.literal(" (" + timerId + "): " + (isCounting? "Counting" : "Stopping")))
@@ -332,7 +264,7 @@ class CommandExecute {
         // Receive argument.
         String timerId = StringArgumentType.getString(context, "timer_id");
 
-        boolean isDeleted = TimeHolder.removeTemplateTimer(timerId);
+        boolean isDeleted = TimeHolder.deleteTemplateTimer(timerId);
         if (isDeleted) {
             context.getSource().sendSystemMessage(
                     Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_deleted")
@@ -372,12 +304,12 @@ class CommandExecute {
         int selectedTimeAmount = ThreadLocalRandom.current().nextInt(timeLowerRange, timeUpperRange + 1);
 
         // Check if timer exist.
-        if (TimeHolder.returnRemainingTicks(timerId) != -1) {
+        if (TimeHolder.returnRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
             context.getSource().sendFailure(Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_already_exist"));
             return 0;
         }
 
-        return forCreateTemplateTimer(context,  timerId, timeUnit, selectedTimeAmount, endBehavior, behaviorContent);
+        return forCreateTemplateTimer(context, timerId, timeUnit, selectedTimeAmount, endBehavior, behaviorContent);
     }
 
     static int executeAdminCommandTimer_Instance_Apply(CommandContext<CommandSourceStack> context) {
@@ -413,7 +345,7 @@ class CommandExecute {
             context.getSource().sendSystemMessage(
                     Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_instantiated")
                             .append(Component.literal(" " + templateTimerId + " -> " + displayTarget))
-                            .withColor(0xFFD700)
+                            .withColor(0x66FF66)
             );
         }
         else {
@@ -422,6 +354,10 @@ class CommandExecute {
         }
 
         return 1;
+    }
+    
+    static int executeAdminCommandTimer_Instance_Start(CommandContext<CommandSourceStack> context) {
+        return 0;
     }
 
     private static int forCreateTemplateTimer(CommandContext<CommandSourceStack> context,
@@ -441,6 +377,8 @@ class CommandExecute {
                 // Then register command execution into source stack;
                 // !(If NO online player exist, selector which used @r/a will lose their effect on command execution).
                 callback = player -> {
+                    String callbackCommand = behaviorContent.startsWith("/")? behaviorContent : ("/" + behaviorContent);
+
                     @SuppressWarnings("resource")
                     MinecraftServer server = player.level().getServer();
                     server.getCommands().performPrefixedCommand(
@@ -453,11 +391,7 @@ class CommandExecute {
                 // Send message when time out:
                 // Modified information.
                 if (behaviorContent != null) {
-                    callback = player -> player.sendSystemMessage(
-                            Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_time_out")
-                                    .append(Component.literal(" " + timerId))
-                                    .withColor(0xFFD700)
-                    );
+                    callback = player -> player.sendSystemMessage(Component.literal(behaviorContent));
                 }
                 // Or default information.
                 else {
@@ -497,19 +431,37 @@ class CommandExecute {
 
         // Output message.
         context.getSource().sendSystemMessage(
-            Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_created")
-                .append(Component.literal(" " + timerId + " -> " + timeAmount + " " + timeUnit))
-                .withColor(0x66FF66)
+                Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_created")
+                        .append(Component.literal(" " + timerId + " -> " + timeAmount + " " + timeUnit))
+                        .withColor(0x66FF66)
         );
+        switch (endBehavior) {
+            case "e", "execute":
+                context.getSource().sendSystemMessage(
+                        Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_with_execute_behavior")
+                                .append(Component.literal(": " + behaviorContent))
+                                .withColor(0x66FF66)
+                );
+                break;
+            case "r", "remind":
+                context.getSource().sendSystemMessage(
+                        Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_with_remind_behavior")
+                                .append(Component.literal(": " + behaviorContent))
+                                .withColor(0x66FF66)
+                );
+                break;
+            default:
+                break;
+        }
 
         return 1;
     }
 
     private static UUID forAnalysisTargetUUID(CommandContext<CommandSourceStack> context, String targetString) {
-        if ("0".equals(targetString)) {
+        if ("-global".equals(targetString) || "-g".equals(targetString)) {
             return TimeHolder.GLOBAL_UUID;
         }
-        else if ("1".equals(targetString)) {
+        else if ("-temporary".equals(targetString) || "-t".equals(targetString)) {
             return TimeHolder.TEMPORARY_UUID;
         }
 

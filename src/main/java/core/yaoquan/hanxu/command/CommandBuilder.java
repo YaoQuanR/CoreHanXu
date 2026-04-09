@@ -90,7 +90,7 @@ public class CommandBuilder {
                                                                 .then(
                                                                     Commands.argument("end_behavior", StringArgumentType.word())
                                                                         .then(
-                                                                            Commands.argument("behavior_content", StringArgumentType.word())
+                                                                            Commands.argument("behavior_content", StringArgumentType.greedyString())
                                                                                 .executes(CommandExecute::executeAdminCommandTimer_Template_Create)
                                                                         )
                                                                         .suggests(CommandSuggest::suggestEndBehaviorCategory)
@@ -114,6 +114,15 @@ public class CommandBuilder {
                                                             Commands.argument("time_second_range", IntegerArgumentType.integer(1))
                                                                 .then(
                                                                     Commands.argument("time_unit", StringArgumentType.word())
+                                                                        .then(
+                                                                            Commands.argument("end_behavior", StringArgumentType.word())
+                                                                                .then(
+                                                                                    Commands.argument("behavior_content", StringArgumentType.greedyString())
+                                                                                        .executes(CommandExecute::executeAdminCommandTimer_Template_CreateRange)
+                                                                                )
+                                                                                .suggests(CommandSuggest::suggestEndBehaviorCategory)
+                                                                                .executes(CommandExecute::executeAdminCommandTimer_Template_CreateRange)
+                                                                        )
                                                                         .suggests(CommandSuggest::suggestUnit)
                                                                         .executes(CommandExecute::executeAdminCommandTimer_Template_CreateRange)
                                                                 )
@@ -165,18 +174,45 @@ public class CommandBuilder {
                                 )
                                 .then(
                                     Commands.literal("start")
+                                        .then(
+                                            Commands.argument("timer_id", StringArgumentType.word())
+                                        )
                                 )
                                 .then(
                                     Commands.literal("stop")
+                                        .then(
+                                            Commands.argument("timer_id", StringArgumentType.word())
+                                        )
                                 )
                                 .then(
                                     Commands.literal("reset")
+                                        .then(
+                                            Commands.argument("timer_id", StringArgumentType.word())
+                                        )
                                 )
                                 .then(
                                     Commands.literal("read")
+                                        .then(
+                                            Commands.argument("timer_id", StringArgumentType.word())
+                                                .then(
+                                                    Commands.argument("category", StringArgumentType.word())
+                                                        .then(
+                                                            Commands.argument("time_unit", StringArgumentType.word())
+                                                        )
+                                                )
+                                        )
                                 )
                                 .then(
                                     Commands.literal("delete")
+                                        .then(
+                                            Commands.argument("timer_id", StringArgumentType.word())
+                                        )
+                                )
+                                .then(
+                                    Commands.literal("list")
+                                        .then(
+                                            Commands.argument("master_id", StringArgumentType.word())
+                                        )
                                 )
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))

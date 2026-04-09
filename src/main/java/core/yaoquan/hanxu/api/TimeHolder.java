@@ -7,7 +7,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Map;
-import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -21,7 +20,7 @@ public class TimeHolder {
 
     // UUID constant.
     public static final UUID GLOBAL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-    public static final UUID TEMPORARY_UUID = UUID.fromString("00000000-0000-0000-0000-00000000000x");
+    public static final UUID TEMPORARY_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     // Storage template timer (in safety method).
     private static final Map<String, TimerData> templateTimer = new ConcurrentHashMap<>();
@@ -51,14 +50,20 @@ public class TimeHolder {
     // Register your timer to instance set.
     public static boolean registerToInstance(UUID masterId, String templateId) {
         TimerData templateTimerData = templateTimer.get(templateId);
+        Map<String, TimerData> determineTimer = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
         
         // Check if available to copy.
         if (templateTimerData == null) {
             return false;
         }
+
+        // Check if available to put.
+        if (determineTimer.containsKey(templateId)) {
+            return false;
+        }
         
         // Else copy now.
-        TimerData instanceTimerData = new TimerData(templateTimerData.templateId, templateTimerData.initialTicks, templateTimerData.callback);
+        TimerData instanceTimerData = new TimerData(templateTimerData);
         instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>()).put(templateId, instanceTimerData);
         
         return true;
@@ -90,13 +95,16 @@ public class TimeHolder {
         }
     }
 
-    public static void removeTemplateTimer(String templateId) {
+    public static boolean removeTemplateTimer(String templateId) {
         TimerData timerData = templateTimer.get(templateId);
         // Stop and remove timer.
         if (timerData != null) {
             timerData.stop();
             templateTimer.remove(templateId);
+            return true;
         }
+
+        return false;
     }
 
     // Method of using instance timer.
@@ -156,7 +164,7 @@ public class TimeHolder {
     }
 
     // Collect all registered timer by id and return.
-    public static String[] returnAlltemplateIds() {
+    public static String[] returnAllTemplateIds() {
         return templateTimer.keySet().toArray(new String[0]);
     }
 
@@ -173,6 +181,19 @@ public class TimeHolder {
             this.templateId = templateId;
             this.initialTicks = durationTicks;
             this.callback = callback;
+            this.remainingTicks = durationTicks;
+            this.isCounting = false;
+            this.player = null;
+        }
+
+        // Timer apply from template to instance (Copy).
+        TimerData(TimerData timerData) {
+            this.templateId = timerData.templateId;
+            this.initialTicks = timerData.initialTicks;
+            this.callback = timerData.callback;
+            this.remainingTicks = timerData.remainingTicks;
+            this.isCounting = false;
+            this.player = null;
         }
 
         void start(ServerPlayer player) {
@@ -205,7 +226,7 @@ public class TimeHolder {
             }
         }
 
-        String returntemplateId() {
+        String returnTemplateId() {
             return templateId;
         }
 
@@ -225,6 +246,11 @@ public class TimeHolder {
     // Register timers into game.
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
-        templateTimer.values().forEach(TimerData::tickRecall);
+        // Double foreach for event tick recall.
+        for (Map<String, TimerData> map : instantiatedTimer.values()) {
+            for (TimerData timerData : map.values()) {
+                timerData.tickRecall();
+            }
+        }
     }
 }

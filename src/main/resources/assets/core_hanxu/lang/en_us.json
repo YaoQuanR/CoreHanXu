@@ -49,12 +49,6 @@
   "commands.chx.license_origin_innertext22": "You are welcomed to join and contribute to the community;",
   "commands.chx.license_origin_innertext23": "thus, you are permitted to act on the mod within the terms of license.",
   "commands.chx.license_agree": "You are now permitted to use the mod's commands.",
-  "commands.chx.timer": "Please execute '/chx timer help' for more information.",
-  "commands.chx.timer_help_title": "=> Core HanXu: Timer -> Help",
-  "commands.chx.timer_help_innertext1": "/chx timer list: List out all timers",
-  "commands.chx.timer_help_innertext2": "/chx timer read: Read timer's information.",
-  "commands.chx.timer_help_read_argument1": "---> Argument: read ![id] !{remaining_time/initial_time} #{tick/second/minute/hour}",
-  "commands.chx.timer_help_read_argument2": "---> Argument: read ![id] state",
 
   "commands.chx-a.bare1": "You are required admin permission to use this set of commands.",
   "commands.chx-a.bare2": "Please execute '/chx-a help' for more information.",
@@ -68,6 +62,7 @@
   "commands.chx-a.help_innertext6": "/chx-a license origin: Review the original license.",
   "commands.chx-a.help_innertext7": "/chx-a timer: Display the guide information.",
   "commands.chx-a.help_innertext8": "/chx-a timer help: Display the commands list.",
+  "commands.chx-a.timer": "Please execute '/chx-a timer help' for more information.",
   "commands.chx-a.timer_help_title": "=> Core HanXu (Admin): Timer -> Help",
   "commands.chx-a.timer_help_innertext1": "/chx-a timer list: List out all timers",
   "commands.chx-a.timer_help_innertext2": "/chx-a timer read: Read timer's information.",
@@ -90,5 +85,9 @@
   "commands.core_hanxu.timer_created": "Timer create success!",
   "commands.core_hanxu.timer_read_remaining_time": "Remaining time",
   "commands.core_hanxu.timer_read_initial_time": "Initial time",
-  "commands.core_hanxu.timer_state": "Timer state"
+  "commands.core_hanxu.timer_state": "Timer state",
+  "commands.core_hanxu.timer_deleted": "Timer was deleted!",
+  "commands.core_hanxu.target_not_exist": "Target does not exist!",
+  "commands.core_hanxu.timer_not_exist_or_already_instantiated": "Timer not exist or already instantiated!",
+  "commands.core_hanxu.timer_instantiated": "Timer was success instantiated!"
 }

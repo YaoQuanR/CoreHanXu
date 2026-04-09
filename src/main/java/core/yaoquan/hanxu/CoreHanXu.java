@@ -1,12 +1,10 @@
 package core.yaoquan.hanxu;
 
-import core.yaoquan.hanxu.api.TimeHolder;
-import core.yaoquan.hanxu.registry.ModCommand;
+import core.yaoquan.hanxu.command.CommandBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -52,7 +50,7 @@ public class CoreHanXu {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        ModCommand.registerCommand(event.getDispatcher());
+        CommandBuilder.registerCommand(event.getDispatcher());
         LOGGER.info("[HX] Register Procedure: Commands.");
     }
 

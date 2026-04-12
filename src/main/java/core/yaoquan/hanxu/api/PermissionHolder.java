@@ -48,6 +48,30 @@ public class PermissionHolder {
         player.getPersistentData().putInt("core.yaoquan.hanxu.player_permission_level", level);
     }
 
+    // Get specific player permission level.
+    public static int returnPlayerPermissionLevel(Player player) {
+        return player.getPersistentData()
+            .getInt("core.yaoquan.hanxu.player_permission_level")
+            .orElse(1);
+    }
+
+    // Get override player permission level.
+    public static int returnPlayerOverridePermissionLevel() {
+        return maxPlayerPermissionLevel;
+    }
+
+    // Get override command block permission level.
+    public static int returnCommandBlockOverridePermissionLevel() {
+        return maxCommandBlockPermissionLevel;
+    }
+
+    // Get license state.
+    public static boolean returnLicenseState(Player player) {
+        return player.getPersistentData()
+            .getBoolean("core.yaoquan.hanxu.agreed_license")
+            .orElse(false);
+    }
+
     // Permission check.
     public static boolean hasPermission(CommandSourceStack source, int requiredLevel) {
         // Always pass for developer.

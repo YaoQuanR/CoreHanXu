@@ -1,16 +1,21 @@
 package core.yaoquan.hanxu.event;
 import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.TimeHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID, value = Dist.CLIENT)
 public class ModInfoOverlay {
@@ -42,8 +47,40 @@ public class ModInfoOverlay {
         List<String> displayLines = new ArrayList<>();
         displayLines.add("-= Core HanXu Information =-");
         displayLines.add("Loaded.");
-        displayLines.add("Waiting for more information...");
 
+        int displayedTimer = 0;
+        displayLines.add("");
+        displayLines.add("-> Timer");
+        for (String key : TimeHolder.returnAllInfoKeys()) {
+            if (displayedTimer < 10) {
+                String[] parts = key.split(":", 2);
+                UUID masterId = UUID.fromString(parts[0]);
+                String timerId = parts[1];
+
+                int remainingTime = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "tick");
+                String masterName = returnMasterName(masterId);
+
+                if (remainingTime == -1) {
+                    displayLines.add("(" + timerId + " -> " + masterName + ") REMOVED");
+                }
+                else {
+                    int remainingTicks = remainingTime % (20);
+                    int remainingSeconds = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "second") % 60;
+                    int remainingMinutes = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "minute") % 60;
+                    int remainingHours = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "hour");
+                    boolean isItCounting = TimeHolder.isInstanceTimerCounting(masterId, timerId);
+                    displayLines.add("(" + timerId + " -> " + masterName + ") " + remainingHours + ":" + remainingMinutes + ":" + remainingSeconds + ":" + remainingTicks + (isItCounting? " (-)" : " (#)"));
+                }
+
+                displayedTimer++;
+            }
+            else {
+                displayLines.add("And more...");
+                break;
+            }
+        }
+
+        displayLines.add("");
         displayLines.add("[Press the key again to close]");
 
         int maxWidth = 0;
@@ -67,5 +104,25 @@ public class ModInfoOverlay {
             gui.drawString(font, line, textX, currentY, 0xFFFFFFFF, false);
             currentY += font.lineHeight;
         }
+    }
+
+    private static String returnMasterName(UUID masterId) {
+        if (TimeHolder.GLOBAL_UUID.equals(masterId)) {
+            return "-global";
+        }
+        else if (TimeHolder.TEMPORARY_UUID.equals(masterId)) {
+            return "-temporary";
+        }
+
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            ServerPlayer player = server.getPlayerList().getPlayer(masterId);
+            if (player != null) {
+                return player.getName().getString();
+            }
+        }
+
+        // If no pair target exist, return this.
+        return "-not_found";
     }
 }

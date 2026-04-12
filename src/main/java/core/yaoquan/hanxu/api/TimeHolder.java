@@ -9,6 +9,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -28,30 +29,51 @@ public class TimeHolder {
     private static final Map<String, TimerData> templateTimer = new ConcurrentHashMap<>();
     // Storage instantiated timer (in safety method).
     private static final Map<UUID, Map<String, TimerData>> instantiatedTimer = new ConcurrentHashMap<>();
+    // Storage debug display timer.
+    private static final Set<String> infoDisplayTimer = ConcurrentHashMap.newKeySet();
 
-    // Register your new timer (Available to override old timer):
-    public static void createTemplateTimer(String templateId, int durationTicks, Consumer<ServerPlayer> callback) {
-        templateTimer.put(templateId, new TimerData(templateId, durationTicks, callback));
+    // Register your new timer to template (Available to override old timer):
+    public static void createTemplateTimer(String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent) {
+        // Convert.
+        int durationTicks = convertToTicks(durationTime, timeUnit);
+
+        // Then create.
+        templateTimer.put(timerId, new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent));
     }
 
-    public static void createTemplateTimerInSeconds(String templateId, int durationSeconds, Consumer<ServerPlayer> callback) {
-        int durationTicks = durationSeconds * TICKS_PER_SECOND;
-        templateTimer.put(templateId, new TimerData(templateId, durationTicks, callback));
+    // Register your new timer to instance (For immediately use).
+    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent) {
+        // Check if timer already existed.
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData != null && instantiatedData.containsKey(timerId)) {
+            return false;
+        }
+
+        // Convert.
+        int durationTicks = convertToTicks(durationTime, timeUnit);
+
+        // Create timer.
+        TimerData instanceTimer = new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent);
+
+        // Then put into instance.
+        instantiatedTimer.computeIfAbsent(masterId, key -> new ConcurrentHashMap<>()).put(timerId, instanceTimer);
+
+        return true;
     }
 
-    public static void createTemplateTimerInMinutes(String templateId, int durationMinutes, Consumer<ServerPlayer> callback) {
-        int durationTicks = durationMinutes * TICKS_PER_MINUTE;
-        templateTimer.put(templateId, new TimerData(templateId, durationTicks, callback));
-    }
-
-    public static void createTemplateTimerInHours(String templateId, int durationHours, Consumer<ServerPlayer> callback) {
-        int durationTicks = durationHours * TICKS_PER_HOUR;
-        templateTimer.put(templateId, new TimerData(templateId, durationTicks, callback));
+    // Tool method.
+    public static int convertToTicks(int durationTime, String timeUnit) {
+        return switch (timeUnit) {
+            case "second" -> durationTime * TICKS_PER_SECOND;
+            case "minute" -> durationTime * TICKS_PER_MINUTE;
+            case "hour" -> durationTime * TICKS_PER_HOUR;
+            default -> durationTime;
+        };
     }
     
     // Register your timer to instance set.
-    public static boolean registerToInstance(UUID masterId, String templateId) {
-        TimerData templateTimerData = templateTimer.get(templateId);
+    public static boolean registerToInstance(UUID masterId, String timerId) {
+        TimerData templateTimerData = templateTimer.get(timerId);
         Map<String, TimerData> determineTimer = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
         
         // Check if available to copy.
@@ -60,24 +82,24 @@ public class TimeHolder {
         }
 
         // Check if available to put.
-        if (determineTimer.containsKey(templateId)) {
+        if (determineTimer.containsKey(timerId)) {
             return false;
         }
         
         // Else copy now.
         TimerData instanceTimerData = new TimerData(templateTimerData);
-        instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>()).put(templateId, instanceTimerData);
+        instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>()).put(timerId, instanceTimerData);
         
         return true;
     }
 
     // Method of using template timer.
-    public static boolean deleteTemplateTimer(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
+    public static boolean deleteTemplateTimer(String timerId) {
+        TimerData timerData = templateTimer.get(timerId);
         // Stop and remove timer.
         if (timerData != null) {
             timerData.stop();
-            templateTimer.remove(templateId);
+            templateTimer.remove(timerId);
             return true;
         }
 
@@ -85,7 +107,7 @@ public class TimeHolder {
     }
 
     // Method of using instance timer:
-    public static boolean startInstanceTimer(UUID masterId, String templateId) {
+    public static boolean startInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         // Determine if map existed.
@@ -93,7 +115,7 @@ public class TimeHolder {
             return false;
         }
         // Else get inner data and also determine if existed.
-        TimerData timerData = instantiatedData.get(templateId);
+        TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
             return false;
         }
@@ -107,6 +129,7 @@ public class TimeHolder {
                 ServerPlayer player = minecraftServer.getPlayerList().getPlayer(masterId);
                 if (player != null) {
                     timerData.start(player);
+                    return true;
                 }
             }
             return false;
@@ -114,7 +137,7 @@ public class TimeHolder {
         return true;
     }
 
-    public static boolean stopInstanceTimer(UUID masterId, String templateId) {
+    public static boolean stopInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         // Determine if map existed.
@@ -122,7 +145,7 @@ public class TimeHolder {
             return false;
         }
         // Else get inner data and also determine if existed.
-        TimerData timerData = instantiatedData.get(templateId);
+        TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
             return false;
         }
@@ -131,7 +154,7 @@ public class TimeHolder {
         return true;
     }
 
-    public static boolean resetInstanceTimer(UUID masterId, String templateId) {
+    public static boolean resetInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         // Determine if map existed.
@@ -139,7 +162,7 @@ public class TimeHolder {
             return false;
         }
         // Else get inner data and also determine if existed.
-        TimerData timerData = instantiatedData.get(templateId);
+        TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
             return false;
         }
@@ -148,56 +171,102 @@ public class TimeHolder {
         return true;
     }
 
-    public static boolean deleteInstanceTimer(UUID masterId, String templateId) {
+    public static boolean deleteInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         if (instantiatedData == null) {
             return false;
         }
 
-        return instantiatedData.remove(templateId) != null;
+        return instantiatedData.remove(timerId) != null;
+    }
+
+    public static boolean modifyInstanceTimer(UUID masterId, String timerId, int newTime, String timeUnit, String category) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return false;
+        }
+        TimerData timerData = instantiatedData.get(timerId);
+        if (timerData == null) {
+            return false;
+        }
+
+        int newTicks = convertToTicks(newTime, timeUnit);
+
+        // Modify
+        timerData.modify(newTicks, category);
+
+        return true;
     }
 
     // Method of getting timer's information:
-    public static String returnTemplateId(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
-        return timerData != null? timerData.templateId : "Null";
+    public static String returnTemplateId(String timerId) {
+        TimerData timerData = templateTimer.get(timerId);
+        return timerData != null? timerData.timerId : "Null";
     }
 
-    public static String returnInstanceId(UUID masterId, String templateId) {
+    public static String returnTemplateEndBehavior(String timerId) {
+        TimerData timerData = templateTimer.get(timerId);
+        return timerData.returnEndBehavior();
+    }
+
+    public static String returnTemplateBehaviorContent(String timerId) {
+        TimerData timerData = templateTimer.get(timerId);
+        return timerData.returnBehaviorContent();
+    }
+
+    public static String returnInstanceEndBehavior(UUID masterId, String timerId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return "Not Found";
+        }
+        TimerData timerData = instantiatedData.get(timerId);
+        return timerData.returnEndBehavior();
+    }
+
+    public static String returnInstanceBehaviorContent(UUID masterId, String timerId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return "Not Found";
+        }
+        TimerData timerData = instantiatedData.get(timerId);
+        return timerData.returnBehaviorContent();
+    }
+
+    public static String returnInstanceId(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return "Null";
         }
-        TimerData timerData = instantiatedData.get(templateId);
-        return timerData != null? timerData.templateId : "Null";
+        TimerData timerData = instantiatedData.get(timerId);
+        return timerData != null? timerData.timerId : "Null";
     }
 
-    public static int returnRemainingTimeFromTemplate(String templateId, String timeUnit) {
-        TimerData timerData = templateTimer.get(templateId);
+    public static int returnRemainingTimeFromTemplate(String timerId, String timeUnit) {
+        TimerData timerData = templateTimer.get(timerId);
         return forReturnRemainingTime(timeUnit, timerData);
     }
 
-    public static int returnInitialTimeFromTemplate(String templateId, String timeUnit) {
-        TimerData timerData = templateTimer.get(templateId);
+    public static int returnInitialTimeFromTemplate(String timerId, String timeUnit) {
+        TimerData timerData = templateTimer.get(timerId);
         return forReturnInitialTime(timeUnit, timerData);
     }
 
-    public static int returnRemainingTimeFromInstance(UUID masterId, String templateId, String timeUnit) {
+    public static int returnRemainingTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return -1;
         }
-        TimerData timerData = instantiatedData.get(templateId);
+        TimerData timerData = instantiatedData.get(timerId);
         return forReturnRemainingTime(timeUnit, timerData);
     }
 
-    public static int returnInitialTimeFromInstance(UUID masterId, String templateId, String timeUnit) {
+    public static int returnInitialTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return -1;
         }
-        TimerData timerData = instantiatedData.get(templateId);
+        TimerData timerData = instantiatedData.get(timerId);
         return forReturnInitialTime(timeUnit, timerData);
     }
 
@@ -221,17 +290,17 @@ public class TimeHolder {
         };
     }
 
-    public static boolean isTemplateTimerCounting(String templateId) {
-        TimerData timerData = templateTimer.get(templateId);
+    public static boolean isTemplateTimerCounting(String timerId) {
+        TimerData timerData = templateTimer.get(timerId);
         return timerData != null && timerData.isItCounting();
     }
 
-    public static boolean isInstanceTimerCounting(UUID masterId, String templateId) {
+    public static boolean isInstanceTimerCounting(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return false;
         }
-        TimerData timerData = instantiatedData.get(templateId);
+        TimerData timerData = instantiatedData.get(timerId);
         return timerData != null && timerData.isItCounting();
     }
 
@@ -250,17 +319,21 @@ public class TimeHolder {
 
     // Define an actual timer data system.
     private static class TimerData {
-        private final String templateId;
-        private final int initialTicks;
+        private final String timerId;
         private final Consumer<ServerPlayer> callback;
+        private final String endBehavior;
+        private final String behaviorContent;
         private ServerPlayer player;
+        private int initialTicks;
         private int remainingTicks;
         private boolean isCounting;
 
-        TimerData(String templateId, int durationTicks, Consumer<ServerPlayer> callback) {
-            this.templateId = templateId;
+        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent) {
+            this.timerId = timerId;
             this.initialTicks = durationTicks;
             this.callback = callback;
+            this.endBehavior = endBehavior;
+            this.behaviorContent = behaviorContent;
             this.remainingTicks = durationTicks;
             this.isCounting = false;
             this.player = null;
@@ -268,9 +341,11 @@ public class TimeHolder {
 
         // Timer apply from template to instance (Copy).
         TimerData(TimerData timerData) {
-            this.templateId = timerData.templateId;
+            this.timerId = timerData.timerId;
             this.initialTicks = timerData.initialTicks;
             this.callback = timerData.callback;
+            this.endBehavior = timerData.endBehavior;
+            this.behaviorContent = timerData.behaviorContent;
             this.remainingTicks = timerData.remainingTicks;
             this.isCounting = false;
             this.player = null;
@@ -292,6 +367,19 @@ public class TimeHolder {
             this.isCounting = false;
         }
 
+        void modify(int newTicks, String category) {
+            switch (category) {
+                case "initial_time":
+                    this.initialTicks = newTicks;
+                    break;
+                case "remaining_time":
+                    this.remainingTicks = newTicks;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         void tickRecall() {
             // Pass when not start counting.
             if (!this.isCounting) {
@@ -307,7 +395,7 @@ public class TimeHolder {
         }
 
         String returnTemplateId() {
-            return templateId;
+            return timerId;
         }
 
         int returnRemainingTicks() {
@@ -318,9 +406,46 @@ public class TimeHolder {
             return initialTicks;
         }
 
+        String returnEndBehavior() {
+            return endBehavior;
+        }
+
+        String returnBehaviorContent() {
+            return behaviorContent;
+        }
+
         boolean isItCounting() {
             return isCounting;
         }
+    }
+
+    // Display out to F4 page (info page).
+    public static void displayToInfoPage(UUID masterId, String timerId, boolean state) {
+        String masterIdString = masterId.toString();
+        String key = masterIdString + ":" + timerId;
+
+        if (state) {
+            infoDisplayTimer.add(key);
+        }
+        else {
+            infoDisplayTimer.remove(key);
+        }
+    }
+
+    public static boolean isInfoDisplay(UUID masterId, String timerId) {
+        String masterIdString = masterId.toString();
+        String key = masterIdString + ":" + timerId;
+
+        return infoDisplayTimer.contains(key);
+    }
+
+    public static Set<String> returnAllInfoKeys() {
+        return infoDisplayTimer;
+    }
+
+    // Save data.
+    public static void saveInstanceTimerForPlayer(ServerPlayer player) {
+
     }
 
     // Register timers into game.

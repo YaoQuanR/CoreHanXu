@@ -1,5 +1,6 @@
 package core.yaoquan.hanxu.command;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
@@ -7,6 +8,7 @@ import core.yaoquan.hanxu.api.TimeHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 class CommandSuggest {
@@ -24,6 +26,22 @@ class CommandSuggest {
     static <S> CompletableFuture<Suggestions> suggestUUIDOwner(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("-global");
         builder.suggest("-temporary");
+        builder.suggest("-me");
+
+        // Suggest player id.
+        CommandSourceStack source = context.getSource();
+        if (source.getEntity() instanceof ServerPlayer) {
+            for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
+                builder.suggest(player.getName().getString());
+            }
+        }
+
+        return builder.buildFuture();
+    }
+
+    // Add bare player id suggestion.
+    static <S> CompletableFuture<Suggestions> suggestPlayer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("-me");
 
         // Suggest player id.
         CommandSourceStack source = context.getSource();
@@ -41,6 +59,7 @@ class CommandSuggest {
         builder.suggest("remaining_time");
         builder.suggest("initial_time");
         builder.suggest("state");
+        builder.suggest("end_behavior");
 
         return builder.buildFuture();
     }
@@ -59,6 +78,36 @@ class CommandSuggest {
         builder.suggest("remind");
         builder.suggest("execute");
         builder.suggest("null");
+
+        return builder.buildFuture();
+    }
+
+    // Add instance timer suggestion.
+    static <S> CompletableFuture<Suggestions> suggestInstanceTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        String masterString;
+        try {
+            masterString = StringArgumentType.getString(context, "master_id");
+        }
+        catch (IllegalArgumentException e) {
+            return builder.buildFuture();
+        }
+
+        UUID masterId = CommandExecute.forAnalysisTargetUUID(context, masterString);
+
+        if (masterId == null) {
+            return builder.buildFuture();
+        }
+
+        for (String id : TimeHolder.returnAllInstanceIds(masterId)) {
+            builder.suggest(id);
+        }
+        return builder.buildFuture();
+    }
+
+    // For debug timer suggestion.
+    static <S> CompletableFuture<Suggestions> suggestInfoTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("-global");
+        builder.suggest("-me");
 
         return builder.buildFuture();
     }

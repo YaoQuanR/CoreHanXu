@@ -109,6 +109,7 @@
   "commands.chx-a.timer_stopped": "[HX] Timer stopped!",
   "commands.chx-a.timer_reset": "[HX] Timer was reset!",
   "commands.chx-a.timer_success_modification": "[HX] Timer was modified.",
+  "commands.chx-a.timer_default_remind": "[HX] No specific remind content, default content will be used.",
 
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
   "commands.core_hanxu.not_player": "[HX] Only player are allowed to use this command.",

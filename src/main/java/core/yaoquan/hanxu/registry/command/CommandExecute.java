@@ -535,17 +535,23 @@ class CommandExecute {
             timeUnit = "t";
         }
 
-        if (TimeHolder.modifyInstanceTimer(masterId, timerId, timeAmount, timeUnit, category)) {
-            MessagePublisher.sendSystemMessage(context, 
-                    Component.translatable("commands.chx-a.timer_success_modification")
-                            .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + category + " " + timeAmount + " " + timeUnit))
-                            .withColor(0xFFD700)
-            );
-            return 1;
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
-            return 0;
+        switch (timeUnit) {
+            case "t", "tick", "s", "second", "m", "minute", "h", "hour":
+                if (TimeHolder.modifyInstanceTimer(masterId, timerId, timeAmount, timeUnit, category)) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx-a.timer_success_modification")
+                                    .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + category + " " + timeAmount + " " + timeUnit))
+                                    .withColor(0xFFD700)
+                    );
+                    return 1;
+                }
+                else {
+                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    return 0;
+                }
+            default:
+                MessagePublisher.sendFailureMessage(context, Component.translatable("commands." + CoreHanXu.MOD_ID + ".invalid_unit_argument"));
+                return 0;
         }
     }
 
@@ -633,15 +639,24 @@ class CommandExecute {
             return 0;
         }
 
-        // Then register if timer not yet created.
-        if (!TimeHolder.createInstanceTimer(masterId, timerId, timeAmount, timeUnit, callback, endBehavior, behaviorContent, "core_hanxu-command")) {
-            MessagePublisher.sendFailureMessage(context, 
-                    returnTimerError(TimerError.alreadyExist)
-            );
-            return 0;
-        }
 
-        return 1;
+        // Then register if time not yet created.
+        switch (timeUnit) {
+            case "t", "tick", "s", "second", "m", "minute", "h", "hour":
+                // Then register if timer not yet created.
+                if (!TimeHolder.createInstanceTimer(masterId, timerId, timeAmount, timeUnit, callback, endBehavior, behaviorContent, "core_hanxu-command")) {
+                    MessagePublisher.sendFailureMessage(context,
+                            returnTimerError(TimerError.alreadyExist)
+                    );
+                    return 0;
+                }
+                else {
+                    return 1;
+                }
+            default:
+                MessagePublisher.sendFailureMessage(context, Component.translatable("commands." + CoreHanXu.MOD_ID + ".invalid_unit_argument"));
+                return 0;
+        }
     }
 
     private static int commandOperateInstanceTimer(CommandContext<CommandSourceStack> context,

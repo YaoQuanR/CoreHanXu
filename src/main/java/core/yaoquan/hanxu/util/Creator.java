@@ -1,7 +1,6 @@
 package core.yaoquan.hanxu.util;
 
 import com.mojang.brigadier.context.CommandContext;
-import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.Error;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -93,7 +92,7 @@ public class Creator {
                             }
                         }
                     };
-                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands." + CoreHanXu.MOD_ID + ".timer_default_end_behavior").withColor(0xFFD700));
+                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_default_remind").withColor(0xFFD700));
                 }
                 break;
             case "n", "null":

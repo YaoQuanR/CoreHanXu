@@ -2,14 +2,15 @@ package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.TimerCallback;
+import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.Creator;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -486,7 +487,7 @@ public class TimeHolder {
             // For each set, save arguments.
             for (var entry : specificPlayerInstanceTimers.entrySet()) {
                 // Put timer's data into NBT tag.
-                CompoundTag timerDataTag = putTimerData(entry);
+                CompoundTag timerDataTag = saveTimerData(entry);
 
                 // Then save.
                 allTimersTag.put(entry.getKey(), timerDataTag);
@@ -496,7 +497,34 @@ public class TimeHolder {
         dataRoot.put(headKey, allTimersTag);
     }
 
-    private static CompoundTag putTimerData(Map.Entry<String, TimerData> entry) {
+    public static void saveInstanceTimerForGlobal(ServerLevel level) {
+        String headKey = "core.yaoquan.hanxu.global_instance_timers";
+        CompoundTag dataRoot = new CompoundTag();
+        CompoundTag allTimersTag = new CompoundTag();
+
+        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(GLOBAL_UUID);
+        if (globalInstanceTimers != null) {
+            for (var entry : globalInstanceTimers.entrySet()) {
+                // Put timer's data into NBT tag.
+                CompoundTag timerDataTag = saveTimerData(entry);
+
+                // Then save.
+                allTimersTag.put(entry.getKey(), timerDataTag);
+            }
+        }
+
+        dataRoot.put(headKey, allTimersTag);
+
+        Path file = FilePath.getModDataPath(level);
+        try {
+            NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
+        }
+        catch (IOException e) {
+            LOGGER.error("[HX] Failed to save global timers", e);
+        }
+    }
+
+    private static CompoundTag saveTimerData(Map.Entry<String, TimerData> entry) {
         CompoundTag timerDataTag = new CompoundTag();
         TimerData timerData = entry.getValue();
 
@@ -522,7 +550,35 @@ public class TimeHolder {
         CompoundTag dataRoot = player.getPersistentData();
         CompoundTag allTimersTag = dataRoot.getCompound("core.yaoquan.hanxu.player_instance_timers").orElse(new CompoundTag());
 
-        // Take all elements.
+        rebuildTimerData(allTimersTag, player.getUUID());
+    }
+
+    public static void loadInstanceTimerForGlobal(ServerLevel level) {
+        String headKey = "core.yaoquan.hanxu.global_instance_timers";
+        Path file = FilePath.getModDataPath(level);
+
+        // Skip load if not exist.
+        if (!file.toFile().exists()) {
+            return;
+        }
+
+        CompoundTag dataRoot;
+        try {
+            // Limited to 32MB -> 512 Depth.
+            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
+            dataRoot = NbtIo.readCompressed(file, accounter);
+        }
+        catch (IOException e) {
+            LOGGER.error("[HX] Failed to load global timers", e);
+            return;
+        }
+
+        CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
+
+        rebuildTimerData(allTimersTag, GLOBAL_UUID);
+    }
+
+    private static void rebuildTimerData(CompoundTag allTimersTag, UUID masterId) {
         for (String eachTimerId : allTimersTag.keySet()) {
             CompoundTag timerTag = allTimersTag.getCompound(eachTimerId).orElse(new CompoundTag());
 
@@ -537,7 +593,7 @@ public class TimeHolder {
             String behaviorContent = timerTag.getString("behavior_content").orElse(null);
             String masterGroup = timerTag.getString("master_group").orElse("core_hanxu-command");
 
-            // Rebuild callback
+            // Rebuild timer data.
             Consumer<ServerPlayer> callback = rebuildCallback(masterGroup, timerId, endBehavior, behaviorContent);
             // Skip when no callback.
             if (callback == null) {
@@ -548,35 +604,9 @@ public class TimeHolder {
             TimerData rebuildTimer = new TimerData(timerId, initialTicks, callback, endBehavior, behaviorContent, masterGroup, isCounting);
             rebuildTimer.remainingTicks = remainingTicks;
 
-            Map<String, TimerData> specificPlayerInstanceTimers = instantiatedTimer.computeIfAbsent(player.getUUID(), k -> new ConcurrentHashMap<>());
-            specificPlayerInstanceTimers.put(timerId, rebuildTimer);
-        }
-    }
-
-    public static void saveInstanceTimerForGlobal(ServerLevel level) {
-        String headKey = "core.yaoquan.hanxu.global_instance_timers";
-        CompoundTag dataRoot = new CompoundTag();
-        CompoundTag allTimersTag = new CompoundTag();
-
-        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(GLOBAL_UUID);
-        if (globalInstanceTimers != null) {
-            for (var entry : globalInstanceTimers.entrySet()) {
-                // Put timer's data into NBT tag.
-                CompoundTag timerDataTag = putTimerData(entry);
-
-                // Then save.
-                allTimersTag.put(entry.getKey(), timerDataTag);
-            }
-        }
-
-        dataRoot.put(headKey, allTimersTag);
-
-        Path file = level.getServer().getWorldPath(LevelResource.GENERATED_DIR).resolve(headKey + ".dat");
-        try {
-            NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
-        }
-        catch (IOException e) {
-            LOGGER.error("[HX] Failed to save global timers", e);
+            // Then recover.
+            Map<String, TimerData> instanceTimers = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
+            instanceTimers.put(timerId, rebuildTimer);
         }
     }
 

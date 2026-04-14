@@ -4,6 +4,7 @@ import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -50,6 +51,10 @@ public class CoreHanXu {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("[HX] Server starting...");
+
+        ServerLevel overworld = event.getServer().overworld();
+        TimeHolder.loadInstanceTimerForGlobal(overworld);
+        LOGGER.info("[HX] Rebuild Procedure: Timer - Global");
     }
 
     @SubscribeEvent
@@ -77,7 +82,7 @@ public class CoreHanXu {
 
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             TimeHolder.loadInstanceTimerForPlayer(serverPlayer);
-            LOGGER.info("[HX] Load timer for target: {}", serverPlayer.getName().getString());
+            LOGGER.info("[HX] Load Procedure: Timer - Player: {}", serverPlayer.getName().getString());
         }
     }
 
@@ -85,7 +90,7 @@ public class CoreHanXu {
     public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             TimeHolder.saveInstanceTimerForPlayer(player);
-            LOGGER.info("[HX] Save timer for target: {}", player.getName().getString());
+            LOGGER.info("[HX] Save Procedure: Timer - Player: {}", player.getName().getString());
         }
     }
 
@@ -94,7 +99,11 @@ public class CoreHanXu {
         MinecraftServer server = event.getServer();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             TimeHolder.saveInstanceTimerForPlayer(player);
-            LOGGER.info("[HX] Auto save in stopping server, target: {}", player.getName().getString());
+            LOGGER.info("[HX] Save Procedure: Auto, Timer - Player: {}", player.getName().getString());
         }
+
+        ServerLevel overworld = event.getServer().overworld();
+        TimeHolder.saveInstanceTimerForGlobal(overworld);
+        LOGGER.info("[HX] Save Procedure: Timer - Global");
     }
 }

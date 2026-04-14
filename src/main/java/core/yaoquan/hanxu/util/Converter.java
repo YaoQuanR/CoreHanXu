@@ -8,9 +8,9 @@ public class Converter {
     // Tool method.
     public static int convertToTicks(int durationTime, String timeUnit) {
         return switch (timeUnit) {
-            case "second" -> durationTime * TimeHolder.TICKS_PER_SECOND;
-            case "minute" -> durationTime * TimeHolder.TICKS_PER_MINUTE;
-            case "hour" -> durationTime * TimeHolder.TICKS_PER_HOUR;
+            case "s", "second" -> durationTime * TimeHolder.TICKS_PER_SECOND;
+            case "m", "minute" -> durationTime * TimeHolder.TICKS_PER_MINUTE;
+            case "h", "hour" -> durationTime * TimeHolder.TICKS_PER_HOUR;
             default -> durationTime;
         };
     }

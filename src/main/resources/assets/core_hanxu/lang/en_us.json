@@ -47,7 +47,6 @@
   "commands.chx.license_origin_innertext22": "You are welcomed to join and contribute to the community;",
   "commands.chx.license_origin_innertext23": "thus, you are permitted to act on the mod within the terms of license.",
   "commands.chx.license_agree": "[HX] You are now permitted to use the mod's commands.",
-  "commands.chx.license_already_agreed": "[HX] You are already agreed the license!",
 
   "commands.chx-a.bare1": "[HX-ADMIN] You are required admin permission to use this set of commands.",
   "commands.chx-a.bare2": "[HX-ADMIN] Please execute '/chx-a help' for more information.",
@@ -91,6 +90,12 @@
   "commands.chx-a.timer_already_exist": "[HX] Timer has already exist!",
   "commands.chx-a.timer_not_exist": "[HX] Timer does not exist!",
   "commands.chx-a.timer_time_out": "[HX] Time out:",
+  "commands.chx-a.timer_not_exist_or_already_instantiated": "[HX] Timer not exist or already instantiated!",
+  "commands.chx-a.timer_unable_to_start": "[HX] Unable to start timer, check if target offline of not exist!",
+  "commands.chx-a.timer_unable_to_stop": "[HX] Unable to stop timer, check if targeted timer exist!",
+  "commands.chx-a.timer_unable_to_reset": "[HX] Unable to reset timer, check if targeted timer exist!",
+  "commands.chx-a.timer_unable_to_delete_instance": "[HX] Unable to delete instance timer, check if targeted timer exist!",
+
   "commands.chx-a.timer_created": "[HX] Timer create success!",
   "commands.chx-a.timer_with_execute_behavior": "[HX] Execute when time out",
   "commands.chx-a.timer_with_remind_behavior": "[HX] Remind when time out",
@@ -98,23 +103,22 @@
   "commands.chx-a.timer_read_initial_time": "[HX] Initial time",
   "commands.chx-a.timer_state": "[HX] Timer state",
   "commands.chx-a.timer_deleted": "[HX] Timer was deleted!",
-  "commands.chx-a.timer_not_exist_or_already_instantiated": "[HX] Timer not exist or already instantiated!",
   "commands.chx-a.timer_instantiated": "[HX] Timer was success instantiated!",
   "commands.chx-a.timer_list_title": "[HX] Timer found. List:",
-  "commands.chx-a.timer_unable_to_start": "[HX] Unable to start timer, check if target offline of not exist!",
   "commands.chx-a.timer_started": "[HX] Timer start!",
-  "commands.chx-a.timer_unable_to_stop": "[HX] Unable to stop timer, check if targeted timer exist!",
   "commands.chx-a.timer_stopped": "[HX] Timer stopped!",
-  "commands.chx-a.timer_unable_to_reset": "[HX] Unable to reset timer, check if targeted timer exist!",
   "commands.chx-a.timer_reset": "[HX] Timer was reset!",
-  "commands.chx-a.timer_unable_to_delete_instance": "[HX] Unable to delete instance timer, check if targeted timer exist!",
   "commands.chx-a.timer_success_modification": "[HX] Timer was modified.",
 
+  "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
   "commands.core_hanxu.not_player": "[HX] Only player are allowed to use this command.",
   "commands.core_hanxu.not_yet_agreed": "[HX] Accept the license '/chx license agree' and re-execute this command again.",
   "commands.core_hanxu.invalid_unit_argument": "[HX] Invalid unit argument used!",
   "commands.core_hanxu.invalid_selector_used": "[HX] Invalid selector used!",
+  "commands.core_hanxu.selector_to_nearest_used": "[HX] Selector @p used, global master will replaced by @a, player master within no change.",
   "commands.core_hanxu.target_not_exist": "[HX] Target does not exist!",
   "commands.core_hanxu.undefined_operation_category": "[HX] Undefined operation category!",
+  "commands.core_hanxu.undefined_error_type": "[HX] Undefined error type used!",
+
   "commands.core_hanxu.has_changed_to": "has changed to"
 }

@@ -1,4 +1,4 @@
-package core.yaoquan.hanxu.event;
+package core.yaoquan.hanxu.registry.event;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import core.yaoquan.hanxu.CoreHanXu;

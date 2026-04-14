@@ -1,4 +1,4 @@
-package core.yaoquan.hanxu.event;
+package core.yaoquan.hanxu.registry.event;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.TimeHolder;
 import net.minecraft.client.Minecraft;
@@ -51,13 +51,13 @@ public class ModInfoOverlay {
         int displayedTimer = 0;
         displayLines.add("");
         displayLines.add("-> Timer");
-        for (String key : TimeHolder.returnAllInfoKeys()) {
+        for (String key : TimeHolder.getAllInfoKeys()) {
             if (displayedTimer < 10) {
                 String[] parts = key.split(":", 2);
                 UUID masterId = UUID.fromString(parts[0]);
                 String timerId = parts[1];
 
-                int remainingTime = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "tick");
+                int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                 String masterName = returnMasterName(masterId);
 
                 if (remainingTime == -1) {
@@ -65,9 +65,9 @@ public class ModInfoOverlay {
                 }
                 else {
                     int remainingTicks = remainingTime % (20);
-                    int remainingSeconds = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "second") % 60;
-                    int remainingMinutes = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "minute") % 60;
-                    int remainingHours = TimeHolder.returnRemainingTimeFromInstance(masterId, timerId, "hour");
+                    int remainingSeconds = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "second") % 60;
+                    int remainingMinutes = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "minute") % 60;
+                    int remainingHours = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "hour");
                     boolean isItCounting = TimeHolder.isInstanceTimerCounting(masterId, timerId);
                     displayLines.add("(" + timerId + " -> " + masterName + ") " + remainingHours + ":" + remainingMinutes + ":" + remainingSeconds + ":" + remainingTicks + (isItCounting? " (-)" : " (#)"));
                 }

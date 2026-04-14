@@ -1,4 +1,4 @@
-package core.yaoquan.hanxu.command;
+package core.yaoquan.hanxu.registry.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -16,30 +16,30 @@ public class CommandBuilder {
                 .then(
                     Commands.literal("help")
                         .requires(cs -> PermissionHolder.hasPermission(cs,0))
-                        .executes(CommandExecute::executeCommandHelp)
+                        .executes(CommandExecute::executeHelp)
                 )
                 .then(
                     Commands.literal("detail")
                         .requires(cs -> PermissionHolder.hasPermission(cs,0))
-                        .executes(CommandExecute::executeCommandDetail)
+                        .executes(CommandExecute::executeDetail)
                 )
                 .then(
                     Commands.literal("license")
                         .then(
                             Commands.literal("agree")
                                 .requires(cs -> PermissionHolder.hasPermission(cs,0))
-                                .executes(CommandExecute::executeCommandLicense_Agree)
+                                .executes(CommandExecute::executeLicense_Agree)
                         )
                         .then(
                             Commands.literal("origin")
                                 .requires(cs -> PermissionHolder.hasPermission(cs,0))
-                                .executes(CommandExecute::executeCommandLicense_Origin)
+                                .executes(CommandExecute::executeLicense_Origin)
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,0))
-                        .executes(CommandExecute::executeCommandLicense)
+                        .executes(CommandExecute::executeLicense)
                 )
                 // Final execute father command.
-                .executes(CommandExecute::executeCommandBare)
+                .executes(CommandExecute::executeBare)
         );
 
         dispatcher.register(
@@ -48,36 +48,36 @@ public class CommandBuilder {
                 .then(
                     Commands.literal("help")
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))
-                        .executes(CommandExecute::executeAdminCommandHelp)
+                        .executes(CommandExecute::executeAdminHelp)
                 )
                 .then(
                     Commands.literal("detail")
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))
-                        .executes(CommandExecute::executeCommandDetail)
+                        .executes(CommandExecute::executeDetail)
                 )
                 .then(
                     Commands.literal("license")
                         .then(
                             Commands.literal("agree")
                                 .requires(cs -> PermissionHolder.hasPermission(cs,2))
-                                .executes(CommandExecute::executeCommandLicense_Agree)
+                                .executes(CommandExecute::executeLicense_Agree)
                         )
                         .then(
                             Commands.literal("origin")
                                 .requires(cs -> PermissionHolder.hasPermission(cs,2))
-                                .executes(CommandExecute::executeCommandLicense_Origin)
+                                .executes(CommandExecute::executeLicense_Origin)
                         )
                         .then(
                             Commands.literal("state")
                                 .then(
                                     Commands.argument("player_id", StringArgumentType.word())
                                         .suggests(CommandSuggest::suggestPlayer)
-                                        .executes(CommandExecute::executeAdminCommandLicense_State)
+                                        .executes(CommandExecute::executeAdminLicense_State)
                                 )
                                 .requires(cs -> PermissionHolder.hasPermission(cs,2))
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))
-                        .executes(CommandExecute::executeCommandLicense)
+                        .executes(CommandExecute::executeLicense)
                 )
                 .then(
                     Commands.literal("permission")
@@ -86,23 +86,23 @@ public class CommandBuilder {
                                 .then(
                                     Commands.argument("player_id", StringArgumentType.string())
                                         .suggests(CommandSuggest::suggestPlayer)
-                                        .executes(cs -> CommandExecute.executeAdminCommandPermissionCheck(cs, "player"))
+                                        .executes(cs -> CommandExecute.executeAdminPermissionCheck(cs, "player"))
                                 )
                         )
                         .then(
                             Commands.literal("server")
-                                .executes(cs -> CommandExecute.executeAdminCommandPermissionCheck(cs, "server"))
+                                .executes(cs -> CommandExecute.executeAdminPermissionCheck(cs, "server"))
                         )
                         .then(
                             Commands.literal("player_override")
-                                .executes(cs -> CommandExecute.executeAdminCommandPermissionCheck(cs, "player_override"))
+                                .executes(cs -> CommandExecute.executeAdminPermissionCheck(cs, "player_override"))
                         )
                 )
                 .then(
                     Commands.literal("timer")
                         .then(
                             Commands.literal("help")
-                                    .executes(CommandExecute::executeAdminCommandTimer_Help)
+                                    .executes(CommandExecute::executeAdminTimer_Help)
                         )
                         .then(
                             Commands.literal("template")
@@ -116,26 +116,27 @@ public class CommandBuilder {
                                                             Commands.argument("time_unit", StringArgumentType.word())
                                                                 .then(
                                                                     Commands.literal("null")
-                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_Create(cs, "null"))
+                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Template_Create(cs, "null"))
                                                                 )
                                                                 .then(
                                                                     Commands.literal("execute")
                                                                         .then(
                                                                             Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_Create(cs, "execute"))
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Template_Create(cs, "execute"))
                                                                         )
                                                                 )
                                                                 .then(
                                                                     Commands.literal("remind")
                                                                         .then(
                                                                             Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_Create(cs, "remind"))
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Template_Create(cs, "remind"))
                                                                         )
+                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Template_Create(cs, "remind"))
                                                                 )
                                                                 .suggests(CommandSuggest::suggestUnit)
-                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_Create(cs, "null"))
+                                                                .executes(cs -> CommandExecute.executeAdminTimer_Template_Create(cs, "null"))
                                                         )
-                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_Create(cs, "null"))
+                                                        .executes(cs -> CommandExecute.executeAdminTimer_Template_Create(cs, "null"))
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
                                         )
@@ -154,28 +155,29 @@ public class CommandBuilder {
                                                                             Commands.literal("null")
                                                                                 .then(
                                                                                     Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_CreateRange(cs, "null"))
+                                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Template_CreateRange(cs, "null"))
                                                                                 )
-                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_CreateRange(cs, "null"))
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Template_CreateRange(cs, "null"))
                                                                         )
                                                                         .then(
                                                                             Commands.literal("execute")
                                                                                 .then(
                                                                                     Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_CreateRange(cs, "execute"))
+                                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Template_CreateRange(cs, "execute"))
                                                                                 )
                                                                         )
                                                                         .then(
                                                                             Commands.literal("remind")
                                                                                 .then(
                                                                                     Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_CreateRange(cs, "remind"))
+                                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Template_CreateRange(cs, "remind"))
                                                                                 )
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Template_CreateRange(cs, "remind"))
                                                                         )
                                                                         .suggests(CommandSuggest::suggestUnit)
-                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_CreateRange(cs, "null"))
+                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Template_CreateRange(cs, "null"))
                                                                 )
-                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Template_CreateRange(cs, "null"))
+                                                                .executes(cs -> CommandExecute.executeAdminTimer_Template_CreateRange(cs, "null"))
                                                         )
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
@@ -190,10 +192,10 @@ public class CommandBuilder {
                                                         .then(
                                                             Commands.argument("time_unit", StringArgumentType.word())
                                                                 .suggests(CommandSuggest::suggestUnit)
-                                                                .executes(CommandExecute::executeAdminCommandTimer_Template_Read)
+                                                                .executes(CommandExecute::executeAdminTimer_Template_Read)
                                                         )
                                                         .suggests(CommandSuggest::suggestReadCategory)
-                                                        .executes(CommandExecute::executeAdminCommandTimer_Template_Read)
+                                                        .executes(CommandExecute::executeAdminTimer_Template_Read)
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
                                         )
@@ -203,12 +205,12 @@ public class CommandBuilder {
                                         .then(
                                             Commands.argument("timer_id", StringArgumentType.word())
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
-                                                .executes(CommandExecute::executeAdminCommandTimer_Template_Delete)
+                                                .executes(CommandExecute::executeAdminTimer_Template_Delete)
                                         )
                                 )
                                 .then(
                                     Commands.literal("list")
-                                        .executes(CommandExecute::executeAdminCommandTimer_Template_List)
+                                        .executes(CommandExecute::executeAdminTimer_Template_List)
                                 )
                         )
                         .then(
@@ -220,7 +222,7 @@ public class CommandBuilder {
                                                 .then(
                                                     Commands.argument("apply_target", StringArgumentType.word())
                                                         .suggests(CommandSuggest::suggestUUIDOwner)
-                                                        .executes(CommandExecute::executeAdminCommandTimer_Instance_Apply)
+                                                        .executes(CommandExecute::executeAdminTimer_Instance_Apply)
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
                                         )
@@ -237,26 +239,27 @@ public class CommandBuilder {
                                                                     Commands.argument("time_unit", StringArgumentType.word())
                                                                         .then(
                                                                             Commands.literal("null")
-                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Create(cs, "null"))
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_Create(cs, "null"))
                                                                         )
                                                                         .then(
                                                                             Commands.literal("execute")
                                                                                 .then(
                                                                                     Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Create(cs, "execute"))
+                                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_Create(cs, "execute"))
                                                                                 )
                                                                         )
                                                                         .then(
                                                                             Commands.literal("remind")
                                                                                 .then(
                                                                                     Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Create(cs, "remind"))
+                                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_Create(cs, "remind"))
                                                                                 )
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_Create(cs, "remind"))
                                                                         )
                                                                         .suggests(CommandSuggest::suggestUnit)
-                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Create(cs, "null"))
+                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_Create(cs, "null"))
                                                                 )
-                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Create(cs, "null"))
+                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_Create(cs, "null"))
                                                         )
                                                         .suggests(CommandSuggest::suggestUUIDOwner)
                                                 )
@@ -277,26 +280,27 @@ public class CommandBuilder {
                                                                             Commands.argument("time_unit", StringArgumentType.word())
                                                                                 .then(
                                                                                     Commands.literal("null")
-                                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_CreateRange(cs, "null"))
+                                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_CreateRange(cs, "null"))
                                                                                 )
                                                                                 .then(
                                                                                     Commands.literal("execute")
                                                                                         .then(
                                                                                             Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_CreateRange(cs, "execute"))
+                                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_CreateRange(cs, "execute"))
                                                                                         )
                                                                                 )
                                                                                 .then(
                                                                                     Commands.literal("remind")
                                                                                         .then(
                                                                                             Commands.argument("behavior_content", StringArgumentType.greedyString())
-                                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_CreateRange(cs, "remind"))
+                                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_CreateRange(cs, "remind"))
                                                                                         )
+                                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_CreateRange(cs, "remind"))
                                                                                 )
                                                                                 .suggests(CommandSuggest::suggestUnit)
-                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_CreateRange(cs, "null"))
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_CreateRange(cs, "null"))
                                                                         )
-                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_CreateRange(cs, "null"))
+                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_CreateRange(cs, "null"))
                                                                 )
                                                         )
                                                         .suggests(CommandSuggest::suggestUUIDOwner)
@@ -311,7 +315,7 @@ public class CommandBuilder {
                                                 .then(
                                                     Commands.argument("timer_id", StringArgumentType.word())
                                                         .suggests(CommandSuggest::suggestInstanceTimer)
-                                                        .executes(CommandExecute::executeAdminCommandTimer_Instance_Start)
+                                                        .executes(CommandExecute::executeAdminTimer_Instance_Start)
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
@@ -323,7 +327,7 @@ public class CommandBuilder {
                                                 .then(
                                                     Commands.argument("timer_id", StringArgumentType.word())
                                                         .suggests(CommandSuggest::suggestInstanceTimer)
-                                                        .executes(CommandExecute::executeAdminCommandTimer_Instance_Stop)
+                                                        .executes(CommandExecute::executeAdminTimer_Instance_Stop)
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
@@ -335,7 +339,7 @@ public class CommandBuilder {
                                                 .then(
                                                     Commands.argument("timer_id", StringArgumentType.word())
                                                         .suggests(CommandSuggest::suggestInstanceTimer)
-                                                        .executes(CommandExecute::executeAdminCommandTimer_Instance_Reset)
+                                                        .executes(CommandExecute::executeAdminTimer_Instance_Reset)
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
@@ -353,9 +357,9 @@ public class CommandBuilder {
                                                                         .then(
                                                                             Commands.argument("time_unit", StringArgumentType.word())
                                                                                 .suggests(CommandSuggest::suggestUnit)
-                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Modify(cs, "initial_time"))
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_Modify(cs, "initial_time"))
                                                                         )
-                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Modify(cs, "initial_time"))
+                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_Modify(cs, "initial_time"))
                                                                 )
                                                         )
                                                         .then(
@@ -365,9 +369,9 @@ public class CommandBuilder {
                                                                         .then(
                                                                             Commands.argument("time_unit", StringArgumentType.word())
                                                                                 .suggests(CommandSuggest::suggestUnit)
-                                                                                .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Modify(cs, "remaining_time"))
+                                                                                .executes(cs -> CommandExecute.executeAdminTimer_Instance_Modify(cs, "remaining_time"))
                                                                         )
-                                                                        .executes(cs -> CommandExecute.executeAdminCommandTimer_Instance_Modify(cs, "remaining_time"))
+                                                                        .executes(cs -> CommandExecute.executeAdminTimer_Instance_Modify(cs, "remaining_time"))
                                                                 )
                                                         )
                                                         .suggests(CommandSuggest::suggestInstanceTimer)
@@ -386,10 +390,10 @@ public class CommandBuilder {
                                                                 .then(
                                                                     Commands.argument("time_unit", StringArgumentType.word())
                                                                         .suggests(CommandSuggest::suggestUnit)
-                                                                        .executes(CommandExecute::executeAdminCommandTimer_Instance_Read)
+                                                                        .executes(CommandExecute::executeAdminTimer_Instance_Read)
                                                                 )
                                                                 .suggests(CommandSuggest::suggestReadCategory)
-                                                                .executes(CommandExecute::executeAdminCommandTimer_Instance_Read)
+                                                                .executes(CommandExecute::executeAdminTimer_Instance_Read)
                                                         )
                                                         .suggests(CommandSuggest::suggestInstanceTimer)
                                                 )
@@ -404,7 +408,7 @@ public class CommandBuilder {
                                                 .then(
                                                     Commands.argument("timer_id", StringArgumentType.word())
                                                         .suggests(CommandSuggest::suggestInstanceTimer)
-                                                        .executes(CommandExecute::executeAdminCommandTimer_Instance_Delete)
+                                                        .executes(CommandExecute::executeAdminTimer_Instance_Delete)
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
@@ -414,7 +418,7 @@ public class CommandBuilder {
                                         .then(
                                             Commands.argument("master_id", StringArgumentType.word())
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
-                                                .executes(CommandExecute::executeAdminCommandTimer_Instance_List)
+                                                .executes(CommandExecute::executeAdminTimer_Instance_List)
                                         )
                                 )
                                 .then(
@@ -425,13 +429,13 @@ public class CommandBuilder {
                                                     Commands.argument("timer_id", StringArgumentType.word())
                                                         .then(
                                                             Commands.literal("true")
-                                                                .executes(cs -> CommandExecute.executeAdminCommandDisplay_Info_Timer(cs, true))
+                                                                .executes(cs -> CommandExecute.executeAdminDisplay_Info_Timer(cs, true))
                                                         )
                                                         .then(
                                                             Commands.literal("false")
-                                                                .executes(cs -> CommandExecute.executeAdminCommandDisplay_Info_Timer(cs, false))
+                                                                .executes(cs -> CommandExecute.executeAdminDisplay_Info_Timer(cs, false))
                                                         )
-                                                        .executes(cs -> CommandExecute.executeAdminCommandDisplay_Info_Timer(cs, true))
+                                                        .executes(cs -> CommandExecute.executeAdminDisplay_Info_Timer(cs, true))
                                                         .suggests(CommandSuggest::suggestInstanceTimer)
                                                 )
                                                 .suggests(CommandSuggest::suggestInfoTimer)
@@ -439,10 +443,10 @@ public class CommandBuilder {
                                 )
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))
-                        .executes(CommandExecute::executeAdminCommandTimer)
+                        .executes(CommandExecute::executeAdminTimer)
                 )
                 .requires(cs -> PermissionHolder.hasPermission(cs,0))
-                .executes(CommandExecute::executeAdminCommandBare)
+                .executes(CommandExecute::executeAdminBare)
         );
     }
 }

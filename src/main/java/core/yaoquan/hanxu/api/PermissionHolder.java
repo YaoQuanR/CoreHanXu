@@ -1,13 +1,14 @@
 package core.yaoquan.hanxu.api;
 
-import core.yaoquan.hanxu.CoreHanXu;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 
 import java.util.Set;
 
+import static core.yaoquan.hanxu.api.define.Error.*;
+
+// Reminder: API will use "get" for getter, but out of API, "return" is used for general returning methods.
 public class PermissionHolder {
     // Permission manager list:
     // Always level 2.
@@ -49,24 +50,24 @@ public class PermissionHolder {
     }
 
     // Get specific player permission level.
-    public static int returnPlayerPermissionLevel(Player player) {
+    public static int getPlayerPermissionLevel(Player player) {
         return player.getPersistentData()
             .getInt("core.yaoquan.hanxu.player_permission_level")
             .orElse(1);
     }
 
     // Get override player permission level.
-    public static int returnPlayerOverridePermissionLevel() {
+    public static int getPlayerOverridePermissionLevel() {
         return maxPlayerPermissionLevel;
     }
 
     // Get override command block permission level.
-    public static int returnCommandBlockOverridePermissionLevel() {
+    public static int getCommandBlockOverridePermissionLevel() {
         return maxCommandBlockPermissionLevel;
     }
 
     // Get license state.
-    public static boolean returnLicenseState(Player player) {
+    public static boolean getLicenseState(Player player) {
         return player.getPersistentData()
             .getBoolean("core.yaoquan.hanxu.agreed_license")
             .orElse(false);
@@ -124,7 +125,7 @@ public class PermissionHolder {
                 .getBoolean("core.yaoquan.hanxu.agreed_license")
                 .orElse(false);
         if (!agreedLicense) {
-            source.sendFailure(Component.translatable(("commands."+ CoreHanXu.MOD_ID +".not_yet_agreed")));
+            source.sendFailure(returnGeneralError(GeneralError.notYetAgreed));
         }
     }
 }

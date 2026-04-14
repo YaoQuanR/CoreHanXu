@@ -1,10 +1,11 @@
-package core.yaoquan.hanxu.command;
+package core.yaoquan.hanxu.registry.command;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.util.Resolver;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -66,7 +67,7 @@ class CommandSuggest {
 
     // Add template timer suggestion.
     static <S> CompletableFuture<Suggestions> suggestTemplateTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        for (String id : TimeHolder.returnAllTemplateIds()) {
+        for (String id : TimeHolder.getAllTemplateIds()) {
             builder.suggest(id);
         }
 
@@ -92,13 +93,13 @@ class CommandSuggest {
             return builder.buildFuture();
         }
 
-        UUID masterId = CommandExecute.forAnalysisTargetUUID(context, masterString);
+        UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
         if (masterId == null) {
             return builder.buildFuture();
         }
 
-        for (String id : TimeHolder.returnAllInstanceIds(masterId)) {
+        for (String id : TimeHolder.getAllInstanceIds(masterId)) {
             builder.suggest(id);
         }
         return builder.buildFuture();

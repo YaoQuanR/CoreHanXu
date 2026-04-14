@@ -1,10 +1,15 @@
 package core.yaoquan.hanxu;
 
-import core.yaoquan.hanxu.command.CommandBuilder;
+import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.registry.command.CommandBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -55,7 +60,7 @@ public class CoreHanXu {
     }
 
     @SubscribeEvent
-    public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
 
         if (PermissionHolder.autoAuthorizePermission) {
@@ -69,6 +74,28 @@ public class CoreHanXu {
 
                 LOGGER.info("[HX] Auto authorize permission to new player. (Level: {})", autoLevel);
             }
+        }
+
+        if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            TimeHolder.loadInstanceTimerForPlayer(serverPlayer);
+            LOGGER.info("[HX] Load timer for target: {}", serverPlayer.getName().getString());
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            TimeHolder.saveInstanceTimerForPlayer(player);
+            LOGGER.info("[HX] Save timer for target: {}", player.getName().getString());
+        }
+    }
+
+    @SubscribeEvent
+    public void onServerStopping(ServerStoppingEvent event) {
+        MinecraftServer server = event.getServer();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            TimeHolder.saveInstanceTimerForPlayer(player);
+            LOGGER.info("[HX] Auto save in stopping server, target: {}", player.getName().getString());
         }
     }
 }

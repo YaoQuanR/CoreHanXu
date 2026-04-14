@@ -1,19 +1,31 @@
 package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.custom.TimerCallback;
+import core.yaoquan.hanxu.util.Converter;
+import core.yaoquan.hanxu.util.Creator;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
+
+// Reminder: API will use "get" for getter, but out of API, "return" is used for general returning methods.
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
 public class TimeHolder {
     // Unit transform.
@@ -31,18 +43,20 @@ public class TimeHolder {
     private static final Map<UUID, Map<String, TimerData>> instantiatedTimer = new ConcurrentHashMap<>();
     // Storage debug display timer.
     private static final Set<String> infoDisplayTimer = ConcurrentHashMap.newKeySet();
+    // Storage recovery end behavior.
+    private static final Map<String, TimerCallback> callbacks = new ConcurrentHashMap<>();
 
     // Register your new timer to template (Available to override old timer):
-    public static void createTemplateTimer(String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent) {
+    public static void createTemplateTimer(String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
         // Convert.
-        int durationTicks = convertToTicks(durationTime, timeUnit);
+        int durationTicks = Converter.convertToTicks(durationTime, timeUnit);
 
         // Then create.
-        templateTimer.put(timerId, new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent));
+        templateTimer.put(timerId, new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent, masterGroup));
     }
 
     // Register your new timer to instance (For immediately use).
-    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent) {
+    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
         // Check if timer already existed.
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData != null && instantiatedData.containsKey(timerId)) {
@@ -50,10 +64,10 @@ public class TimeHolder {
         }
 
         // Convert.
-        int durationTicks = convertToTicks(durationTime, timeUnit);
+        int durationTicks = Converter.convertToTicks(durationTime, timeUnit);
 
         // Create timer.
-        TimerData instanceTimer = new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent);
+        TimerData instanceTimer = new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent, masterGroup);
 
         // Then put into instance.
         instantiatedTimer.computeIfAbsent(masterId, key -> new ConcurrentHashMap<>()).put(timerId, instanceTimer);
@@ -61,18 +75,8 @@ public class TimeHolder {
         return true;
     }
 
-    // Tool method.
-    public static int convertToTicks(int durationTime, String timeUnit) {
-        return switch (timeUnit) {
-            case "second" -> durationTime * TICKS_PER_SECOND;
-            case "minute" -> durationTime * TICKS_PER_MINUTE;
-            case "hour" -> durationTime * TICKS_PER_HOUR;
-            default -> durationTime;
-        };
-    }
-    
     // Register your timer to instance set.
-    public static boolean registerToInstance(UUID masterId, String timerId) {
+    public static boolean createInstanceFromTemplate(UUID masterId, String timerId) {
         TimerData templateTimerData = templateTimer.get(timerId);
         Map<String, TimerData> determineTimer = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
         
@@ -191,7 +195,7 @@ public class TimeHolder {
             return false;
         }
 
-        int newTicks = convertToTicks(newTime, timeUnit);
+        int newTicks = Converter.convertToTicks(newTime, timeUnit);
 
         // Modify
         timerData.modify(newTicks, category);
@@ -200,40 +204,22 @@ public class TimeHolder {
     }
 
     // Method of getting timer's information:
-    public static String returnTemplateId(String timerId) {
+    public static String getTemplateId(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
         return timerData != null? timerData.timerId : "Null";
     }
 
-    public static String returnTemplateEndBehavior(String timerId) {
+    public static String getTemplateEndBehavior(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
-        return timerData.returnEndBehavior();
+        return timerData.getEndBehavior();
     }
 
-    public static String returnTemplateBehaviorContent(String timerId) {
+    public static String getTemplateBehaviorContent(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
-        return timerData.returnBehaviorContent();
+        return timerData.getBehaviorContent();
     }
 
-    public static String returnInstanceEndBehavior(UUID masterId, String timerId) {
-        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
-        if (instantiatedData == null) {
-            return "Not Found";
-        }
-        TimerData timerData = instantiatedData.get(timerId);
-        return timerData.returnEndBehavior();
-    }
-
-    public static String returnInstanceBehaviorContent(UUID masterId, String timerId) {
-        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
-        if (instantiatedData == null) {
-            return "Not Found";
-        }
-        TimerData timerData = instantiatedData.get(timerId);
-        return timerData.returnBehaviorContent();
-    }
-
-    public static String returnInstanceId(UUID masterId, String timerId) {
+    public static String getInstanceId(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return "Null";
@@ -242,50 +228,68 @@ public class TimeHolder {
         return timerData != null? timerData.timerId : "Null";
     }
 
-    public static int returnRemainingTimeFromTemplate(String timerId, String timeUnit) {
-        TimerData timerData = templateTimer.get(timerId);
-        return forReturnRemainingTime(timeUnit, timerData);
+    public static String getInstanceEndBehavior(UUID masterId, String timerId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return "Not Found";
+        }
+        TimerData timerData = instantiatedData.get(timerId);
+        return timerData.getEndBehavior();
     }
 
-    public static int returnInitialTimeFromTemplate(String timerId, String timeUnit) {
-        TimerData timerData = templateTimer.get(timerId);
-        return forReturnInitialTime(timeUnit, timerData);
+    public static String getInstanceBehaviorContent(UUID masterId, String timerId) {
+        Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        if (instantiatedData == null) {
+            return "Not Found";
+        }
+        TimerData timerData = instantiatedData.get(timerId);
+        return timerData.getBehaviorContent();
     }
 
-    public static int returnRemainingTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
+    public static int getRemainingTimeFromTemplate(String timerId, String timeUnit) {
+        TimerData timerData = templateTimer.get(timerId);
+        return getRemainingTicks(timeUnit, timerData);
+    }
+
+    public static int getInitialTimeFromTemplate(String timerId, String timeUnit) {
+        TimerData timerData = templateTimer.get(timerId);
+        return getInitialTicks(timeUnit, timerData);
+    }
+
+    public static int getRemainingTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return -1;
         }
         TimerData timerData = instantiatedData.get(timerId);
-        return forReturnRemainingTime(timeUnit, timerData);
+        return getRemainingTicks(timeUnit, timerData);
     }
 
-    public static int returnInitialTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
+    public static int getInitialTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return -1;
         }
         TimerData timerData = instantiatedData.get(timerId);
-        return forReturnInitialTime(timeUnit, timerData);
+        return getInitialTicks(timeUnit, timerData);
     }
 
-    private static int forReturnRemainingTime(String timeUnit, TimerData timerData) {
+    private static int getRemainingTicks(String timeUnit, TimerData timerData) {
         return switch (timeUnit) {
-            case "t", "tick" -> timerData != null? timerData.returnRemainingTicks() : -1;
-            case "s", "second" -> timerData != null? timerData.returnRemainingTicks() / TICKS_PER_SECOND : -1;
-            case "m", "minute" -> timerData != null? timerData.returnRemainingTicks() / TICKS_PER_MINUTE : -1;
-            case "h", "hour" -> timerData != null? timerData.returnRemainingTicks() / TICKS_PER_HOUR : -1;
+            case "t", "tick" -> timerData != null? timerData.getRemainingTicks() : -1;
+            case "s", "second" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_SECOND : -1;
+            case "m", "minute" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_MINUTE : -1;
+            case "h", "hour" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_HOUR : -1;
             default -> -1;
         };
     }
 
-    private static int forReturnInitialTime(String timeUnit, TimerData timerData) {
+    private static int getInitialTicks(String timeUnit, TimerData timerData) {
         return switch (timeUnit) {
-            case "t", "tick" -> timerData != null? timerData.returnInitialTicks() : -1;
-            case "s", "second" -> timerData != null? timerData.returnInitialTicks() / TICKS_PER_SECOND : -1;
-            case "m", "minute" -> timerData != null? timerData.returnInitialTicks() / TICKS_PER_MINUTE : -1;
-            case "h", "hour" -> timerData != null? timerData.returnInitialTicks() / TICKS_PER_HOUR : -1;
+            case "t", "tick" -> timerData != null? timerData.getInitialTicks() : -1;
+            case "s", "second" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_SECOND : -1;
+            case "m", "minute" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_MINUTE : -1;
+            case "h", "hour" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_HOUR : -1;
             default -> -1;
         };
     }
@@ -305,11 +309,11 @@ public class TimeHolder {
     }
 
     // Collect all registered timer by id and return.
-    public static String[] returnAllTemplateIds() {
+    public static String[] getAllTemplateIds() {
         return templateTimer.keySet().toArray(new String[0]);
     }
 
-    public static String[] returnAllInstanceIds(UUID masterId) {
+    public static String[] getAllInstanceIds(UUID masterId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return new String[0];
@@ -323,19 +327,34 @@ public class TimeHolder {
         private final Consumer<ServerPlayer> callback;
         private final String endBehavior;
         private final String behaviorContent;
+        private final String masterGroup;
         private ServerPlayer player;
         private int initialTicks;
         private int remainingTicks;
         private boolean isCounting;
 
-        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent) {
+        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
             this.timerId = timerId;
             this.initialTicks = durationTicks;
             this.callback = callback;
             this.endBehavior = endBehavior;
             this.behaviorContent = behaviorContent;
             this.remainingTicks = durationTicks;
+            this.masterGroup = masterGroup;
             this.isCounting = false;
+            this.player = null;
+        }
+
+        // Timer with controllable starting state.
+        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup, boolean isCounting) {
+            this.timerId = timerId;
+            this.initialTicks = durationTicks;
+            this.callback = callback;
+            this.endBehavior = endBehavior;
+            this.behaviorContent = behaviorContent;
+            this.remainingTicks = durationTicks;
+            this.masterGroup = masterGroup;
+            this.isCounting = isCounting;
             this.player = null;
         }
 
@@ -347,13 +366,13 @@ public class TimeHolder {
             this.endBehavior = timerData.endBehavior;
             this.behaviorContent = timerData.behaviorContent;
             this.remainingTicks = timerData.remainingTicks;
+            this.masterGroup = timerData.masterGroup;
             this.isCounting = false;
             this.player = null;
         }
 
         void start(ServerPlayer player) {
             this.player = player;
-            this.remainingTicks = this.initialTicks;
             this.isCounting = true;
         }
 
@@ -394,24 +413,28 @@ public class TimeHolder {
             }
         }
 
-        String returnTemplateId() {
+        String getTimerId() {
             return timerId;
         }
 
-        int returnRemainingTicks() {
+        int getRemainingTicks() {
             return remainingTicks;
         }
 
-        int returnInitialTicks() {
+        int getInitialTicks() {
             return initialTicks;
         }
 
-        String returnEndBehavior() {
+        String getEndBehavior() {
             return endBehavior;
         }
 
-        String returnBehaviorContent() {
+        String getBehaviorContent() {
             return behaviorContent;
+        }
+
+        String getMasterGroup() {
+            return masterGroup;
         }
 
         boolean isItCounting() {
@@ -439,13 +462,135 @@ public class TimeHolder {
         return infoDisplayTimer.contains(key);
     }
 
-    public static Set<String> returnAllInfoKeys() {
+    public static Set<String> getAllInfoKeys() {
         return infoDisplayTimer;
     }
 
-    // Save data.
-    public static void saveInstanceTimerForPlayer(ServerPlayer player) {
+    // Save and load methods:
+    public static void registerCallback(TimerCallback callback) {
+        callbacks.put(callback.getMasterGroupId(), callback);
+    }
 
+    public static TimerCallback getCallback(String modId) {
+        return callbacks.get(modId);
+    }
+
+    public static void saveInstanceTimerForPlayer(ServerPlayer player) {
+        String headKey = "core.yaoquan.hanxu.player_instance_timers";
+        CompoundTag dataRoot = player.getPersistentData();
+        CompoundTag allTimersTag = new CompoundTag();
+
+        // Get all specific player's timer, then save.
+        Map<String, TimerData> specificPlayerInstanceTimers = instantiatedTimer.get(player.getUUID());
+        if (specificPlayerInstanceTimers != null) {
+            // For each set, save arguments.
+            for (var entry : specificPlayerInstanceTimers.entrySet()) {
+                // Put timer's data into NBT tag.
+                CompoundTag timerDataTag = putTimerData(entry);
+
+                // Then save.
+                allTimersTag.put(entry.getKey(), timerDataTag);
+            }
+        }
+
+        dataRoot.put(headKey, allTimersTag);
+    }
+
+    private static CompoundTag putTimerData(Map.Entry<String, TimerData> entry) {
+        CompoundTag timerDataTag = new CompoundTag();
+        TimerData timerData = entry.getValue();
+
+        timerDataTag.putString("timer_id", timerData.getTimerId());
+        timerDataTag.putInt("remaining_ticks", timerData.getRemainingTicks());
+        timerDataTag.putInt("initial_ticks", timerData.getInitialTicks());
+        timerDataTag.putBoolean("is_counting", timerData.isItCounting());
+        timerDataTag.putString("end_behavior", timerData.getEndBehavior());
+        if (timerData.getBehaviorContent() != null) {
+            timerDataTag.putString("behavior_content", timerData.getBehaviorContent());
+        }
+        if (timerData.getMasterGroup() != null) {
+            timerDataTag.putString("master_group", timerData.getMasterGroup());
+        }
+        else {
+            timerDataTag.putString("master_group", "core_hanxu-command");
+        }
+
+        return timerDataTag;
+    }
+
+    public static void loadInstanceTimerForPlayer(ServerPlayer player) {
+        CompoundTag dataRoot = player.getPersistentData();
+        CompoundTag allTimersTag = dataRoot.getCompound("core.yaoquan.hanxu.player_instance_timers").orElse(new CompoundTag());
+
+        // Take all elements.
+        for (String eachTimerId : allTimersTag.keySet()) {
+            CompoundTag timerTag = allTimersTag.getCompound(eachTimerId).orElse(new CompoundTag());
+
+            String timerId = timerTag.getString("timer_id").orElse(eachTimerId);
+
+            int remainingTicks = timerTag.getInt("remaining_ticks").orElse(0);
+            int initialTicks = timerTag.getInt("initial_ticks").orElse(0);
+
+            boolean isCounting = timerTag.getBoolean("is_counting").orElse(false);
+
+            String endBehavior = timerTag.getString("end_behavior").orElse("null");
+            String behaviorContent = timerTag.getString("behavior_content").orElse(null);
+            String masterGroup = timerTag.getString("master_group").orElse("core_hanxu-command");
+
+            // Rebuild callback
+            Consumer<ServerPlayer> callback = rebuildCallback(masterGroup, timerId, endBehavior, behaviorContent);
+            // Skip when no callback.
+            if (callback == null) {
+                continue;
+            }
+
+            // Rebuild timer data.
+            TimerData rebuildTimer = new TimerData(timerId, initialTicks, callback, endBehavior, behaviorContent, masterGroup, isCounting);
+            rebuildTimer.remainingTicks = remainingTicks;
+
+            Map<String, TimerData> specificPlayerInstanceTimers = instantiatedTimer.computeIfAbsent(player.getUUID(), k -> new ConcurrentHashMap<>());
+            specificPlayerInstanceTimers.put(timerId, rebuildTimer);
+        }
+    }
+
+    public static void saveInstanceTimerForGlobal(ServerLevel level) {
+        String headKey = "core.yaoquan.hanxu.global_instance_timers";
+        CompoundTag dataRoot = new CompoundTag();
+        CompoundTag allTimersTag = new CompoundTag();
+
+        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(GLOBAL_UUID);
+        if (globalInstanceTimers != null) {
+            for (var entry : globalInstanceTimers.entrySet()) {
+                // Put timer's data into NBT tag.
+                CompoundTag timerDataTag = putTimerData(entry);
+
+                // Then save.
+                allTimersTag.put(entry.getKey(), timerDataTag);
+            }
+        }
+
+        dataRoot.put(headKey, allTimersTag);
+
+        Path file = level.getServer().getWorldPath(LevelResource.GENERATED_DIR).resolve(headKey + ".dat");
+        try {
+            NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
+        }
+        catch (IOException e) {
+            LOGGER.error("[HX] Failed to save global timers", e);
+        }
+    }
+
+    private static Consumer<ServerPlayer> rebuildCallback(String masterGroup, String timerId, String endBehavior, String behaviorContent) {
+        if (masterGroup.equals("core_hanxu-command")) {
+            return Creator.createCallback(null, timerId, endBehavior, behaviorContent);
+        }
+        else {
+            TimerCallback callback = getCallback(masterGroup);
+            if (callback != null) {
+                return callback.createCustomCallback(timerId, endBehavior, behaviorContent);
+            }
+            return null;
+        }
     }
 
     // Register timers into game.

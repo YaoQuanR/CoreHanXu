@@ -38,6 +38,7 @@ public class TestHolder {
         switch (testId) {
             case 1:
                 // Single timer define.
+                // If you did not finish API TimerCallback, callback will become null after restart the server.
                 Consumer<ServerPlayer> customCallback = player -> {
                     // Message.
                     player.sendSystemMessage(Component.literal("[HX] From the emperor's madness!"));

@@ -52,6 +52,14 @@ public class TimeHolder {
         // Convert.
         int durationTicks = Converter.convertToTicks(durationTime, timeUnit);
 
+        // Check if callback = null (For API define).
+        if (callback == null && masterGroup != null) {
+            TimerCallback timerCallback = getCallback(masterGroup);
+            if (timerCallback != null) {
+                callback = timerCallback.createCustomCallback(timerId, endBehavior, behaviorContent);
+            }
+        }
+
         // Then create.
         templateTimer.put(timerId, new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent, masterGroup));
     }
@@ -123,7 +131,6 @@ public class TimeHolder {
     // Method of using instance timer:
     public static boolean startInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
-        CoreHanXu.LOGGER.info("[HX] Timer was started, master id: {}, timerId: {}, callback: {}", masterId, timerId, callbacks.get(timerId));
 
         // Determine if map existed.
         if (instantiatedData == null) {

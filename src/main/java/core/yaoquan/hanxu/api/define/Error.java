@@ -22,6 +22,7 @@ public class Error {
         selectorToNearestUsed,
         targetNotExist,
         undefinedOperationCategory,
+        undefinedOperationId,
     }
 
     public static Component returnTimerError(TimerError timerError) {
@@ -46,7 +47,8 @@ public class Error {
             case invalidSelectorUsed -> Component.translatable("commands.core_hanxu.invalid_selector_used");
             case selectorToNearestUsed -> Component.translatable("commands.core_hanxu.selector_to_nearest_used");
             case targetNotExist -> Component.translatable("commands.core_hanxu.target_not_exist");
-            case undefinedOperationCategory -> Component.translatable("commands.core_hanxu.undefine_operation_category");
+            case undefinedOperationCategory -> Component.translatable("commands.core_hanxu.undefined_operation_category");
+            case undefinedOperationId -> Component.translatable("commands.core_hanxu.undefined_operation_id");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

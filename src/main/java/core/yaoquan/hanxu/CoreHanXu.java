@@ -3,6 +3,7 @@ package core.yaoquan.hanxu;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
+import core.yaoquan.hanxu.test.TestCallback;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -51,6 +52,11 @@ public class CoreHanXu {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("[HX] Server starting...");
+
+        // Test methods.
+        // Register.
+        TimeHolder.registerCallback(new TestCallback());
+        LOGGER.info("[HX] Test: Custom Timer Callback.");
 
         ServerLevel overworld = event.getServer().overworld();
         TimeHolder.loadInstanceTimerForGlobal(overworld);

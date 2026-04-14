@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import core.yaoquan.hanxu.api.PermissionHolder;
+import core.yaoquan.hanxu.test.TestHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
@@ -441,6 +442,14 @@ public class CommandBuilder {
                                                 .suggests(CommandSuggest::suggestInfoTimer)
                                         )
                                 )
+                        )
+                        .then(
+                            Commands.literal("test")
+                                .then(
+                                    Commands.argument("test_id", IntegerArgumentType.integer())
+                                        .executes(TestHolder::executeTest_Timer)
+                                )
+                                .requires(TestHolder::hasPrivateTestPermission)
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))
                         .executes(CommandExecute::executeAdminTimer)

@@ -64,6 +64,15 @@ public class TimeHolder {
             return false;
         }
 
+        // Check if callback = null (For API define).
+        if (callback == null) {
+            CoreHanXu.LOGGER.info("[HX] Rebuild callback from API TimerCallback.");
+            TimerCallback timerCallback = getCallback(masterGroup);
+            if (timerCallback != null) {
+                callback = timerCallback.createCustomCallback(timerId, endBehavior, behaviorContent);
+            }
+        }
+
         // Convert.
         int durationTicks = Converter.convertToTicks(durationTime, timeUnit);
 
@@ -114,6 +123,7 @@ public class TimeHolder {
     // Method of using instance timer:
     public static boolean startInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
+        CoreHanXu.LOGGER.info("[HX] Timer was started, master id: {}, timerId: {}, callback: {}", masterId, timerId, callbacks.get(timerId));
 
         // Determine if map existed.
         if (instantiatedData == null) {
@@ -122,6 +132,10 @@ public class TimeHolder {
         // Else get inner data and also determine if existed.
         TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
+            return false;
+        }
+        // Else determine if remaining time reach to 0.
+        if (timerData.getRemainingTicks() <= 0) {
             return false;
         }
         // Else start depend on master id.
@@ -520,7 +534,7 @@ public class TimeHolder {
             NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
         }
         catch (IOException e) {
-            LOGGER.error("[HX] Failed to save global timers", e);
+            CoreHanXu.LOGGER.error("[HX] Failed to save global timers", e);
         }
     }
 
@@ -569,7 +583,7 @@ public class TimeHolder {
             dataRoot = NbtIo.readCompressed(file, accounter);
         }
         catch (IOException e) {
-            LOGGER.error("[HX] Failed to load global timers", e);
+            CoreHanXu.LOGGER.error("[HX] Failed to load global timers", e);
             return;
         }
 
@@ -619,6 +633,7 @@ public class TimeHolder {
             if (callback != null) {
                 return callback.createCustomCallback(timerId, endBehavior, behaviorContent);
             }
+            CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
             return null;
         }
     }

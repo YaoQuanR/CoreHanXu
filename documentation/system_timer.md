@@ -44,5 +44,5 @@ In detailed, API provided:
 
 - Examples:
   - If you do not understand how to modify timer by API,
-    folder "test": "TestCallback" & "TestHolder" provided examples for you to learn.
+    folder "test": "TestCallback.java" & "TestHolder.java" provided examples for you to learn.
     Remind to register your player id for the private test and demonstration (change the set).

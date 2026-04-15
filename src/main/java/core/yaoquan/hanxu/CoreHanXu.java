@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu;
 
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.registry.ModConfig;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
 import core.yaoquan.hanxu.test.TestCallback;
@@ -18,7 +19,6 @@ import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -42,7 +42,7 @@ public class CoreHanXu {
         NeoForge.EVENT_BUS.register(this);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, ModConfig.SPEC);
 
         LOGGER.info("[HX] >>>>>> End register.");
     }
@@ -76,7 +76,9 @@ public class CoreHanXu {
         if (PermissionHolder.autoAuthorizePermission) {
             boolean hasPermissionLevel = player.getPersistentData()
                     .contains("core.yaoquan.hanxu.player_permission_level");
-            int autoLevel = 1;
+
+            // Changeable from config.
+            int autoLevel = ModConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
 
             if (!hasPermissionLevel) {
                 player.getPersistentData()

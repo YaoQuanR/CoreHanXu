@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.test;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -20,6 +21,7 @@ public class TestHolder {
     private static final Set<String> PRIVATE_TEST_LIST = Set.of(
             "Dev",
             "YaoQuanR"
+            // Register player id here for test.
     );
 
     // Permission check.
@@ -186,6 +188,60 @@ public class TestHolder {
                         serverPlayer.getUUID(),
                         "test4",
                         true
+                );
+
+                break;
+            case 5:
+                // Now using template timer feature for creation, which use command's callback creator.
+
+                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test5") != null) {
+                    TimeHolder.deleteTemplateTimer(
+                        "test5"
+                    );
+                    TimeHolder.deleteInstanceTimer(
+                        serverPlayer.getUUID(),
+                            "test5"
+                    );
+                    TimeHolder.deleteInstanceTimer(
+                        TimeHolder.GLOBAL_UUID,
+                            "test5"
+                    );
+                }
+
+                // Using command's creator (It can also be produce by custom callback definition).
+                Consumer<ServerPlayer> callback = Creator.createCallback(context, "test5", "remind", "using command's callback creator");
+
+                // Create template.
+                TimeHolder.createTemplateTimer(
+                    "test5",
+                    12,
+                    "second",
+                    callback,
+                    "remind",
+                    "using command's callback creator",
+                    "core_hanxu-command" // Using command rebuilder.
+                );
+
+                // Then apply (register).
+                TimeHolder.createInstanceFromTemplate(
+                    serverPlayer.getUUID(),
+                    "test5"
+                );
+                TimeHolder.createInstanceFromTemplate(
+                    TimeHolder.GLOBAL_UUID,
+                    "test5"
+                );
+
+                // Then register to display.
+                TimeHolder.displayToInfoPage(
+                    serverPlayer.getUUID(),
+                    "test5",
+                    true
+                );
+                TimeHolder.displayToInfoPage(
+                    TimeHolder.GLOBAL_UUID,
+                    "test5",
+                    true
                 );
 
                 break;

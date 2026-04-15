@@ -36,6 +36,10 @@ public class CommandBuilder {
                                 .requires(cs -> PermissionHolder.hasPermission(cs,0))
                                 .executes(CommandExecute::executeLicense_Origin)
                         )
+                        .then(
+                            Commands.literal("state")
+                                .executes(CommandExecute::executeLicense_State)
+                        )
                         .requires(cs -> PermissionHolder.hasPermission(cs,0))
                         .executes(CommandExecute::executeLicense)
                 )

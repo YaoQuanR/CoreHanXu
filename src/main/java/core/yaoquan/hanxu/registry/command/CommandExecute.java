@@ -50,6 +50,7 @@ class CommandExecute {
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext4").withColor(0xFFD700));
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(0xFFD700));
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(0xFFD700));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(0xFFD700));
             }
             else {
                 PermissionHolder.sendMessageToNotAgreedLicense(context.getSource(), player);
@@ -129,6 +130,38 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeLicense_State(CommandContext<CommandSourceStack> context) {
+        if (context.getSource().getEntity() instanceof Player player) {
+            boolean state = PermissionHolder.getLicenseState(player);
+            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(0xFFD700));
+            return 1;
+        }
+        return 0;
+    }
+
+    static int executeAdminLicense_State(CommandContext<CommandSourceStack> context) {
+        String playerId = StringArgumentType.getString(context, "player_id");
+        UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
+        if (playerUUID == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            return 0;
+        }
+        else {
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+            if (server == null) {
+                return 0;
+            }
+            ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
+            if (player == null) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                return 0;
+            }
+            boolean state = PermissionHolder.getLicenseState(player);
+            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(0xFFD700));
+            return 1;
+        }
+    }
+
     static int executeAdminTimer(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer").withColor(0xFFD700));
         return 1;
@@ -160,6 +193,7 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext8").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext9").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext10").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext11").withColor(0xFFD700));
         return 1;
     }
 
@@ -208,29 +242,6 @@ class CommandExecute {
             }
         }
         return 1;
-    }
-
-    static int executeAdminLicense_State(CommandContext<CommandSourceStack> context) {
-        String playerId = StringArgumentType.getString(context, "player_id");
-        UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
-        if (playerUUID == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
-            return 0;
-        }
-        else {
-            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-            if (server == null) {
-                return 0;
-            }
-            ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
-            if (player == null) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
-                return 0;
-            }
-            boolean state = PermissionHolder.getLicenseState(player);
-            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(0xFFD700));
-            return 1;
-        }
     }
 
     static int executeAdminTimer_Help(CommandContext<CommandSourceStack> context) {

@@ -5,6 +5,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
@@ -12,9 +13,22 @@ import static core.yaoquan.hanxu.api.define.Error.*;
 public class PermissionHolder {
     // Permission manager list:
     // Always level 2.
-    private static final Set<String> ADMIN_LIST = Set.of(
-            // Insert player id here to pass permission check:
-    );
+    private static final Set<String> ADMIN_LIST = ConcurrentHashMap.newKeySet();
+
+    static {
+        ADMIN_LIST.add("Dev");
+    }
+
+    // Join admin group by method.
+    public static boolean addToAdminList(String playerId) {
+        if (playerId == null) {
+            return false;
+        }
+        else {
+            ADMIN_LIST.add(playerId);
+            return true;
+        }
+    }
 
     // Maximum player/ command block permission level, for API.
     private static int maxPlayerPermissionLevel = 2;

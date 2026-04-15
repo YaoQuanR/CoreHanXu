@@ -14,7 +14,7 @@ You can get the license state from "PermissionHolder.java":
 
 Permission system is designed to avoid unauthorized action on command system.
 
-System provided 2 definition which is "player" and "command block".
+System provided 2 definitions which is "player" and "command block".
 Here is the list of this feature:
 - Maximum permission level: Normally fixed player to 2, command block to 0.
   - You can by using GameRule system to modify command block maximum level "/gamerule overrideCommandblockPermission",

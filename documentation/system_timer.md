@@ -15,25 +15,32 @@ But, API will not block the modification on timer system, you are freely to depe
 
 ### Features
 
-Timer system provided two set of timer, included command generated callback and custom callback.
+Timer system provided two sets of timer, included command generated callback and custom callback.
 
-You can create template timer for apply multiple instance time by same, 
+You can create template timer for apply multiple instance timers by same, 
 or using instance timer creation for quick use.
 
 Defining master (timer owner) id is required for the timer feature,
 timer will use player UUID or server identity for executing callback commands.
 
 In detailed, API provided:
-- Generals: (Only instance timer allowed to execute)
-  - Create
-  - Create-Range (Randomly select a time depend on range)
-  - Start
-  - Stop
-  - Reset (Reset remaining time to initial time)
-  - Delete
-  - List (List out all timers)
-  - Read (Read timer remaining time/ initial time/ end behavior/ state)
-  - Modify (Modify the time of timer)
+- Generals:
+  - Instance Timer
+    - Create
+    - Create-Range (Randomly select a time depend on range)
+    - Start
+    - Stop
+    - Reset (Reset remaining time to initial time)
+    - Delete
+    - List (List out all timers)
+    - Read (Read timer remaining time/ initial time/ end behavior/ state)
+    - Modify (Modify the time of timer)
+    - Apply (Only usable when applying template timer to instance)
+  - Template Timer
+    - Create
+    - Create-Range (Same)
+    - List
+    - Read
 
 - Help:
   - You can execute "/chx-a timer help" for details.

@@ -175,7 +175,7 @@ public class TestHolder {
                 TimeHolder.createInstanceTimer(
                         serverPlayer.getUUID(),
                         "test4",
-                        60,
+                        40,
                         "tick",
                         null,
                         "test",

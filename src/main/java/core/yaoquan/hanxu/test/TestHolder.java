@@ -135,6 +135,60 @@ public class TestHolder {
                 );
 
                 break;
+            case 3:
+                // Now create global timer.
+
+                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test3") != null) {
+                    TimeHolder.deleteInstanceTimer(
+                            serverPlayer.getUUID(),
+                            "test3"
+                    );
+                }
+
+                TimeHolder.createInstanceTimer(
+                        TimeHolder.GLOBAL_UUID,
+                        "test3",
+                        8,
+                        "second",
+                        null,
+                        "test",
+                        "custom_behavior",
+                        "core_hanxu-test"
+                );
+                TimeHolder.displayToInfoPage(
+                        TimeHolder.GLOBAL_UUID,
+                        "test3",
+                        true
+                );
+
+                break;
+            case 4:
+                // Now create player timer, with auto restart feature.
+
+                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test4") != null) {
+                    TimeHolder.deleteInstanceTimer(
+                            serverPlayer.getUUID(),
+                            "test4"
+                    );
+                }
+
+                TimeHolder.createInstanceTimer(
+                        serverPlayer.getUUID(),
+                        "test4",
+                        60,
+                        "tick",
+                        null,
+                        "test",
+                        "auto_restart_behavior",
+                        "core_hanxu-test"
+                );
+                TimeHolder.displayToInfoPage(
+                        serverPlayer.getUUID(),
+                        "test4",
+                        true
+                );
+
+                break;
             default:
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
                 return 0;

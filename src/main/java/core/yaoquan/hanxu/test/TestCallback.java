@@ -77,6 +77,21 @@ public class TestCallback implements TimerCallback {
                         }
                     }
                 }
+                // And also cover offhand inventory.
+                ItemStack offhandItem = player.getOffhandItem();
+                if (offhandItem.getItem() == Items.GOLDEN_SWORD) {
+                    int newDamage = offhandItem.getDamageValue() + 1;
+                    if (newDamage >= offhandItem.getMaxDamage()) {
+                        // Set overlay to true: display at action bar.
+                        player.sendSystemMessage(Component.literal("Item broke."), true);
+                        offhandItem.shrink(1);
+                    }
+                    else {
+                        // Set overlay to true: display at action bar.
+                        player.sendSystemMessage(Component.literal("Item damaged."), true);
+                        offhandItem.setDamageValue(newDamage);
+                    }
+                }
 
                 // Reset.
                 TimeHolder.resetInstanceTimer(player.getUUID(), "test4");

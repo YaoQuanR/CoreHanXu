@@ -8,7 +8,7 @@ User (Player) are required to agreed license for using command system.
 Check the state from "/chx license state" (or admin: "/chx-a license state [id]")
 
 You can get the license state from "PermissionHolder.java":
-"getLicenseState(Player player)" from API.
+"getLicenseState" from API.
 
 ### Permission System
 
@@ -22,7 +22,7 @@ Here is the list of this feature:
   - Player's maximum level is also allowed to set by API.
 
 - Player current permission level: For API.
-  - Player permission cannot be modified inside game (server), API of "setPlayerPermissionLevel(Player player, int level)"
+  - Player permission cannot be modified inside game (server), API of "setPlayerPermissionLevel"
     is used for editing player level, then storage into NBT folder.
 
 - Auto authorize permission: Player will get NBT of permission level (normally used 1) when game (server) start.

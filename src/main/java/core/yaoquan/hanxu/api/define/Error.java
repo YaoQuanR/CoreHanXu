@@ -25,6 +25,12 @@ public class Error {
         undefinedOperationId,
     }
 
+    public enum CodeError {
+        yamlFileNotFound,
+        unexceptedTarget,
+        unavailableTargetPath,
+    }
+
     public static Component returnTimerError(TimerError timerError) {
         return switch (timerError) {
             case alreadyExist -> Component.translatable("commands.chx-a.timer_already_exist");
@@ -50,6 +56,15 @@ public class Error {
             case undefinedOperationCategory -> Component.translatable("commands.core_hanxu.undefined_operation_category");
             case undefinedOperationId -> Component.translatable("commands.core_hanxu.undefined_operation_id");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
+        };
+    }
+
+    public static String returnCodeError(CodeError codeError) {
+        return switch (codeError) {
+            case yamlFileNotFound -> "[HX] Yaml file not found: ";
+            case unexceptedTarget -> "[HX] Unexcepted target: ";
+            case unavailableTargetPath ->  "[HX] Unavailable target path.";
+            default -> "[HX] Undefined error type: " + codeError.toString();
         };
     }
 }

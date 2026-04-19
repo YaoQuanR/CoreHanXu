@@ -4,6 +4,9 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.function.Consumer;
 
+/**
+ * Override this interface for your callback definition.
+ */
 public interface TimerCallback {
     String getMasterGroupId();
     Consumer<ServerPlayer> createCustomCallback(String timerId, String endBehaviorTitle, String behaviorContent);

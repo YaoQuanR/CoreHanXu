@@ -15,6 +15,16 @@ import java.util.function.Consumer;
 import static core.yaoquan.hanxu.api.define.Error.returnGeneralError;
 
 public class Creator {
+    /**
+     * Use this method to create callback behavior, it is same to command timer creation.
+     * @param context            CommandSourceStack from command builder {@link com.mojang.brigadier.context}.
+     * @param timerId           Unique title of timer.
+     * @param endBehavior       If you are using command callback generator,
+     *                          remind/execute/null is required to fill in for recreate callback.
+     * @param behaviorContent   Also required when using command callback,
+     *                          remind: display information context; execute: command execution; null: nothing.
+     * @return                  Generated callback: Consumer<\ServerPlayer>.
+     */
     public static Consumer<ServerPlayer> createCallback(CommandContext<CommandSourceStack> context, String timerId, String endBehavior, String behaviorContent) {
         // Build callback according to endBehavior from command;
         // ?(You are advised to use API "createTemplateTimer"/"createInstanceTimer" to build advanced timer behavior).

@@ -27,6 +27,10 @@ import java.util.function.Consumer;
 import static com.mojang.text2speech.Narrator.LOGGER;
 
 // Reminder: API will use "get" for getter, but out of API, "return" is used for general returning methods.
+/**
+ * Timer system API
+ * @since 0.2.0
+ */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
 public class TimeHolder {
     // Unit transform.
@@ -48,6 +52,20 @@ public class TimeHolder {
     private static final Map<String, TimerCallback> callbacks = new ConcurrentHashMap<>();
 
     // Register your new timer to template (Available to override old timer):
+    /**
+     * Create a new template timer.
+     * You are required to register to instance for operation by {@link #createInstanceFromTemplate(UUID, String)}.
+     * @param timerId           Unique title of timer.
+     * @param durationTime      Time durations.
+     * @param timeUnit          Flexible use by: tick/second/minute/hour.
+     * @param callback          Execute callback behavior when time run out.
+     * @param endBehavior       If you are using command callback generator,
+     *                          remind/execute/null is required to fill in for recreate callback.
+     * @param behaviorContent   Also required when using command callback,
+     *                          remind: display information context; execute: command execution; null: nothing.
+     * @param masterGroup       Required when rebuild callback behavior,
+     *                          depends on mods definition of {@link TimerCallback}.
+     */
     public static void createTemplateTimer(String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
         // Convert.
         int durationTicks = Converter.convertToTicks(durationTime, timeUnit);
@@ -65,6 +83,24 @@ public class TimeHolder {
     }
 
     // Register your new timer to instance (For immediately use).
+    /**
+     * Create new instance timer for immediately use.
+     * You are required to define an owner of timer (or called "master") when create an instance timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @param durationTime      Time durations.
+     * @param timeUnit          Flexible use by: tick/second/minute/hour.
+     * @param callback          Execute callback behavior when time run out.
+     * @param endBehavior       If you are using command callback generator,
+     *                          remind/execute/null is required to fill in for recreate callback.
+     * @param behaviorContent   Also required when using command callback,
+     *                          remind: display information context; execute: command execution; null: nothing.
+     * @param masterGroup       Required when rebuild callback behavior,
+     *                          depends on mods definition of {@link TimerCallback}.
+     * @return                  Does the creation success: boolean.
+     */
     public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
         // Check if timer already existed.
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
@@ -94,6 +130,14 @@ public class TimeHolder {
     }
 
     // Register your timer to instance set.
+    /**
+     * Use this function to instance the template timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @return                  Does the creation success: boolean.
+     */
     public static boolean createInstanceFromTemplate(UUID masterId, String timerId) {
         TimerData templateTimerData = templateTimer.get(timerId);
         Map<String, TimerData> determineTimer = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
@@ -207,6 +251,18 @@ public class TimeHolder {
         return instantiatedData.remove(timerId) != null;
     }
 
+    /**
+     * Modify instance timer.
+     * The modified timer will NOT auto stop.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @param newTime           The new time.
+     * @param timeUnit          Flexible use by: tick/second/minute/hour.
+     * @param category          Use it for identify what operation required to do:
+     *                          "initial_time" or "remaining_time".
+     */
     public static boolean modifyInstanceTimer(UUID masterId, String timerId, int newTime, String timeUnit, String category) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
@@ -330,7 +386,7 @@ public class TimeHolder {
         return timerData != null && timerData.isItCounting();
     }
 
-    // Collect all registered timer by id and return.
+    // Collect all registered timer by id and return:
     public static String[] getAllTemplateIds() {
         return templateTimer.keySet().toArray(new String[0]);
     }

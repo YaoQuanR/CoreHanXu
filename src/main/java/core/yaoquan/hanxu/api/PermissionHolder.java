@@ -10,6 +10,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 // Reminder: API will use "get" for getter, but out of API, "return" is used for general returning methods.
+/**
+ * Permission system
+ * @since 0.1ea
+ */
 public class PermissionHolder {
     // Permission manager list:
     // Always level 2.
@@ -59,11 +63,22 @@ public class PermissionHolder {
     }
 
     // Set player level by API.
+    /**
+     * Set player level by API.
+     * This is the only way to modify player permission level.
+     * @param player            The target player that you want to modify.
+     * @param level             The integer level of your targeted permission level.
+     */
     public static void setPlayerPermissionLevel(Player player, int level) {
         player.getPersistentData().putInt("core.yaoquan.hanxu.player_permission_level", level);
     }
 
     // Get specific player permission level.
+    /**
+     * Get specific player permission level.
+     * @param player            The target player that you want to get information.
+     * @return                  The current player permission level: int.
+     */
     public static int getPlayerPermissionLevel(Player player) {
         return player.getPersistentData()
             .getInt("core.yaoquan.hanxu.player_permission_level")
@@ -71,16 +86,29 @@ public class PermissionHolder {
     }
 
     // Get override player permission level.
+    /**
+     * Get override player permission level.
+     * @return                  The override permission level of player: int.
+     */
     public static int getPlayerOverridePermissionLevel() {
         return maxPlayerPermissionLevel;
     }
 
     // Get override command block permission level.
+    /**
+     * Get override command block permission level.
+     * @return                  The override permission level of command block: int.
+     */
     public static int getCommandBlockOverridePermissionLevel() {
         return maxCommandBlockPermissionLevel;
     }
 
     // Get license state.
+    /**
+     * Check the agree state of the license.
+     * @param player            The target player that you want to know about the state.
+     * @return                  Does the specific player agreed the license: boolean.
+     */
     public static boolean getLicenseState(Player player) {
         return player.getPersistentData()
             .getBoolean("core.yaoquan.hanxu.agreed_license")
@@ -88,6 +116,11 @@ public class PermissionHolder {
     }
 
     // Permission check.
+    /**
+     * Use it when registering command.
+     * @param source            CommandSourceStack from command builder {@link net.minecraft.commands.CommandSourceStack}.
+     * @param requiredLevel     Set the level that required player to get that level for execution.
+     */
     public static boolean hasPermission(CommandSourceStack source, int requiredLevel) {
         // Always pass for developer.
         if (source.getEntity() instanceof Player player &&

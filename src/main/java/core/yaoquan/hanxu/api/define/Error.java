@@ -13,6 +13,11 @@ public class Error {
         unableToDeleteInstance,
     }
 
+    public enum SceneError {
+        notFound,
+        playFailed,
+    }
+
     public enum GeneralError {
         licenseAlreadyAgreed,
         notPlayer,
@@ -40,6 +45,14 @@ public class Error {
             case unableToStop -> Component.translatable("commands.chx-a.timer_unable_to_stop");
             case unableToReset -> Component.translatable("commands.chx-a.timer_unable_to_reset");
             case unableToDeleteInstance -> Component.translatable("commands.chx-a.timer_unable_to_delete_instance");
+            default -> Component.translatable("commands.core_hanxu.undefined_error_type");
+        };
+    }
+
+    public static Component returnSceneError(SceneError sceneError) {
+        return switch (sceneError) {
+            case notFound -> Component.translatable("commands.chx-a.scene_not_found");
+            case playFailed -> Component.translatable("commands.chx-a.scene_play_failed");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

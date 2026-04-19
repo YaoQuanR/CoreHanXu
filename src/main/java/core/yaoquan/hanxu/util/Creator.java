@@ -17,7 +17,7 @@ import static core.yaoquan.hanxu.api.define.Error.returnGeneralError;
 public class Creator {
     /**
      * Use this method to create callback behavior, it is same to command timer creation.
-     * @param context            CommandSourceStack from command builder {@link com.mojang.brigadier.context}.
+     * @param context           CommandSourceStack from command builder {@link com.mojang.brigadier.context}.
      * @param timerId           Unique title of timer.
      * @param endBehavior       If you are using command callback generator,
      *                          remind/execute/null is required to fill in for recreate callback.
@@ -47,7 +47,7 @@ public class Creator {
                 callback = player -> {
                     MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
                     if (server != null) {
-                        String callbackCommand = behaviorContent.startsWith("/") ? behaviorContent : ("/" + behaviorContent);
+                        String callbackCommand = behaviorContent.startsWith("/")? behaviorContent : ("/" + behaviorContent);
                         if (callbackCommand.contains("@p") && player != null) {
                             List<ServerPlayer> players = server.getPlayerList().getPlayers();
                             ServerPlayer nearest = players.stream().min(Comparator.comparing(p -> p.distanceTo(player))).orElse(player);

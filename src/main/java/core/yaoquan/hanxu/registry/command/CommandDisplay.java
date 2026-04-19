@@ -8,6 +8,7 @@ import core.yaoquan.hanxu.util.Resolver;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 import static core.yaoquan.hanxu.api.define.Error.returnGeneralError;
@@ -206,6 +207,13 @@ public class CommandDisplay {
                 break;
             default:
                 break;
+        }
+    }
+
+    static void displaySceneList(CommandContext<CommandSourceStack> context, List<Component> displayList) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_list_title").withColor(0xFFD700));
+        for (Component line : displayList) {
+            MessagePublisher.sendSystemMessage(context, line);
         }
     }
 }

@@ -66,6 +66,17 @@ public class YamlReader {
         throw new FileNotFoundException(returnCodeError(CodeError.yamlFileNotFound) + subPath + "\\" + fileName);
     }
 
+    // Delete the file.
+    public static void delete(String subPath, String fileName, TargetPath targetPath) throws IOException {
+        Path targetRootPath = targetPath == TargetPath.TO_WORLD? FilePath.getWorldPath() : FilePath.getGlobalPath();
+        if (targetRootPath == null) {
+            throw new FileNotFoundException(returnCodeError(CodeError.yamlFileNotFound) + subPath + "\\" + fileName);
+        }
+
+        Path file = targetRootPath.resolve(subPath).resolve(fileName + ".yaml");
+        Files.deleteIfExists(file);
+    }
+
     // List out all YAML files.
     public static List<Path> listOut(String subPath) {
         List<Path> returnList = new ArrayList<>();

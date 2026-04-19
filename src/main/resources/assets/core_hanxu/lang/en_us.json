@@ -48,6 +48,13 @@
   "commands.chx.license_origin_innertext22": "You are welcomed to join and contribute to the community;",
   "commands.chx.license_origin_innertext23": "thus, you are permitted to act on the mod within the terms of license.",
   "commands.chx.license_agree": "[HX] You are now permitted to use the mod's commands.",
+  "commands.chx.scene": "[HX] Please execute '/chx scene help' for more information.",
+  "commands.chx.scene_help_title": "[HX] Scene -> Help",
+  "commands.chx.scene_help_introduction": "Scene system is an auto dialog playing feature, available to use YAML for modification.",
+  "commands.chx.scene_help_innertext1": "/chx scene: Display the guide information.",
+  "commands.chx.scene_help_innertext2": "/chx scene help: Current page.",
+  "commands.chx.scene_help_innertext3": "/chx scene list: List out all available scene documents.",
+  "commands.chx.scene_help_innertext4": "/chx scene play ![scene_id]: Play the specific scene.",
 
   "commands.chx-a.bare1": "[HX-ADMIN] You are required admin permission to use this set of commands.",
   "commands.chx-a.bare2": "[HX-ADMIN] Please execute '/chx-a help' for more information.",
@@ -88,6 +95,15 @@
   "commands.chx-a.timer_help_innertext14": "/chx-a timer !{template/instance} read: Read timer's information.",
   "commands.chx-a.timer_help_read_argument1": "--> Argument: .. read ![id] !{remaining_time/initial_time} #{tick/second/minute/hour}",
   "commands.chx-a.timer_help_read_argument2": "--> Argument: .. read ![id] !{state/end_behavior}",
+  "commands.chx-a.scene": "[HX-ADMIN] Please execute '/chx scene help' for more information.",
+  "commands.chx-a.scene_help_title": "[HX-ADMIN] Scene -> Help",
+  "commands.chx-a.scene_help_introduction": "Scene system is an auto dialog playing feature, available to use YAML for modification.",
+  "commands.chx-a.scene_help_innertext1": "/chx-a scene: Display the guide information.",
+  "commands.chx-a.scene_help_innertext2": "/chx-a scene help: Current page.",
+  "commands.chx-a.scene_help_innertext3": "/chx-a scene list: List out all available scene documents.",
+  "commands.chx-a.scene_help_innertext4": "/chx-a scene play ![scene_id]: Play the specific scene.",
+  "commands.chx-a.scene_help_innertext5": "/chx-a scene create: Open scene YAML editor gui.",
+  "commands.chx-a.scene_help_innertext6": "/chx-a scene delete ![scene_id]: Delete specific scene.",
 
   "commands.chx-a.timer_already_exist": "[HX] Timer has already exist!",
   "commands.chx-a.timer_not_exist": "[HX] Timer does not exist!",
@@ -112,6 +128,12 @@
   "commands.chx-a.timer_reset": "[HX] Timer was reset!",
   "commands.chx-a.timer_success_modification": "[HX] Timer was modified.",
   "commands.chx-a.timer_default_remind": "[HX] No specific remind content, default content will be used.",
+
+  "commands.chx-a.scene_not_found": "[HX] Scene not found!",
+  "commands.chx-a.scene_play_failed": "[HX] Scene play failed!",
+
+  "commands.chx-a.scene_list_title": "[HX] Scene list found!",
+  "commands.chx-a.scene_now_playing": "[HX] \uD83C\uDFB6 Now playing",
 
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
   "commands.core_hanxu.not_player": "[HX] Only player are allowed to use this command.",

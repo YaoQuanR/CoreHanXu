@@ -5,7 +5,9 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.PermissionHolder;
+import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.MessagePublisher;
@@ -17,9 +19,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
+import java.awt.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
@@ -44,13 +53,13 @@ class CommandExecute {
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_title").withColor(0xFFD700));
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_page").withColor(0xFFD700));
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext1").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext2").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext3").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext4").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(0xFFD700));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext1").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext2").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext3").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext4").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(0xFFFACD));
             }
             else {
                 PermissionHolder.sendMessageToNotAgreedLicense(context.getSource(), player);
@@ -65,17 +74,17 @@ class CommandExecute {
 
     static int executeDetail(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext2").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext2").withColor(0xFFFACD));
         return 1;
     }
 
     static int executeLicense(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext2").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext3").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext4").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext4").withColor(0xFFFACD));
         return 1;
     }
 
@@ -139,6 +148,89 @@ class CommandExecute {
         return 0;
     }
 
+    static int executeScene(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene").withColor(0xFFD700));
+        return 1;
+    }
+
+    static int executeScene_Help(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_title").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_introduction").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext4").withColor(0xFFFACD));
+        return 1;
+    }
+
+    static int executeScene_List(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            return 0;
+        }
+
+        List<Component> displayList = new ArrayList<>();
+
+        // Scan global path.
+        Path globalPath = FilePath.getGlobalPath().resolve("scene");
+        if (Files.isDirectory(globalPath)) {
+            try (Stream<Path> stream = Files.list(globalPath)) {
+                stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
+                    displayList.add(Component.literal("(global): " + p.getFileName().toString()).withColor(0xFFFACD));
+                });
+            }
+            catch (IOException ignored) {}
+        }
+
+        // Scan world path.
+        Path worldPath = FilePath.getWorldPath();
+        if (worldPath != null) {
+            Path worldScenePath = worldPath.resolve("scene");
+            if (Files.isDirectory(worldScenePath)) {
+                try (Stream<Path> stream = Files.list(worldScenePath)) {
+                    stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
+                        displayList.add(Component.literal("(world): " + p.getFileName().toString()).withColor(0xFFFACD));
+                    });
+                }
+                catch (IOException ignored) {}
+            }
+        }
+
+        // Then list out.
+        if (displayList.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+        }
+        else {
+            CommandDisplay.displaySceneList(context, displayList);
+        }
+
+        return 1;
+    }
+
+    static int executeScene_Play(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        String sceneName = StringArgumentType.getString(context, "scene_name");
+
+        try {
+            MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx-a.scene_now_playing")
+                        .append(Component.literal(": " + sceneName))
+                        .withColor(0xFFFACD));
+            SceneHolder.playScene(player, sceneName);
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
+            return 0;
+        }
+
+        return 1;
+    }
+
     static int executeAdminLicense_State(CommandContext<CommandSourceStack> context) {
         String playerId = StringArgumentType.getString(context, "player_id");
         UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
@@ -183,17 +275,17 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_title").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_page").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext2").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext3").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext4").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext5").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext6").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext7").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext8").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext9").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext10").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext11").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext4").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext5").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext6").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext7").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext8").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext9").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext10").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext11").withColor(0xFFFACD));
         return 1;
     }
 
@@ -254,27 +346,27 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_title").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_introduction").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create_argument1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext2").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create-range_argument1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext3").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext4").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext5").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create_argument2").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext6").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create-range_argument2").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext7").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext8").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext9").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext10").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext11").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext12").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext13").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_modify_argument").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext14").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_read_argument1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_read_argument2").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create_argument1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create-range_argument1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext4").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext5").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create_argument2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext6").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create-range_argument2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext7").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext8").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext9").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext10").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext11").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext12").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext13").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_modify_argument").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext14").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_read_argument1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_read_argument2").withColor(0xFFFACD));
         return 1;
     }
 
@@ -615,6 +707,23 @@ class CommandExecute {
                         .withColor(0x66FF66)
         );
 
+        return 1;
+    }
+
+    static int executeAdminScene(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene"));
+        return 1;
+    }
+
+    static int executeAdminScene_Help(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_title").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_introduction").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext4").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext5").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext6").withColor(0xFFFACD));
         return 1;
     }
 

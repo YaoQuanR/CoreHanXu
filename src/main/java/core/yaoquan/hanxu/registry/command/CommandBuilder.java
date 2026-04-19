@@ -43,6 +43,29 @@ public class CommandBuilder {
                         .requires(cs -> PermissionHolder.hasPermission(cs,0))
                         .executes(CommandExecute::executeLicense)
                 )
+                .then(
+                    Commands.literal("scene")
+                        .then(
+                            Commands.literal("help")
+                                .executes(CommandExecute::executeScene_Help)
+                        )
+                        .then(
+                            Commands.literal("list")
+                                .executes(CommandExecute::executeScene_List)
+                        )
+                        .then(
+                            Commands.literal("play")
+                                .then(
+                                    Commands.argument("scene_name", StringArgumentType.string())
+                                        .executes(CommandExecute::executeScene_Play)
+                                )
+                        )
+                        .then(
+                            Commands.literal("gui")
+                        )
+                        .requires(cs -> PermissionHolder.hasPermission(cs,1))
+                        .executes(CommandExecute::executeScene)
+                )
                 // Final execute father command.
                 .executes(CommandExecute::executeBare)
         );
@@ -457,6 +480,35 @@ public class CommandBuilder {
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))
                         .executes(CommandExecute::executeAdminTimer)
+                )
+                .then(
+                    Commands.literal("scene")
+                        .then(
+                            Commands.literal("help")
+                                .executes(CommandExecute::executeAdminScene_Help)
+                        )
+                        .then(
+                            Commands.literal("list")
+                                .executes(CommandExecute::executeScene_List)
+                        )
+                        .then(
+                            Commands.literal("play")
+                                .then(
+                                    Commands.argument("scene_name", StringArgumentType.string())
+                                        .executes(CommandExecute::executeScene_Play)
+                                )
+                        )
+                        .then(
+                            Commands.literal("create")
+                        )
+                        .then(
+                            Commands.literal("delete")
+                        )
+                        .then(
+                            Commands.literal("gui")
+                        )
+                        .requires(cs -> PermissionHolder.hasPermission(cs,2))
+                        .executes(CommandExecute::executeAdminScene)
                 )
                 .requires(cs -> PermissionHolder.hasPermission(cs,0))
                 .executes(CommandExecute::executeAdminBare)

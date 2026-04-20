@@ -216,6 +216,12 @@ class CommandExecute {
 
         String sceneName = StringArgumentType.getString(context, "scene_name");
 
+        // Check if existed.
+        if (!SceneHolder.doesSceneExist(sceneName)) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            return 0;
+        }
+
         try {
             MessagePublisher.sendSystemMessage(context,
                 Component.translatable("commands.chx-a.scene_now_playing")

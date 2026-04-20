@@ -6,11 +6,14 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 /**
  * Scene system API
@@ -22,6 +25,11 @@ public class SceneHolder {
         public String type;
         public int defaultColor;
         public int defaultInterval;
+        public boolean defaultBold;
+        public boolean defaultItalic;
+        public boolean defaultUnderlined;
+        public boolean defaultStrikethrough;
+        public boolean defaultObfuscated;
         public boolean enabledSpeaker;
         public List<DialogNode> dialogs;
     }
@@ -31,6 +39,11 @@ public class SceneHolder {
         public String text;
         public Integer color;
         public Integer interval;
+        public Boolean bold;
+        public Boolean italic;
+        public Boolean underlined;
+        public Boolean strikethrough;
+        public Boolean obfuscated;
         public String execute;
     }
 
@@ -42,6 +55,14 @@ public class SceneHolder {
      */
     public static Scene loadScene(String fileName) throws IOException {
         Map<String, Object> sceneData = YamlReader.read("scene", fileName + ".yaml");
+
+        // Check if the id equals to file name.
+        Scene scene = parseSceneData(sceneData);
+        String yamlFileName = scene.id;
+        if (yamlFileName != null && !yamlFileName.equals(fileName)) {
+            throw new IOException(returnCodeError(CodeError.mismatchFileElement) + fileName + " ≠ " + yamlFileName);
+        }
+
         return parseSceneData(sceneData);
     }
 
@@ -75,6 +96,19 @@ public class SceneHolder {
         }
     }
 
+    public static boolean doesSceneExist(String sceneName) {
+        try {
+            YamlReader.read("scene", sceneName + ".yaml");
+            return true;
+        }
+        catch (FileNotFoundException e) {
+            return false;
+        }
+        catch (IOException e) {
+            return true;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static Scene parseSceneData(Map<String, Object> sceneData) {
         // Read general information.
@@ -87,6 +121,11 @@ public class SceneHolder {
         if (defaults != null) {
             scene.defaultColor = (Integer) defaults.getOrDefault("color", 0xFFFFFF);
             scene.defaultInterval = (Integer) defaults.getOrDefault("interval", 20);
+            scene.defaultBold = (Boolean) defaults.getOrDefault("bold", false);
+            scene.defaultItalic = (Boolean) defaults.getOrDefault("italic", false);
+            scene.defaultUnderlined = (Boolean) defaults.getOrDefault("underlined", false);
+            scene.defaultStrikethrough = (Boolean) defaults.getOrDefault("strikethrough", false);
+            scene.defaultObfuscated = (Boolean) defaults.getOrDefault("obfuscated", false);
             scene.enabledSpeaker = (Boolean) defaults.getOrDefault("speaker", true);
         }
 
@@ -99,6 +138,11 @@ public class SceneHolder {
             dialogNode.text = (String) dialog.get("text");
             dialogNode.color = (Integer) dialog.get("color");
             dialogNode.interval = (Integer) dialog.get("interval");
+            dialogNode.bold = (Boolean) dialog.get("bold");
+            dialogNode.italic = (Boolean) dialog.get("italic");
+            dialogNode.underlined = (Boolean) dialog.get("underlined");
+            dialogNode.strikethrough = (Boolean) dialog.get("strikethrough");
+            dialogNode.obfuscated = (Boolean) dialog.get("obfuscated");
             dialogNode.execute = (String) dialog.get("execute");
             
             scene.dialogs.add(dialogNode);
@@ -120,6 +164,11 @@ public class SceneHolder {
             DialogNode dialogNode = scene.dialogs.get(progress);
             int color = dialogNode.color != null? dialogNode.color : scene.defaultColor;
             int interval = dialogNode.interval != null? dialogNode.interval : scene.defaultInterval;
+            boolean bold = dialogNode.bold != null? dialogNode.bold : scene.defaultBold;
+            boolean italic = dialogNode.italic != null? dialogNode.italic : scene.defaultItalic;
+            boolean underlined = dialogNode.underlined != null? dialogNode.underlined : scene.defaultUnderlined;
+            boolean strikethrough = dialogNode.strikethrough != null? dialogNode.strikethrough : scene.defaultStrikethrough;
+            boolean obfuscated = dialogNode.obfuscated != null? dialogNode.obfuscated : scene.defaultObfuscated;
             // Splicing string to complete message.
             String message = "";
             if (scene.enabledSpeaker) {
@@ -153,7 +202,15 @@ public class SceneHolder {
             else {
                 message = dialogNode.text;
             }
-            Component finalMessage = Component.literal(message).withColor(color);
+            Component finalMessage = Component.literal(message)
+                    .withColor(color)
+                    .withStyle(style -> style
+                            .withBold(bold)
+                            .withItalic(italic)
+                            .withUnderlined(underlined)
+                            .withStrikethrough(strikethrough)
+                            .withObfuscated(obfuscated)
+                    );
 
             // Then display dialog.
             if (player != null) {

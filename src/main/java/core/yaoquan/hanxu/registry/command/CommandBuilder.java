@@ -57,6 +57,7 @@ public class CommandBuilder {
                             Commands.literal("play")
                                 .then(
                                     Commands.argument("scene_name", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Play)
                                 )
                         )
@@ -495,6 +496,7 @@ public class CommandBuilder {
                             Commands.literal("play")
                                 .then(
                                     Commands.argument("scene_name", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Play)
                                 )
                         )

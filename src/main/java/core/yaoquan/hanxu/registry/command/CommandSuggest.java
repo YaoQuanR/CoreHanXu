@@ -6,9 +6,12 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.util.Resolver;
+import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -109,6 +112,17 @@ class CommandSuggest {
     static <S> CompletableFuture<Suggestions> suggestInfoTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("-global");
         builder.suggest("-me");
+
+        return builder.buildFuture();
+    }
+
+    // For scene suggestion.
+    static <S> CompletableFuture<Suggestions> suggestScene(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        List<Path> sceneFiles = YamlReader.listOut("scene");
+        for (Path path : sceneFiles) {
+            String fileName = path.getFileName().toString().replace(".yaml", "");
+            builder.suggest(fileName);
+        }
 
         return builder.buildFuture();
     }

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Scene system API
@@ -120,16 +121,33 @@ public class SceneHolder {
             int color = dialogNode.color != null? dialogNode.color : scene.defaultColor;
             int interval = dialogNode.interval != null? dialogNode.interval : scene.defaultInterval;
             // Splicing string to complete message.
-            String message;
+            String message = "";
             if (scene.enabledSpeaker) {
-                if (dialogNode.speaker == null) {
-                    message = dialogNode.text;
-                }
-                else if (dialogNode.speaker.equals("@p")) {
-                    message = player.getName().getString() + ": " + dialogNode.text;
-                }
-                else {
-                    message = dialogNode.speaker + ": " + dialogNode.text;
+                switch (dialogNode.speaker) {
+                    case null:
+                        message = dialogNode.text;
+                        break;
+                    case "@p", "@s":
+                        message = player.getName().getString() + ": " + dialogNode.text;
+                        break;
+                    case "@r":
+                        List<ServerPlayer> players;
+                        if (server != null) {
+                            players = server.getPlayerList().getPlayers();
+                            if (players.isEmpty()) {
+                                message = dialogNode.text;
+                            }
+                            else {
+                                ServerPlayer randomPlayer = players.get(new Random().nextInt(players.size()));
+                                message = randomPlayer.getName().getString() + ": " + dialogNode.text;
+                            }
+                        }
+                        break;
+                    case "@a", "@e":
+                        message = "ALL: " + dialogNode.text;
+                        break;
+                    default:
+                        message = dialogNode.speaker + ": " + dialogNode.text;
                 }
             }
             else {

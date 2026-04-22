@@ -131,7 +131,7 @@ public class SceneHolder {
 
         // Read dialogs information.
         List<Map<String, Object>> dialogs = (List<Map<String, Object>>) sceneData.get("dialogs");
-        scene.dialogs = new ArrayList<DialogNode>();
+        scene.dialogs = new ArrayList<>();
         for (Map<String, Object> dialog : dialogs) {
             DialogNode dialogNode = new DialogNode();
             dialogNode.speaker = (String) dialog.get("speaker");

@@ -120,13 +120,23 @@ public class SceneHolder {
         Map<String, Object> defaults = (Map<String, Object>) sceneData.get("default");
         if (defaults != null) {
             scene.defaultColor = (Integer) defaults.getOrDefault("color", 0xFFFFFF);
-            scene.defaultInterval = (Integer) defaults.getOrDefault("interval", 20);
+            scene.defaultInterval = (Integer) defaults.getOrDefault("interval", 1);
             scene.defaultBold = (Boolean) defaults.getOrDefault("bold", false);
             scene.defaultItalic = (Boolean) defaults.getOrDefault("italic", false);
             scene.defaultUnderlined = (Boolean) defaults.getOrDefault("underlined", false);
             scene.defaultStrikethrough = (Boolean) defaults.getOrDefault("strikethrough", false);
             scene.defaultObfuscated = (Boolean) defaults.getOrDefault("obfuscated", false);
             scene.enabledSpeaker = (Boolean) defaults.getOrDefault("speaker", true);
+        }
+        else {
+            scene.defaultColor = 0xFFFFFF;
+            scene.defaultInterval = 1;
+            scene.defaultBold = false;
+            scene.defaultItalic = false;
+            scene.defaultUnderlined = false;
+            scene.defaultStrikethrough = false;
+            scene.defaultObfuscated = false;
+            scene.enabledSpeaker = true;
         }
 
         // Read dialogs information.
@@ -171,10 +181,17 @@ public class SceneHolder {
             boolean obfuscated = dialogNode.obfuscated != null? dialogNode.obfuscated : scene.defaultObfuscated;
             // Splicing string to complete message.
             String message = "";
+            boolean showMessage = true;
+            if (interval < 1) {
+                interval = 1;
+            }
             if (scene.enabledSpeaker) {
                 switch (dialogNode.speaker) {
                     case null:
                         message = dialogNode.text;
+                        break;
+                    case "@skip":
+                        showMessage = false;
                         break;
                     case "@p", "@s":
                         message = player.getName().getString() + ": " + dialogNode.text;
@@ -197,6 +214,7 @@ public class SceneHolder {
                         break;
                     default:
                         message = dialogNode.speaker + ": " + dialogNode.text;
+                        break;
                 }
             }
             else {
@@ -213,7 +231,7 @@ public class SceneHolder {
                     );
 
             // Then display dialog.
-            if (player != null && !dialogNode.speaker.equals("@skip")) {
+            if (player != null && showMessage) {
                 player.sendSystemMessage(finalMessage);
             }
 

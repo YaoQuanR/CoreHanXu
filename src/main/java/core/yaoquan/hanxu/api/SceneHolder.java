@@ -213,7 +213,7 @@ public class SceneHolder {
                     );
 
             // Then display dialog.
-            if (player != null) {
+            if (player != null && !dialogNode.speaker.equals("@skip")) {
                 player.sendSystemMessage(finalMessage);
             }
 

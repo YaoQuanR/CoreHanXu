@@ -20,7 +20,7 @@
   "commands.chx.detail_innertext2": "Version: 0.2.0 <Updated: 2026/04/15>",
   "commands.chx.license_title": "[HX] License",
   "commands.chx.license_innertext1": "License: AGPL + Credit Requirements.",
-  "commands.chx.license_innertext2": "You are advised to check for the original license IF you want to modify this mod.",
+  "commands.chx.license_innertext2": "You are advised to check for the original license IF you want to modify, publish, integrate, or dependent to this mod.",
   "commands.chx.license_innertext3": "To view the original license: Check for License.txt or execute '/chx license origin'.",
   "commands.chx.license_innertext4": "To agree with the license: Execute '/chx license agree'.",
   "commands.chx.license_origin_title": "[HX] License -> Origin",

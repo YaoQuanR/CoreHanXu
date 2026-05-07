@@ -103,7 +103,7 @@
   "commands.chx-a.scene_help_innertext3": "/chx-a scene list: List out all available scene documents.",
   "commands.chx-a.scene_help_innertext4": "/chx-a scene play ![scene_id]: Play the specific scene.",
   "commands.chx-a.scene_help_innertext5": "/chx-a scene create: Open scene YAML editor gui.",
-  "commands.chx-a.scene_help_innertext6": "/chx-a scene delete ![scene_id]: Delete specific scene.",
+  "commands.chx-a.scene_help_innertext6": "/chx-a scene delete ![scene_id] #{global/world}: Delete specific scene.",
 
   "commands.chx-a.timer_already_exist": "[HX] Timer has already exist!",
   "commands.chx-a.timer_not_exist": "[HX] Timer does not exist!",
@@ -131,9 +131,12 @@
 
   "commands.chx-a.scene_not_found": "[HX] Scene not found!",
   "commands.chx-a.scene_play_failed": "[HX] Scene play failed!",
+  "commands.chx-a.scene_failed_to_delete": "[HX] Scene failed to delete!",
+  "commands.chx-a.scene_same_name_found": "[HX] Two same name scene found! Provide specific path component and try again.",
 
   "commands.chx-a.scene_list_title": "[HX] Scene list found!",
   "commands.chx-a.scene_now_playing": "[HX] \uD83C\uDFB6 Now playing",
+  "commands.chx-a.scene_deleted": "[HX] Scene is now deleted!",
 
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
   "commands.core_hanxu.not_player": "[HX] Only player are allowed to use this command.",

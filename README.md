@@ -7,7 +7,7 @@ HanXu (Core) Powered Engine for Minecraft
 HanXu (Core) defined several development tools for Mod use.
 You are advised to check the documentation of "License.txt" and "documentation" file.
 
-In primary use, project Immersive Fear, Song of Long Night, and Unreal Evolution used this engine.
+In primary use, project Immersive Fear, Song of Long Night, Solitude Dive, and Unreal Evolution used this engine.
 
 ### Supports
 
@@ -16,7 +16,7 @@ contact me by 3501226176@qq.com (Primary) or 3648711935@qq.com.
 
 ### Announcements
 
-No promise was made for improving mod or supporting more version of mod.
+No promise to improve mod or support more version of mod.
 
 You are encouraged to generate a mod version for other Minecraft environment,
 such as Fabric and legacy Minecraft.

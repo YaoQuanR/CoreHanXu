@@ -8,10 +8,7 @@ import core.yaoquan.hanxu.api.PermissionHolder;
 import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.define.FilePath;
-import core.yaoquan.hanxu.util.Converter;
-import core.yaoquan.hanxu.util.Creator;
-import core.yaoquan.hanxu.util.MessagePublisher;
-import core.yaoquan.hanxu.util.Resolver;
+import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -19,7 +16,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
-import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -218,7 +214,7 @@ class CommandExecute {
 
         // Check if existed.
         if (!SceneHolder.doesSceneExist(sceneName)) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
             return 0;
         }
 
@@ -730,6 +726,58 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext4").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext5").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext6").withColor(0xFFFACD));
+        return 1;
+    }
+
+    static int executeAdminScene_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        String sceneName = StringArgumentType.getString(context, "scene_name");
+
+        // Check and delete.
+        if (specifiedPath.equals("try")) {
+            boolean worldSceneExist = SceneHolder.doesSceneExist(sceneName, YamlReader.TargetPath.TO_WORLD);
+            boolean globalSceneExist = SceneHolder.doesSceneExist(sceneName, YamlReader.TargetPath.TO_GLOBAL);
+            if (worldSceneExist && globalSceneExist) {
+                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.sameNameFound));
+                return 0;
+            }
+            else if (worldSceneExist) {
+                specifiedPath = "world";
+            }
+            else if (globalSceneExist) {
+                specifiedPath = "global";
+            }
+            else {
+                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+                return 0;
+            }
+        }
+        switch (specifiedPath) {
+            case "world":
+                if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_WORLD)) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx-a.scene_deleted")
+                                    .withColor(0xFFFACD));
+                    break;
+                }
+                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToDelete));
+                return 0;
+            case "global":
+                if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_GLOBAL)) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx-a.scene_deleted")
+                                    .withColor(0xFFFACD));
+                    break;
+                }
+                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToDelete));
+                return 0;
+        }
+
         return 1;
     }
 

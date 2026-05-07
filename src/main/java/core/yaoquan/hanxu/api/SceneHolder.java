@@ -1,5 +1,6 @@
 package core.yaoquan.hanxu.api;
 
+import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -31,6 +32,7 @@ public class SceneHolder {
         public boolean defaultStrikethrough;
         public boolean defaultObfuscated;
         public boolean enabledSpeaker;
+        public boolean enabledJsonText;
         public List<DialogNode> dialogs;
     }
 
@@ -109,6 +111,10 @@ public class SceneHolder {
         }
     }
 
+    public static boolean doesSceneExist(String sceneName, YamlReader.TargetPath targetPath) {
+        return YamlReader.doesFileExist(targetPath, "scene", sceneName + ".yaml");
+    }
+
     @SuppressWarnings("unchecked")
     private static Scene parseSceneData(Map<String, Object> sceneData) {
         // Read general information.
@@ -127,6 +133,7 @@ public class SceneHolder {
             scene.defaultStrikethrough = (Boolean) defaults.getOrDefault("strikethrough", false);
             scene.defaultObfuscated = (Boolean) defaults.getOrDefault("obfuscated", false);
             scene.enabledSpeaker = (Boolean) defaults.getOrDefault("speaker", true);
+            scene.enabledJsonText = (Boolean) defaults.getOrDefault("json", false);
         }
         else {
             scene.defaultColor = 0xFFFFFF;
@@ -137,6 +144,7 @@ public class SceneHolder {
             scene.defaultStrikethrough = false;
             scene.defaultObfuscated = false;
             scene.enabledSpeaker = true;
+            scene.enabledJsonText = false;
         }
 
         // Read dialogs information.
@@ -185,50 +193,61 @@ public class SceneHolder {
             if (interval < 1) {
                 interval = 1;
             }
-            if (scene.enabledSpeaker) {
-                switch (dialogNode.speaker) {
-                    case null:
-                        message = dialogNode.text;
-                        break;
-                    case "@skip":
-                        showMessage = false;
-                        break;
-                    case "@p", "@s":
-                        message = player.getName().getString() + ": " + dialogNode.text;
-                        break;
-                    case "@r":
-                        List<ServerPlayer> players;
-                        if (server != null) {
-                            players = server.getPlayerList().getPlayers();
-                            if (players.isEmpty()) {
-                                message = dialogNode.text;
-                            }
-                            else {
-                                ServerPlayer randomPlayer = players.get(new Random().nextInt(players.size()));
-                                message = randomPlayer.getName().getString() + ": " + dialogNode.text;
-                            }
-                        }
-                        break;
-                    case "@a", "@e":
-                        message = "ALL: " + dialogNode.text;
-                        break;
-                    default:
-                        message = dialogNode.speaker + ": " + dialogNode.text;
-                        break;
-                }
+
+            Component finalMessage;
+            // Determine if enabled to detect json text.
+            if ((dialogNode.text.startsWith("{") && dialogNode.text.endsWith("}"))
+                    || (dialogNode.text.startsWith("[") && dialogNode.text.endsWith("]"))
+                    && scene.enabledJsonText) {
+                finalMessage = Converter.convertFromJsonToComponent(dialogNode.text);
             }
             else {
-                message = dialogNode.text;
+                if (scene.enabledSpeaker) {
+                    switch (dialogNode.speaker) {
+                        case null:
+                            message = dialogNode.text;
+                            break;
+                        case "@skip":
+                            showMessage = false;
+                            break;
+                        case "@p", "@s":
+                            message = player.getName().getString() + ": " + dialogNode.text;
+                            break;
+                        case "@r":
+                            List<ServerPlayer> players;
+                            if (server != null) {
+                                players = server.getPlayerList().getPlayers();
+                                if (players.isEmpty()) {
+                                    message = dialogNode.text;
+                                }
+                                else {
+                                    ServerPlayer randomPlayer = players.get(new Random().nextInt(players.size()));
+                                    message = randomPlayer.getName().getString() + ": " + dialogNode.text;
+                                }
+                            }
+                            break;
+                        case "@a", "@e":
+                            message = "ALL: " + dialogNode.text;
+                            break;
+                        default:
+                            message = dialogNode.speaker + ": " + dialogNode.text;
+                            break;
+                    }
+                }
+                else {
+                    message = dialogNode.text;
+                }
+
+                finalMessage = Component.literal(message)
+                        .withColor(color)
+                        .withStyle(style -> style
+                                .withBold(bold)
+                                .withItalic(italic)
+                                .withUnderlined(underlined)
+                                .withStrikethrough(strikethrough)
+                                .withObfuscated(obfuscated)
+                        );
             }
-            Component finalMessage = Component.literal(message)
-                    .withColor(color)
-                    .withStyle(style -> style
-                            .withBold(bold)
-                            .withItalic(italic)
-                            .withUnderlined(underlined)
-                            .withStrikethrough(strikethrough)
-                            .withObfuscated(obfuscated)
-                    );
 
             // Then display dialog.
             if (player != null && showMessage) {

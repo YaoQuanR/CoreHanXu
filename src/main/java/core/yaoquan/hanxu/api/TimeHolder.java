@@ -24,8 +24,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import static com.mojang.text2speech.Narrator.LOGGER;
-
 // Reminder: API will use "get" for getter, but out of API, "return" is used for general returning methods.
 /**
  * Timer system API

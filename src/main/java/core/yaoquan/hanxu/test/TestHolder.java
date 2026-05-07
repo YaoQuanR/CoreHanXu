@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu.test;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.util.Creator;
@@ -13,16 +14,19 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class TestHolder {
-    private static final Set<String> PRIVATE_TEST_LIST = Set.of(
-            "Dev",
-            "YaoQuanR"
-            // Register player id here for test.
-    );
+    private static final Set<String> PRIVATE_TEST_LIST = ConcurrentHashMap.newKeySet();
+
+    static {
+        PRIVATE_TEST_LIST.add("Dev");
+        PRIVATE_TEST_LIST.add("YaoQuanR");
+        // Join test group by here, or add by code.
+    }
 
     // Permission check.
     public static boolean hasPrivateTestPermission(CommandSourceStack source) {
@@ -249,6 +253,25 @@ public class TestHolder {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
                 return 0;
         }
+
+        return 1;
+    }
+
+    // For display inner timer (included ":").
+    public static int executeTest_TimerDisplay(CommandContext<CommandSourceStack> context, boolean state) {
+        String masterGroup = StringArgumentType.getString(context, "master_group");
+        String timerId = StringArgumentType.getString(context, "timer_id");
+
+        if (!(context.getSource().getEntity() instanceof ServerPlayer serverPlayer)) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        TimeHolder.displayToInfoPage(
+            serverPlayer.getUUID(),
+            masterGroup + ":" + timerId,
+            state
+        );
 
         return 1;
     }

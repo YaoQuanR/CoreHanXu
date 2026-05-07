@@ -77,6 +77,23 @@ public class YamlReader {
         Files.deleteIfExists(file);
     }
 
+    // Check if file existed at specific path.
+    public static boolean doesFileExist(TargetPath targetPath, String subPath, String fileName) {
+        if (targetPath == TargetPath.TO_WORLD) {
+            Path worldPath = FilePath.getWorldPath();
+            if (worldPath != null) {
+                Path worldSpecificFile = worldPath.resolve(subPath).resolve(fileName);
+                return Files.exists(worldSpecificFile);
+            }
+        }
+        else if (targetPath == TargetPath.TO_GLOBAL) {
+            Path globalPath = FilePath.getGlobalPath().resolve(subPath).resolve(fileName);
+            return Files.exists(globalPath);
+        }
+
+        return false;
+    }
+
     // List out all YAML files.
     public static List<Path> listOut(String subPath) {
         List<Path> returnList = new ArrayList<>();

@@ -16,6 +16,8 @@ public class Error {
     public enum SceneError {
         notFound,
         playFailed,
+        failedToDelete,
+        sameNameFound,
     }
 
     public enum GeneralError {
@@ -54,6 +56,8 @@ public class Error {
         return switch (sceneError) {
             case notFound -> Component.translatable("commands.chx-a.scene_not_found");
             case playFailed -> Component.translatable("commands.chx-a.scene_play_failed");
+            case failedToDelete -> Component.translatable("commands.chx-a.scene_failed_to_delete");
+            case sameNameFound -> Component.translatable("commands.chx-a.scene_same_name_found");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

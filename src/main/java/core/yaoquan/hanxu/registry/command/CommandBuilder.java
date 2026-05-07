@@ -474,8 +474,29 @@ public class CommandBuilder {
                         .then(
                             Commands.literal("test")
                                 .then(
-                                    Commands.argument("test_id", IntegerArgumentType.integer())
-                                        .executes(TestHolder::executeTest_Timer)
+                                    Commands.literal("example")
+                                        .then(
+                                            Commands.argument("test_id", IntegerArgumentType.integer())
+                                                .executes(TestHolder::executeTest_Timer)
+                                        )
+                                )
+                                .then(
+                                    Commands.literal("timer_display")
+                                        .then(
+                                            Commands.argument("master_group", StringArgumentType.word())
+                                                .then(
+                                                    Commands.argument("timer_id", StringArgumentType.word())
+                                                        .then(
+                                                            Commands.literal("true")
+                                                                .executes(cs -> TestHolder.executeTest_TimerDisplay(cs, true))
+                                                        )
+                                                        .then(
+                                                            Commands.literal("false")
+                                                                .executes(cs -> TestHolder.executeTest_TimerDisplay(cs, false))
+                                                        )
+                                                        .executes(cs -> TestHolder.executeTest_TimerDisplay(cs, true))
+                                                )
+                                        )
                                 )
                                 .requires(TestHolder::hasPrivateTestPermission)
                         )
@@ -505,6 +526,19 @@ public class CommandBuilder {
                         )
                         .then(
                             Commands.literal("delete")
+                                .then(
+                                    Commands.argument("scene_name", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("world")
+                                                .executes(cs -> CommandExecute.executeAdminScene_Delete(cs, "world"))
+                                        )
+                                        .then(
+                                            Commands.literal("global")
+                                                .executes(cs -> CommandExecute.executeAdminScene_Delete(cs, "global"))
+                                        )
+                                        .suggests(CommandSuggest::suggestScene)
+                                        .executes(cs -> CommandExecute.executeAdminScene_Delete(cs, "try"))
+                                )
                         )
                         .then(
                             Commands.literal("gui")

@@ -1,6 +1,11 @@
 package core.yaoquan.hanxu.util;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import core.yaoquan.hanxu.api.TimeHolder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,5 +27,15 @@ public class Converter {
 
         // Take one random number between the range.
         return ThreadLocalRandom.current().nextInt(lowerRange, upperRange + 1);
+    }
+
+    public static Component convertFromJsonToComponent(String json) {
+        try {
+            JsonElement jsonElement = JsonParser.parseString(json);
+            return ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, jsonElement).getOrThrow();
+        }
+        catch (Exception e) {
+            return Component.literal(json);
+        }
     }
 }

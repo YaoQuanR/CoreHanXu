@@ -52,4 +52,10 @@ In detailed, API provided:
 - Examples:
   - If you do not understand how to modify timer by API,
     folder "test": "TestCallback.java" & "TestHolder.java" provided examples for you to learn.
-    Remind to register your player id for the private test and demonstration (change the set).
+    Remind to register your player id for the private test and demonstration (add your id to set).
+
+- Debug:
+  - If you want to review the timer, display command at timer instance is provided to review.
+    You need to click "F4" for checking.
+    Naming timer as "master_group:timer_id" is encouraged.
+    Test → timer_display is the only method to review inner timer (included element ":").

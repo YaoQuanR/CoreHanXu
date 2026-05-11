@@ -10,19 +10,21 @@ import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.Filterable;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.WritableBookContent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -726,6 +728,7 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext4").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext5").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext6").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext7").withColor(0xFFFACD));
         return 1;
     }
 
@@ -776,6 +779,99 @@ class CommandExecute {
                 }
                 MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToDelete));
                 return 0;
+        }
+
+        return 1;
+    }
+
+    static int executeAdminScene_Template(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        // Create a template book.
+        ItemStack book = new ItemStack(Items.WRITABLE_BOOK);
+
+        String bookTemplate = "id: \"FILE NAME?\"\ntype: \"simple\"\n\ndefault:\n  interval: 20\n\ndialogs:\n  - text: \"CONTENT HERE...\"";
+
+        // Setup template.
+        WritableBookContent content = new WritableBookContent(List.of(Filterable.passThrough(bookTemplate)));
+        book.set(DataComponents.WRITABLE_BOOK_CONTENT, content);
+
+        // Then give.
+        if (!player.getInventory().add(book)) {
+            player.drop(book, false);
+        }
+
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_get_template").withColor(0xFFFACD));
+        return 1;
+    }
+
+    static int executeAdminScene_Create(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        String toPath = StringArgumentType.getString(context, "to_path");
+
+        if (!toPath.equals("world") && !toPath.equals("global")) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedSavePath));
+            return 0;
+        }
+
+        // Then read book from player's main hand.
+        ItemStack book = player.getMainHandItem();
+        if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.mainHandItemNotTarget));
+            return 0;
+        }
+
+        /*
+        * Then verify if valid submission.
+        * 1. Does content empty?
+        * 2. Does field "id" existed?
+        * 3. Does same name scene found?
+        * 4. Does field "type" and "dialogs" existed?
+        * Then try to submit.
+        */
+
+        String yamlContent = YamlReader.read(book);
+        if (yamlContent == null || yamlContent.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.noContentFound));
+            return 0;
+        }
+
+        String sceneId = YamlReader.readSpecificField(yamlContent, "id");
+        if (sceneId.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+            return 0;
+        }
+
+        YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
+
+        if (SceneHolder.doesSceneExist(sceneId, targetPath)) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.sameNameFound));
+            return 0;
+        }
+
+        if (!yamlContent.contains("type:") || !yamlContent.contains("dialogs:")) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uncompletedContent));
+            return 0;
+        }
+
+        try {
+            // Prase data to map for storage.
+            Map<String, Object> yamlMap = YamlReader.stringToMap(yamlContent);
+            YamlReader.save("scene", sceneId + ".yaml", yamlMap, targetPath);
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_created").withColor(0xFFFACD));
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToSave));
+            return 0;
         }
 
         return 1;

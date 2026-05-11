@@ -18,6 +18,7 @@ public class Error {
         playFailed,
         failedToDelete,
         sameNameFound,
+        failedToSave,
     }
 
     public enum GeneralError {
@@ -30,6 +31,11 @@ public class Error {
         targetNotExist,
         undefinedOperationCategory,
         undefinedOperationId,
+        undefinedSavePath,
+        mainHandItemNotTarget,
+        noContentFound,
+        missingIdField,
+        uncompletedContent,
     }
 
     public enum CodeError {
@@ -58,6 +64,7 @@ public class Error {
             case playFailed -> Component.translatable("commands.chx-a.scene_play_failed");
             case failedToDelete -> Component.translatable("commands.chx-a.scene_failed_to_delete");
             case sameNameFound -> Component.translatable("commands.chx-a.scene_same_name_found");
+            case failedToSave ->  Component.translatable("commands.chx-a.scene_failed_to_save");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }
@@ -73,6 +80,11 @@ public class Error {
             case targetNotExist -> Component.translatable("commands.core_hanxu.target_not_exist");
             case undefinedOperationCategory -> Component.translatable("commands.core_hanxu.undefined_operation_category");
             case undefinedOperationId -> Component.translatable("commands.core_hanxu.undefined_operation_id");
+            case undefinedSavePath -> Component.translatable("commands.core_hanxu.undefined_save_path");
+            case mainHandItemNotTarget -> Component.translatable("commands.core_hanxu.main_hand_item_not_target");
+            case noContentFound ->  Component.translatable("commands.core_hanxu.no_content_found");
+            case missingIdField -> Component.translatable("commands.core_hanxu.missing_id_field");
+            case uncompletedContent -> Component.translatable("commands.core_hanxu.uncompleted_content");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

@@ -61,9 +61,6 @@ public class CommandBuilder {
                                         .executes(CommandExecute::executeScene_Play)
                                 )
                         )
-                        .then(
-                            Commands.literal("gui")
-                        )
                         .requires(cs -> PermissionHolder.hasPermission(cs,1))
                         .executes(CommandExecute::executeScene)
                 )
@@ -522,9 +519,6 @@ public class CommandBuilder {
                                 )
                         )
                         .then(
-                            Commands.literal("create")
-                        )
-                        .then(
                             Commands.literal("delete")
                                 .then(
                                     Commands.argument("scene_name", StringArgumentType.string())
@@ -541,7 +535,16 @@ public class CommandBuilder {
                                 )
                         )
                         .then(
-                            Commands.literal("gui")
+                            Commands.literal("template")
+                                .executes(CommandExecute::executeAdminScene_Template)
+                        )
+                        .then(
+                            Commands.literal("create")
+                                .then(
+                                    Commands.argument("to_path", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestSceneSavePath)
+                                        .executes(CommandExecute::executeAdminScene_Create)
+                                )
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,2))
                         .executes(CommandExecute::executeAdminScene)

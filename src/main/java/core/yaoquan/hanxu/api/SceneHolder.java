@@ -98,6 +98,11 @@ public class SceneHolder {
         }
     }
 
+    /**
+     * Check both path: global & world.
+     * @param sceneName           As same as file name.
+     * @return                    Does scene exist: boolean.
+     */
     public static boolean doesSceneExist(String sceneName) {
         try {
             YamlReader.read("scene", sceneName + ".yaml");
@@ -111,6 +116,12 @@ public class SceneHolder {
         }
     }
 
+    /**
+     * Check specific path: global / world.
+     * @param sceneName           As same as file name.
+     * @param targetPath          Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                    Does scene exist: boolean.
+     */
     public static boolean doesSceneExist(String sceneName, YamlReader.TargetPath targetPath) {
         return YamlReader.doesFileExist(targetPath, "scene", sceneName + ".yaml");
     }

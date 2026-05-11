@@ -126,4 +126,12 @@ class CommandSuggest {
 
         return builder.buildFuture();
     }
+
+    // For scene create to save path suggestion.
+    static <S> CompletableFuture<Suggestions> suggestSceneSavePath(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("world");
+        builder.suggest("global");
+
+        return builder.buildFuture();
+    }
 }

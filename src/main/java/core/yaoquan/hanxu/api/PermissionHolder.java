@@ -45,7 +45,7 @@ public class PermissionHolder {
     public static final GameRules.Key<GameRules.IntegerValue> OVERRIDE_COMMAND_BLOCK_PERMISSION =
             GameRules.register(
                     "overrideCommandblockPermission",
-                    GameRules.Category.MISC,
+                    GameRules.Category.PLAYER,
                     GameRules.IntegerValue.create(maxCommandBlockPermissionLevel)
             );
 

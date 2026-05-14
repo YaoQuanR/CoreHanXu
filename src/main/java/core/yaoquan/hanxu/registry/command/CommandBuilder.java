@@ -111,17 +111,24 @@ public class CommandBuilder {
                             Commands.literal("player")
                                 .then(
                                     Commands.argument("player_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("set")
+                                                .then(
+                                                    Commands.argument("level", IntegerArgumentType.integer())
+                                                        .executes(CommandExecute::executeAdminPermission_Set)
+                                                )
+                                        )
                                         .suggests(CommandSuggest::suggestPlayer)
-                                        .executes(cs -> CommandExecute.executeAdminPermissionCheck(cs, "player"))
+                                        .executes(cs -> CommandExecute.executeAdminPermission_Check(cs, "player"))
                                 )
                         )
                         .then(
                             Commands.literal("server")
-                                .executes(cs -> CommandExecute.executeAdminPermissionCheck(cs, "server"))
+                                .executes(cs -> CommandExecute.executeAdminPermission_Check(cs, "server"))
                         )
                         .then(
                             Commands.literal("player_override")
-                                .executes(cs -> CommandExecute.executeAdminPermissionCheck(cs, "player_override"))
+                                .executes(cs -> CommandExecute.executeAdminPermission_Check(cs, "player_override"))
                         )
                 )
                 .then(

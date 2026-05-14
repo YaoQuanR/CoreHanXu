@@ -5,6 +5,8 @@ import core.yaoquan.hanxu.api.TimeHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 public class Resolver {
@@ -25,11 +27,9 @@ public class Resolver {
         }
 
         CommandSourceStack source = context.getSource();
-        if (source.getEntity() instanceof ServerPlayer) {
-            for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
-                if (player.getName().getString().equals(targetString)) {
-                    return player.getUUID();
-                }
+        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
+            if (player.getName().getString().equals(targetString)) {
+                return player.getUUID();
             }
         }
 

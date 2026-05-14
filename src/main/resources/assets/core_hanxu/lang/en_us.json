@@ -2,6 +2,17 @@
   "key.core_hanxu.info_key": "Show Info of Core HanXu",
   "key.category.core_hanxu.category": "Core HanXu",
 
+  "block.loot_deployer": "Loot Deployer",
+
+  "button.gui.load": "Load",
+  "button.gui.file": "File",
+  "button.gui.registered_list": "Registered List",
+  "button.gui.deploy": "Deploy",
+
+  "editbox.gui.write_loot_source": "Enter the source path of loot...",
+  "editbox.gui.write_container_source": "Enter the container ID...",
+  "editbox.gui.write_object_name": "Enter the object name (bare text or JSON)...",
+
   "commands.chx.fixed.available_commands": "Available commands:",
   "commands.chx.fixed.admin_reminder": "Other available commands for admin...",
 
@@ -143,6 +154,7 @@
   "commands.chx-a.scene_created": "[HX] Scene created!",
 
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
+  "commands.core_hanxu.uneditable_player_permission": "[HX] Uneditable player permission! Config:player_permission_editable is false.",
   "commands.core_hanxu.not_player": "[HX] Only player are allowed to use this command.",
   "commands.core_hanxu.not_yet_agreed": "[HX] Accept the license '/chx license agree' and re-execute this command again.",
   "commands.core_hanxu.invalid_unit_argument": "[HX] Invalid unit argument used!",

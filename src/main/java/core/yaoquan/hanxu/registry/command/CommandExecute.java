@@ -8,6 +8,7 @@ import core.yaoquan.hanxu.api.PermissionHolder;
 import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.define.FilePath;
+import core.yaoquan.hanxu.registry.ModConfig;
 import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.component.DataComponents;
@@ -293,7 +294,7 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminPermissionCheck(CommandContext<CommandSourceStack> context, String target) {
+    static int executeAdminPermission_Check(CommandContext<CommandSourceStack> context, String target) {
         String playerId;
         try {
             playerId = StringArgumentType.getString(context, "player_id");
@@ -337,6 +338,43 @@ class CommandExecute {
                 return 0;
             }
         }
+        return 1;
+    }
+
+    static int executeAdminPermission_Set(CommandContext<CommandSourceStack> context) {
+        String playerId = StringArgumentType.getString(context, "player_id");
+
+        MinecraftServer server = context.getSource().getServer();
+        ServerPlayer player;
+        if (playerId.equals("-me") || playerId.equals("-m")) {
+            if (context.getSource().getPlayer() != null) {
+                player = context.getSource().getPlayer();
+            }
+            else {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+                return 0;
+            }
+        }
+        else {
+            player = server.getPlayerList().getPlayerByName(playerId);
+            if (player == null) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                return 0;
+            }
+        }
+
+        int newLevel = IntegerArgumentType.getInteger(context, "level");
+
+        boolean editable = ModConfig.SET_PLAYER_PERMISSION_EDITABLE.getAsBoolean();
+
+        if (!editable) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uneditablePlayerPermission));
+            return 0;
+        }
+
+        PermissionHolder.setPlayerPermissionLevel(player, newLevel);
+
+        MessagePublisher.sendSystemMessage(context, Component.literal("✔ -> " + newLevel).withColor(0xFFD700));
         return 1;
     }
 

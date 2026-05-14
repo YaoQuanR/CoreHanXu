@@ -41,6 +41,11 @@ public class CoreHanXu {
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
 
+        registerGameRules();
+
+        // Register all deferred register.
+        registerAllDeferredRegister(modEventBus);
+
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, ModConfig.SPEC);
 
@@ -113,5 +118,13 @@ public class CoreHanXu {
         ServerLevel overworld = event.getServer().overworld();
         TimeHolder.saveInstanceTimerForGlobal(overworld);
         LOGGER.info("[HX] Save Procedure: Timer - Global");
+    }
+
+    private static void registerGameRules() {
+        PermissionHolder.OVERRIDE_COMMAND_BLOCK_PERMISSION.getClass();
+    }
+
+    private static void registerAllDeferredRegister(IEventBus modEventBus) {
+        // TODO
     }
 }

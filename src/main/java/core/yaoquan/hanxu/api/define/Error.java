@@ -23,6 +23,7 @@ public class Error {
 
     public enum GeneralError {
         licenseAlreadyAgreed,
+        uneditablePlayerPermission,
         notPlayer,
         notYetAgreed,
         invalidUnitArgument,
@@ -72,6 +73,7 @@ public class Error {
     public static Component returnGeneralError(GeneralError generalError) {
         return switch (generalError) {
             case licenseAlreadyAgreed -> Component.translatable("commands.core_hanxu.license_already_agreed");
+            case uneditablePlayerPermission -> Component.translatable("commands.core_hanxu.uneditable_player_permission");
             case notPlayer -> Component.translatable("commands.core_hanxu.not_player");
             case notYetAgreed -> Component.translatable("commands.core_hanxu.not_yet_agreed");
             case invalidUnitArgument -> Component.translatable("commands.core_hanxu.invalid_unit_argument");

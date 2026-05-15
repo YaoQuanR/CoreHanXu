@@ -2,13 +2,19 @@ package core.yaoquan.hanxu;
 
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.registry.ModConfig;
+import core.yaoquan.hanxu.registry.ModDataGenerator;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
+import core.yaoquan.hanxu.registry.object.ModBlock;
+import core.yaoquan.hanxu.registry.object.ModBlockEntity;
+import core.yaoquan.hanxu.registry.object.ModCreativeModeTab;
+import core.yaoquan.hanxu.registry.object.ModItem;
 import core.yaoquan.hanxu.test.TestCallback;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -41,10 +47,14 @@ public class CoreHanXu {
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
 
+        // Register game rule (make sure it registered).
         registerGameRules();
 
         // Register all deferred register.
         registerAllDeferredRegister(modEventBus);
+
+        // Add listener to data generator provider.
+        modEventBus.addListener(CoreHanXu::gatherData);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, ModConfig.SPEC);
@@ -120,11 +130,18 @@ public class CoreHanXu {
         LOGGER.info("[HX] Save Procedure: Timer - Global");
     }
 
+    public static void gatherData(GatherDataEvent.Client event) {
+        event.createProvider(ModDataGenerator.ModModelProvider::new);
+    }
+
     private static void registerGameRules() {
         PermissionHolder.OVERRIDE_COMMAND_BLOCK_PERMISSION.getClass();
     }
 
     private static void registerAllDeferredRegister(IEventBus modEventBus) {
-        // TODO
+        ModBlock.BLOCKS.register(modEventBus);
+        ModItem.ITEMS.register(modEventBus);
+        ModCreativeModeTab.CREATIVE_MODE_TABS.register(modEventBus);
+        ModBlockEntity.BLOCK_ENTITY_TYPES.register(modEventBus);
     }
 }

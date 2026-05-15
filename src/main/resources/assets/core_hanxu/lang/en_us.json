@@ -2,7 +2,10 @@
   "key.core_hanxu.info_key": "Show Info of Core HanXu",
   "key.category.core_hanxu.category": "Core HanXu",
 
-  "block.loot_deployer": "Loot Deployer",
+  "item.core_hanxu.loot_deployer": "Loot Deployer",
+  "block.core_hanxu.loot_deployer": "Loot Deployer",
+
+  "item_tab.core_hanxu.main": "Core HanXu",
 
   "button.gui.load": "Load",
   "button.gui.file": "File",

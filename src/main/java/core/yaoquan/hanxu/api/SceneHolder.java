@@ -200,68 +200,84 @@ public class SceneHolder {
             boolean obfuscated = dialogNode.obfuscated != null? dialogNode.obfuscated : scene.defaultObfuscated;
             // Splicing string to complete message.
             String message = "";
-            boolean showMessage = true;
             if (interval < 1) {
                 interval = 1;
             }
 
-            Component finalMessage;
-            // Determine if enabled to detect json text.
-            if ((dialogNode.text.startsWith("{") && dialogNode.text.endsWith("}"))
-                    || (dialogNode.text.startsWith("[") && dialogNode.text.endsWith("]"))
-                    && scene.enabledJsonText) {
-                finalMessage = Converter.convertFromJsonToComponent(dialogNode.text);
-            }
-            else {
-                if (scene.enabledSpeaker) {
-                    switch (dialogNode.speaker) {
-                        case null:
-                            message = dialogNode.text;
-                            break;
-                        case "@skip":
-                            showMessage = false;
-                            break;
-                        case "@p", "@s":
-                            message = player.getName().getString() + ": " + dialogNode.text;
-                            break;
-                        case "@r":
-                            List<ServerPlayer> players;
-                            if (server != null) {
-                                players = server.getPlayerList().getPlayers();
-                                if (players.isEmpty()) {
-                                    message = dialogNode.text;
-                                }
-                                else {
-                                    ServerPlayer randomPlayer = players.get(new Random().nextInt(players.size()));
-                                    message = randomPlayer.getName().getString() + ": " + dialogNode.text;
-                                }
-                            }
-                            break;
-                        case "@a", "@e":
-                            message = "ALL: " + dialogNode.text;
-                            break;
-                        default:
-                            message = dialogNode.speaker + ": " + dialogNode.text;
-                            break;
-                    }
+            Component finalMessage = null;
+            boolean isSkipped = "@skip".equals(dialogNode.speaker);
+
+            if (!isSkipped) {
+                // Determine if text is empty.
+                if (dialogNode.text == null) {
+                    dialogNode.text = "NO TEXT FIELD FOUND!";
+                }
+                // Determine if enabled to detect json text.
+                if ((dialogNode.text.startsWith("{") && dialogNode.text.endsWith("}"))
+                        || (dialogNode.text.startsWith("[") && dialogNode.text.endsWith("]"))
+                        && scene.enabledJsonText) {
+                    finalMessage = Converter.convertFromJsonToComponent(dialogNode.text);
                 }
                 else {
-                    message = dialogNode.text;
-                }
+                    if (scene.enabledSpeaker) {
+                        List<ServerPlayer> players;
+                        switch (dialogNode.speaker) {
+                            case null:
+                                message = dialogNode.text;
+                                break;
+                            case "@p", "@s":
+                                message = player.getName().getString() + ": " + dialogNode.text;
+                                break;
+                            case "@r":
+                                if (server != null) {
+                                    players = server.getPlayerList().getPlayers();
+                                    if (players.isEmpty()) {
+                                        message = dialogNode.text;
+                                    }
+                                    else {
+                                        ServerPlayer randomPlayer = players.get(new Random().nextInt(players.size()));
+                                        message = randomPlayer.getName().getString() + ": " + dialogNode.text;
+                                    }
+                                }
+                                break;
+                            case "@a", "@e":
+                                StringBuilder speakers = new StringBuilder();
+                                if (server != null) {
+                                    players = server.getPlayerList().getPlayers();
+                                    if (!players.isEmpty()) {
+                                        for (int i = 0; i < players.size(); i++) {
+                                            if (i > 0) {
+                                                speakers.append(", ");
+                                            }
+                                            speakers.append(players.get(i).getName().getString());
+                                        }
+                                    }
+                                }
+                                message = speakers + ": " + dialogNode.text;
+                                break;
+                            default:
+                                message = dialogNode.speaker + ": " + dialogNode.text;
+                                break;
+                        }
+                    }
+                    else {
+                        message = dialogNode.text;
+                    }
 
-                finalMessage = Component.literal(message)
-                        .withColor(color)
-                        .withStyle(style -> style
-                                .withBold(bold)
-                                .withItalic(italic)
-                                .withUnderlined(underlined)
-                                .withStrikethrough(strikethrough)
-                                .withObfuscated(obfuscated)
-                        );
+                    finalMessage = Component.literal(message)
+                            .withColor(color)
+                            .withStyle(style -> style
+                                    .withBold(bold)
+                                    .withItalic(italic)
+                                    .withUnderlined(underlined)
+                                    .withStrikethrough(strikethrough)
+                                    .withObfuscated(obfuscated)
+                            );
+                }
             }
 
             // Then display dialog.
-            if (player != null && showMessage) {
+            if (player != null && finalMessage != null) {
                 player.sendSystemMessage(finalMessage);
             }
 

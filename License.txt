@@ -11,6 +11,16 @@ You are advised to check the original document by:
     CN: https://gnu.ac.cn/licenses/agpl-3.0.html
     EN: https://www.gnu.org/licenses/agpl-3.0.en.html
 
+Textures and sounds are under the terms of CC BY-NC-ND.
+You are advised to check the original document by:
+    CN: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.zh-hans
+    EN: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.en
+-> Exclusion:
+You are permitted to use textures and sounds at recording, live-streaming, and screenshotting
+without separately authorization or signature.
+This exclusion applies ONLY when the resources are used as an integral part of this mod
+during normal gameplay or mod-related showcasing.
+
 Extra requirements:
 1. If you modified this mod, you are required to sign in your name (Game id/ Nick name/ Real name) in to:
 - Mod name

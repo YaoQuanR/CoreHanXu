@@ -107,17 +107,27 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext13").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext14").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext15").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext16").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext17").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext18").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext19").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext20").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext21").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext22").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext23").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext24").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext25").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext26").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext27").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext28").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext29").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext30").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext31").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext32").withColor(0xFFFACD));
         return 1;
     }
 

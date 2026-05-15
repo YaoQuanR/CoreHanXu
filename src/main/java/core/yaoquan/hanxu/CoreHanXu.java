@@ -136,6 +136,7 @@ public class CoreHanXu {
 
     private static void registerGameRules() {
         PermissionHolder.OVERRIDE_COMMAND_BLOCK_PERMISSION.getClass();
+        LOGGER.info("[HX] Custom Game Rule Registered.");
     }
 
     private static void registerAllDeferredRegister(IEventBus modEventBus) {
@@ -143,5 +144,6 @@ public class CoreHanXu {
         ModItem.ITEMS.register(modEventBus);
         ModCreativeModeTab.CREATIVE_MODE_TABS.register(modEventBus);
         ModBlockEntity.BLOCK_ENTITY_TYPES.register(modEventBus);
+        LOGGER.info("[HX] Deferred Register Registered.");
     }
 }

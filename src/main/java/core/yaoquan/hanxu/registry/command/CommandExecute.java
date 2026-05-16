@@ -246,6 +246,30 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeScene_Broadcast(CommandContext<CommandSourceStack> context) {
+        String sceneName = StringArgumentType.getString(context, "scene_name");
+
+        // Check if existed.
+        if (!SceneHolder.doesSceneExist(sceneName)) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+            return 0;
+        }
+
+        try {
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx-a.scene_now_playing_to_everyone")
+                            .append(Component.literal(": " + sceneName))
+                            .withColor(0xFFFACD));
+            SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
+            return 0;
+        }
+
+        return 1;
+    }
+
     static int executeAdminLicense_State(CommandContext<CommandSourceStack> context) {
         String playerId = StringArgumentType.getString(context, "player_id");
         UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);

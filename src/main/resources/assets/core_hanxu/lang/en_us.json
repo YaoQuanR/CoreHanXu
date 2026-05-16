@@ -161,6 +161,7 @@
 
   "commands.chx-a.scene_list_title": "[HX] Scene list found!",
   "commands.chx-a.scene_now_playing": "[HX] \uD83C\uDFB6 Now playing",
+  "commands.chx-a.scene_now_playing_to_everyone": "[HX] \uD83C\uDFB6 Now playing to everyone",
   "commands.chx-a.scene_deleted": "[HX] Scene is now deleted!",
   "commands.chx-a.scene_get_template": "[HX] Received template book.",
   "commands.chx-a.scene_created": "[HX] Scene created!",

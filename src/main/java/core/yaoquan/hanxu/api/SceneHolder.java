@@ -83,6 +83,21 @@ public class SceneHolder {
     }
 
     /**
+     * Scene will load from YAML file, then start playing the scene.
+     * @param server              The source server that targeted to play for all players.
+     * @param sceneName           As same as file name.
+     */
+    public static void playSceneToEveryone(MinecraftServer server, String sceneName) {
+        try {
+            Scene scene = loadScene(sceneName);
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                startScene(player, scene, 0);
+            }
+        }
+        catch (IOException ignored) {}
+    }
+
+    /**
      * Delete scene from selected target.
      * @param sceneName           As same as file name.
      * @param targetPath          Enum path: TO_GLOBAL or TO_WORLD.

@@ -61,6 +61,14 @@ public class CommandBuilder {
                                         .executes(CommandExecute::executeScene_Play)
                                 )
                         )
+                        .then(
+                            Commands.literal("broadcast")
+                                .then(
+                                    Commands.argument("scene_name", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestScene)
+                                        .executes(CommandExecute::executeScene_Broadcast)
+                                )
+                        )
                         .requires(cs -> PermissionHolder.hasPermission(cs,1))
                         .executes(CommandExecute::executeScene)
                 )
@@ -523,6 +531,14 @@ public class CommandBuilder {
                                     Commands.argument("scene_name", StringArgumentType.string())
                                         .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Play)
+                                )
+                        )
+                        .then(
+                            Commands.literal("broadcast")
+                                .then(
+                                    Commands.argument("scene_name", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestScene)
+                                        .executes(CommandExecute::executeScene_Broadcast)
                                 )
                         )
                         .then(

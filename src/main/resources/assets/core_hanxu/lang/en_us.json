@@ -156,6 +156,7 @@
   "commands.chx-a.scene_not_found": "[HX] Scene not found!",
   "commands.chx-a.scene_play_failed": "[HX] Scene play failed!",
   "commands.chx-a.scene_failed_to_delete": "[HX] Scene failed to delete!",
+  "commands.chx-a.scene_already_exist": "[HX] Scene with this name are already exist!",
   "commands.chx-a.scene_same_name_found": "[HX] Two same name scene found! Provide specific path component and try again.",
   "commands.chx-a.scene_failed_to_save": "[HX] Scene failed to save!",
 

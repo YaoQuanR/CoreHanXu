@@ -299,6 +299,15 @@ public class SceneHolder {
             // Then execute command if required.
             if (dialogNode.execute != null) {
                 String command = dialogNode.execute.startsWith("/")? dialogNode.execute : ("/" + dialogNode.execute);
+                // Replace specific selector to player itself.
+                if (command.contains("@p") && player != null) {
+                    command = command.replace("@p", player.getName().getString());
+                }
+                else if (command.contains("@s") && player != null) {
+                    command = command.replace("@s", player.getName().getString());
+                }
+
+                // Execute.
                 if (server != null) {
                     server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command);
                 }

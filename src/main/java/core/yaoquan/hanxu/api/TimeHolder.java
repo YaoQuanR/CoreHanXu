@@ -539,6 +539,8 @@ public class TimeHolder {
             }
         }
 
+        CoreHanXu.LOGGER.info("[HX] Display debug timer info. State: {}, Refresh: {}", state, isRefresh);
+
         PacketDistributor.sendToPlayer(
                 player, new ModPayload.F4DisplayPacket(masterId, timerId, state, remainingTicks, isCounting, masterName)
         );
@@ -548,8 +550,14 @@ public class TimeHolder {
     public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String timerId) {
         String key = player.getUUID() + ":" + masterId.toString() + ":" + timerId;
 
+        CoreHanXu.LOGGER.info("[HX] About to refresh display: {}", key);
+
         if (refreshDisplayList.contains(key)) {
+            CoreHanXu.LOGGER.info("[HX] Refresh check: true");
             displayToInfoPage(player, masterId, timerId, true, true);
+        }
+        else {
+            CoreHanXu.LOGGER.info("[HX] Refresh check: false");
         }
     }
 

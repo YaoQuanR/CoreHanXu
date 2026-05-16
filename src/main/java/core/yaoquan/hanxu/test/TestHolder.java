@@ -106,7 +106,8 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test1",
-                        true
+                        true,
+                        false
                 );
 
                 break;
@@ -139,7 +140,8 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test2",
-                        true
+                        true,
+                        false
                 );
 
                 break;
@@ -148,7 +150,7 @@ public class TestHolder {
 
                 if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test3") != null) {
                     TimeHolder.deleteInstanceTimer(
-                            serverPlayer.getUUID(),
+                            TimeHolder.GLOBAL_UUID,
                             "test3"
                     );
                 }
@@ -167,7 +169,8 @@ public class TestHolder {
                         serverPlayer,
                         TimeHolder.GLOBAL_UUID,
                         "test3",
-                        true
+                        true,
+                        false
                 );
 
                 break;
@@ -195,7 +198,8 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test4",
-                        true
+                        true,
+                        false
                 );
 
                 break;
@@ -245,13 +249,15 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test5",
-                        true
+                        true,
+                        false
                 );
                 TimeHolder.displayToInfoPage(
                         serverPlayer,
                         TimeHolder.GLOBAL_UUID,
                         "test5",
-                        true
+                        true,
+                        false
                 );
 
                 break;
@@ -277,7 +283,8 @@ public class TestHolder {
                 serverPlayer,
                 serverPlayer.getUUID(),
                 masterGroup + ":" + timerId,
-                state
+                state,
+                false
         );
 
         return 1;

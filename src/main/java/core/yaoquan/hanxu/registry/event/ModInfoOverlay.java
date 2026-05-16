@@ -5,14 +5,11 @@ import core.yaoquan.hanxu.api.TimeHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +31,8 @@ public class ModInfoOverlay {
         while (ModKey.INFO_KEY.get().consumeClick()) {
             isShownInfo = !isShownInfo;
         }
+
+        ModNetwork.ClientF4Display.tick();
     }
 
     @SubscribeEvent
@@ -55,21 +54,21 @@ public class ModInfoOverlay {
         for (String key : ModNetwork.ClientF4Display.getAllInfoKeys()) {
             if (displayedTimer < 10) {
                 String[] parts = key.split(":", 2);
-                UUID masterId = UUID.fromString(parts[0]);
                 String timerId = parts[1];
 
-                int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
-                String masterName = returnMasterName(masterId);
+                ModNetwork.ClientF4Display.TimerInfo timerInfo = ModNetwork.ClientF4Display.getTimerInfo(key);
+                int remainingTime = timerInfo.remainingTicks();
+                String masterName = timerInfo.masterName();
 
                 if (remainingTime == -1) {
                     displayLines.add("(" + timerId + " -> " + masterName + ") REMOVED");
                 }
                 else {
-                    int remainingTicks = remainingTime % (20);
-                    int remainingSeconds = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "second") % 60;
-                    int remainingMinutes = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "minute") % 60;
-                    int remainingHours = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "hour");
-                    boolean isItCounting = TimeHolder.isInstanceTimerCounting(masterId, timerId);
+                    int remainingTicks = returnUnitRemains(remainingTime, "tick");
+                    int remainingSeconds = returnUnitRemains(remainingTime, "second");
+                    int remainingMinutes = returnUnitRemains(remainingTime, "minute");
+                    int remainingHours = returnUnitRemains(remainingTime, "hour");
+                    boolean isItCounting = timerInfo.isCounting();
                     displayLines.add("(" + timerId + " -> " + masterName + ") " + remainingHours + ":" + remainingMinutes + ":" + remainingSeconds + ":" + remainingTicks + (isItCounting? " (-)" : " (#)"));
                 }
 
@@ -107,23 +106,13 @@ public class ModInfoOverlay {
         }
     }
 
-    private static String returnMasterName(UUID masterId) {
-        if (TimeHolder.GLOBAL_UUID.equals(masterId)) {
-            return "-global";
-        }
-        else if (TimeHolder.TEMPORARY_UUID.equals(masterId)) {
-            return "-temporary";
-        }
-
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        if (server != null) {
-            ServerPlayer player = server.getPlayerList().getPlayer(masterId);
-            if (player != null) {
-                return player.getName().getString();
-            }
-        }
-
-        // If no pair target exist, return this.
-        return "-not_found";
+    private static int returnUnitRemains(int remainingTicks, String unit) {
+        return switch (unit) {
+            case "t", "tick" -> remainingTicks % TimeHolder.TICKS_PER_SECOND;
+            case "s", "second" -> (remainingTicks / TimeHolder.TICKS_PER_SECOND) % 60;
+            case "m", "minute" -> (remainingTicks / TimeHolder.TICKS_PER_MINUTE) % 60;
+            case "h", "hour" -> remainingTicks / TimeHolder.TICKS_PER_HOUR;
+            default -> -1;
+        };
     }
 }

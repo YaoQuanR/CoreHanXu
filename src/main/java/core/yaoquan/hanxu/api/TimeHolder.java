@@ -48,6 +48,8 @@ public class TimeHolder {
     private static final Map<UUID, Map<String, TimerData>> instantiatedTimer = new ConcurrentHashMap<>();
     // Storage recovery end behavior.
     private static final Map<String, TimerCallback> callbacks = new ConcurrentHashMap<>();
+    // Storage debug display list.
+    private static final Set<String> refreshDisplayList = ConcurrentHashMap.newKeySet();
 
     // Register your new timer to template (Available to override old timer):
     /**
@@ -519,8 +521,36 @@ public class TimeHolder {
     }
 
     // Display out to F4 page (info page).
-    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state) {
-        PacketDistributor.sendToPlayer(player, new ModPayload.F4DisplayPacket(masterId, timerId, state));
+    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state, boolean isRefresh) {
+        if (masterId == null) {
+            return;
+        }
+
+        int remainingTicks = getRemainingTimeFromInstance(masterId, timerId, "tick");
+        boolean isCounting = isInstanceTimerCounting(masterId, timerId);
+        String masterName = returnMasterName(masterId);
+
+        if (!isRefresh) {
+            if (state) {
+                refreshDisplayList.add(player.getUUID() + ":" + masterId + ":" + timerId);
+            }
+            else {
+                refreshDisplayList.remove(player.getUUID() + ":" + masterId + ":" + timerId);
+            }
+        }
+
+        PacketDistributor.sendToPlayer(
+                player, new ModPayload.F4DisplayPacket(masterId, timerId, state, remainingTicks, isCounting, masterName)
+        );
+    }
+
+    // Check if required to refresh the F4 timer display.
+    public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String timerId) {
+        String key = player.getUUID() + ":" + masterId.toString() + ":" + timerId;
+
+        if (refreshDisplayList.contains(key)) {
+            displayToInfoPage(player, masterId, timerId, true, true);
+        }
     }
 
     // Save and load methods:
@@ -678,6 +708,26 @@ public class TimeHolder {
             CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
             return null;
         }
+    }
+
+    private static String returnMasterName(UUID masterId) {
+        if (TimeHolder.GLOBAL_UUID.equals(masterId)) {
+            return "-global";
+        }
+        else if (TimeHolder.TEMPORARY_UUID.equals(masterId)) {
+            return "-temporary";
+        }
+
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            ServerPlayer player = server.getPlayerList().getPlayer(masterId);
+            if (player != null) {
+                return player.getName().getString();
+            }
+        }
+
+        // If no pair target exist, return this.
+        return "-not_found";
     }
 
     // Register timers into game.

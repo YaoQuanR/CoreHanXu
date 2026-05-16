@@ -753,7 +753,7 @@ class CommandExecute {
 
         ServerPlayer player = context.getSource().getPlayer();
 
-        TimeHolder.displayToInfoPage(player, masterId, timerId, state);
+        TimeHolder.displayToInfoPage(player, masterId, timerId, state, true);
         MessagePublisher.sendSystemMessage(context, 
                 Component.literal("[HX] " + timerId + " ")
                         .append(Component.translatable("commands." + CoreHanXu.MOD_ID + ".has_changed_to"))
@@ -1010,7 +1010,7 @@ class CommandExecute {
                                 .withColor(0x66FF66)
                 );
 
-                return 1;
+                break;
             case "stop":
                 // Then stop.
                 if (!TimeHolder.stopInstanceTimer(masterId, timerId)) {
@@ -1028,7 +1028,7 @@ class CommandExecute {
                                 .withColor(0x66FF66)
                 );
 
-                return 1;
+                break;
             case "reset":
                 // Then reset.
                 if (!TimeHolder.resetInstanceTimer(masterId, timerId)) {
@@ -1046,7 +1046,7 @@ class CommandExecute {
                                 .withColor(0x66FF66)
                 );
 
-                return 1;
+                break;
             case "delete":
                 // Then delete.
                 if (!TimeHolder.deleteInstanceTimer(masterId, timerId)) {
@@ -1063,10 +1063,17 @@ class CommandExecute {
                                 .withColor(0x66FF66)
                 );
 
-                return 1;
+                break;
             default:
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
                 return 0;
         }
+
+        // Refresh state of F4 display.
+        if (context.getSource().getPlayer() != null) {
+            TimeHolder.checkAndRefreshDisplay(context.getSource().getPlayer(), masterId, timerId);
+        }
+
+        return 1;
     }
 }

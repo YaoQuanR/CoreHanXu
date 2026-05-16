@@ -12,7 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class ModPayload {
-    public record F4DisplayPacket(UUID masterId, String timerId, boolean isVisible) implements CustomPacketPayload {
+    public record F4DisplayPacket(UUID masterId, String timerId, boolean isVisible, int remainingTicks, boolean isCounting, String masterName)
+            implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<F4DisplayPacket> TYPE =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "f4_display_packet"));
 
@@ -20,6 +21,9 @@ public class ModPayload {
                 ByteBufCodecs.STRING_UTF8.map(UUID::fromString, UUID::toString), F4DisplayPacket::masterId,
                 ByteBufCodecs.STRING_UTF8, F4DisplayPacket::timerId,
                 ByteBufCodecs.BOOL, F4DisplayPacket::isVisible,
+                ByteBufCodecs.INT, F4DisplayPacket::remainingTicks,
+                ByteBufCodecs.BOOL, F4DisplayPacket::isCounting,
+                ByteBufCodecs.STRING_UTF8, F4DisplayPacket::masterName,
                 F4DisplayPacket::new
         );
 
@@ -31,7 +35,7 @@ public class ModPayload {
         public static void handleClient(F4DisplayPacket packet, IPayloadContext context) {
             context.enqueueWork(() -> {
                 if (packet.isVisible()) {
-                    ModNetwork.ClientF4Display.add(packet.masterId(), packet.timerId());
+                    ModNetwork.ClientF4Display.add(packet);
                 }
                 else {
                     ModNetwork.ClientF4Display.remove(packet.masterId(), packet.timerId());

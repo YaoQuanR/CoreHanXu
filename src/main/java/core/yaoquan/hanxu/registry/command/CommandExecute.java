@@ -8,6 +8,7 @@ import core.yaoquan.hanxu.api.PermissionHolder;
 import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.define.FilePath;
+import core.yaoquan.hanxu.api.define.Version;
 import core.yaoquan.hanxu.registry.ModConfig;
 import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
@@ -59,6 +60,8 @@ class CommandExecute {
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(0xFFFACD));
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(0xFFFACD));
                 MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext8").withColor(0xFFFACD));
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext9").withColor(0xFFFACD));
             }
             else {
                 PermissionHolder.sendMessageToNotAgreedLicense(context.getSource(), player);
@@ -74,7 +77,11 @@ class CommandExecute {
     static int executeDetail(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_title").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context,
+            Component.translatable("commands.chx.detail_innertext2")
+                    .append(Component.literal(" " + Version.getCoreVersion()))
+                    .withColor(0xFFFACD)
+        );
         return 1;
     }
 
@@ -325,6 +332,8 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext9").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext10").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext11").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext12").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext13").withColor(0xFFFACD));
         return 1;
     }
 
@@ -789,7 +798,7 @@ class CommandExecute {
     }
 
     static int executeAdminScene(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene"));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene").withColor(0xFFD700));
         return 1;
     }
 
@@ -928,7 +937,7 @@ class CommandExecute {
         YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
 
         if (SceneHolder.doesSceneExist(sceneId, targetPath)) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.sameNameFound));
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.alreadyExist));
             return 0;
         }
 

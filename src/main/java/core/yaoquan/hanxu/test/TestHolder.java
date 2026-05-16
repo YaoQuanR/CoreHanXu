@@ -103,6 +103,7 @@ public class TestHolder {
                 );
                 // For debugging (F4 in default).
                 TimeHolder.displayToInfoPage(
+                        serverPlayer,
                         serverPlayer.getUUID(),
                         "test1",
                         true
@@ -135,6 +136,7 @@ public class TestHolder {
                         "core_hanxu-test"
                 );
                 TimeHolder.displayToInfoPage(
+                        serverPlayer,
                         serverPlayer.getUUID(),
                         "test2",
                         true
@@ -162,6 +164,7 @@ public class TestHolder {
                         "core_hanxu-test"
                 );
                 TimeHolder.displayToInfoPage(
+                        serverPlayer,
                         TimeHolder.GLOBAL_UUID,
                         "test3",
                         true
@@ -189,6 +192,7 @@ public class TestHolder {
                         "core_hanxu-test"
                 );
                 TimeHolder.displayToInfoPage(
+                        serverPlayer,
                         serverPlayer.getUUID(),
                         "test4",
                         true
@@ -200,15 +204,15 @@ public class TestHolder {
 
                 if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test5") != null) {
                     TimeHolder.deleteTemplateTimer(
-                        "test5"
-                    );
-                    TimeHolder.deleteInstanceTimer(
-                        serverPlayer.getUUID(),
                             "test5"
                     );
                     TimeHolder.deleteInstanceTimer(
-                        TimeHolder.GLOBAL_UUID,
-                            "test5"
+                            serverPlayer.getUUID(),
+                                "test5"
+                    );
+                    TimeHolder.deleteInstanceTimer(
+                            TimeHolder.GLOBAL_UUID,
+                                "test5"
                     );
                 }
 
@@ -217,35 +221,37 @@ public class TestHolder {
 
                 // Create template.
                 TimeHolder.createTemplateTimer(
-                    "test5",
-                    12,
-                    "second",
-                    callback,
-                    "remind",
-                    "using command's callback creator",
-                    "core_hanxu-command" // Using command rebuilder.
+                        "test5",
+                        12,
+                        "second",
+                        callback,
+                        "remind",
+                        "using command's callback creator",
+                        "core_hanxu-command" // Using command rebuilder.
                 );
 
                 // Then apply (register).
                 TimeHolder.createInstanceFromTemplate(
-                    serverPlayer.getUUID(),
-                    "test5"
+                        serverPlayer.getUUID(),
+                        "test5"
                 );
                 TimeHolder.createInstanceFromTemplate(
-                    TimeHolder.GLOBAL_UUID,
-                    "test5"
+                        TimeHolder.GLOBAL_UUID,
+                        "test5"
                 );
 
                 // Then register to display.
                 TimeHolder.displayToInfoPage(
-                    serverPlayer.getUUID(),
-                    "test5",
-                    true
+                        serverPlayer,
+                        serverPlayer.getUUID(),
+                        "test5",
+                        true
                 );
                 TimeHolder.displayToInfoPage(
-                    TimeHolder.GLOBAL_UUID,
-                    "test5",
-                    true
+                        serverPlayer,
+                        TimeHolder.GLOBAL_UUID,
+                        "test5",
+                        true
                 );
 
                 break;
@@ -268,9 +274,10 @@ public class TestHolder {
         }
 
         TimeHolder.displayToInfoPage(
-            serverPlayer.getUUID(),
-            masterGroup + ":" + timerId,
-            state
+                serverPlayer,
+                serverPlayer.getUUID(),
+                masterGroup + ":" + timerId,
+                state
         );
 
         return 1;

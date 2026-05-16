@@ -108,14 +108,6 @@ class CommandSuggest {
         return builder.buildFuture();
     }
 
-    // For debug timer suggestion.
-    static <S> CompletableFuture<Suggestions> suggestInfoTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        builder.suggest("-global");
-        builder.suggest("-me");
-
-        return builder.buildFuture();
-    }
-
     // For scene suggestion.
     static <S> CompletableFuture<Suggestions> suggestScene(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         List<Path> sceneFiles = YamlReader.listOut("scene");

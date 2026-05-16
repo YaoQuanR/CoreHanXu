@@ -741,7 +741,7 @@ class CommandExecute {
         return CommandDisplay.displayIdList(context, instanceIds);
     }
 
-    static int executeAdminDisplay_Info_Timer(CommandContext<CommandSourceStack> context, boolean state) {
+    static int executeAdminTimer_Instance_Display(CommandContext<CommandSourceStack> context, boolean state) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
@@ -751,7 +751,9 @@ class CommandExecute {
             return 0;
         }
 
-        TimeHolder.displayToInfoPage(masterId, timerId, state);
+        ServerPlayer player = context.getSource().getPlayer();
+
+        TimeHolder.displayToInfoPage(player, masterId, timerId, state);
         MessagePublisher.sendSystemMessage(context, 
                 Component.literal("[HX] " + timerId + " ")
                         .append(Component.translatable("commands." + CoreHanXu.MOD_ID + ".has_changed_to"))

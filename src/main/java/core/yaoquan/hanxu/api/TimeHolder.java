@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.api;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.TimerCallback;
 import core.yaoquan.hanxu.api.define.FilePath;
+import core.yaoquan.hanxu.registry.event.ModPayload;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.Creator;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.io.IOException;
@@ -44,8 +46,6 @@ public class TimeHolder {
     private static final Map<String, TimerData> templateTimer = new ConcurrentHashMap<>();
     // Storage instantiated timer (in safety method).
     private static final Map<UUID, Map<String, TimerData>> instantiatedTimer = new ConcurrentHashMap<>();
-    // Storage debug display timer.
-    private static final Set<String> infoDisplayTimer = ConcurrentHashMap.newKeySet();
     // Storage recovery end behavior.
     private static final Map<String, TimerCallback> callbacks = new ConcurrentHashMap<>();
 
@@ -519,27 +519,8 @@ public class TimeHolder {
     }
 
     // Display out to F4 page (info page).
-    public static void displayToInfoPage(UUID masterId, String timerId, boolean state) {
-        String masterIdString = masterId.toString();
-        String key = masterIdString + ":" + timerId;
-
-        if (state) {
-            infoDisplayTimer.add(key);
-        }
-        else {
-            infoDisplayTimer.remove(key);
-        }
-    }
-
-    public static boolean isInfoDisplay(UUID masterId, String timerId) {
-        String masterIdString = masterId.toString();
-        String key = masterIdString + ":" + timerId;
-
-        return infoDisplayTimer.contains(key);
-    }
-
-    public static Set<String> getAllInfoKeys() {
-        return infoDisplayTimer;
+    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state) {
+        PacketDistributor.sendToPlayer(player, new ModPayload.F4DisplayPacket(masterId, timerId, state));
     }
 
     // Save and load methods:

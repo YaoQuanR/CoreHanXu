@@ -52,7 +52,7 @@ public class ModInfoOverlay {
         int displayedTimer = 0;
         displayLines.add("");
         displayLines.add("-> Timer");
-        for (String key : TimeHolder.getAllInfoKeys()) {
+        for (String key : ModNetwork.ClientF4Display.getAllInfoKeys()) {
             if (displayedTimer < 10) {
                 String[] parts = key.split(":", 2);
                 UUID masterId = UUID.fromString(parts[0]);

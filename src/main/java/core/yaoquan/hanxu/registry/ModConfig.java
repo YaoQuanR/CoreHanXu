@@ -15,7 +15,7 @@ public class ModConfig {
     // Generate the list of config:
     public static final ModConfigSpec.IntValue SET_AUTO_AUTHORIZED_PERMISSION_LEVEL = MOD_CONFIG
             .comment(COMMENT_1)
-            .defineInRange("auto_level", 2, 0, 2);
+            .defineInRange("auto_level", 1, 0, 2);
 
     public static final ModConfigSpec.BooleanValue SET_PLAYER_PERMISSION_EDITABLE = MOD_CONFIG
             .comment(COMMENT_2)

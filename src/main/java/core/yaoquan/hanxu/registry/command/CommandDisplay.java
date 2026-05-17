@@ -24,7 +24,7 @@ public class CommandDisplay {
                     int remainingTime = TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit);
                     if (remainingTime != -1) {
                         MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx-a.timer_read_remaining_time")
+                                Component.translatable("commands.chx.timer_read_remaining_time")
                                         .append(Component.literal(" (" + timerId + "): " + remainingTime + " " + timeUnit))
                                         .withColor(0xFFD700)
                         );
@@ -38,7 +38,7 @@ public class CommandDisplay {
                     int initialTime = TimeHolder.getInitialTimeFromTemplate(timerId, timeUnit);
                     if (initialTime != -1) {
                         MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx-a.timer_read_initial_time")
+                                Component.translatable("commands.chx.timer_read_initial_time")
                                         .append(Component.literal(" (" + timerId + "): " + initialTime + " " + timeUnit))
                                         .withColor(0xFFD700)
                         );
@@ -53,7 +53,7 @@ public class CommandDisplay {
 
                     if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
                         MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx-a.timer_state")
+                                Component.translatable("commands.chx.timer_state")
                                         .append(Component.literal(" (" + timerId + "): " + (isCounting? "Counting" : "Stopping")))
                                         .withColor(0xFFD700)
                         );
@@ -97,7 +97,7 @@ public class CommandDisplay {
                     int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit);
                     if (remainingTime != -1) {
                         MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx-a.timer_read_remaining_time")
+                                Component.translatable("commands.chx.timer_read_remaining_time")
                                         .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " " + timeUnit))
                                         .withColor(0xFFD700)
                         );
@@ -111,7 +111,7 @@ public class CommandDisplay {
                     int initialTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, timeUnit);
                     if (initialTime != -1) {
                         MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx-a.timer_read_initial_time")
+                                Component.translatable("commands.chx.timer_read_initial_time")
                                         .append(Component.literal(" (" + timerId + "->" + masterString + "): " + initialTime + " " + timeUnit))
                                         .withColor(0xFFD700)
                         );
@@ -125,7 +125,7 @@ public class CommandDisplay {
                     boolean isCounting = TimeHolder.isInstanceTimerCounting(masterId, timerId);
                     if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit) != -1) {
                         MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx-a.timer_state")
+                                Component.translatable("commands.chx.timer_state")
                                         .append(Component.literal(" (" + timerId + "): " + (isCounting? "Counting" : "Stopping")))
                                         .withColor(0xFFD700)
                         );
@@ -174,7 +174,7 @@ public class CommandDisplay {
         }
 
         MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx-a.timer_list_title").withColor(0xFFD700)
+                Component.translatable("commands.chx.timer_list_title").withColor(0xFFD700)
         );
         for (String id : idList) {
             MessagePublisher.sendSystemMessage(context, Component.literal(id).withColor(0xFFD700));
@@ -186,21 +186,21 @@ public class CommandDisplay {
     static void displayCreateMessage(CommandContext<CommandSourceStack> context, String timerId, int timeAmount, String timeUnit, String endBehavior, String behaviorContent) {
         // Output message.
         MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx-a.timer_created")
+                Component.translatable("commands.chx.timer_created")
                         .append(Component.literal(" " + timerId + " -> " + timeAmount + " " + timeUnit))
                         .withColor(0x66FF66)
         );
         switch (endBehavior) {
             case "e", "execute":
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx-a.timer_with_execute_behavior")
+                        Component.translatable("commands.chx.timer_with_execute_behavior")
                                 .append(Component.literal(": " + behaviorContent))
                                 .withColor(0x66FF66)
                 );
                 break;
             case "r", "remind":
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx-a.timer_with_remind_behavior")
+                        Component.translatable("commands.chx.timer_with_remind_behavior")
                                 .append(Component.literal(": " + behaviorContent))
                                 .withColor(0x66FF66)
                 );
@@ -211,7 +211,7 @@ public class CommandDisplay {
     }
 
     static void displaySceneList(CommandContext<CommandSourceStack> context, List<Component> displayList) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_list_title").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_list_title").withColor(0xFFD700));
         for (Component line : displayList) {
             MessagePublisher.sendSystemMessage(context, line);
         }

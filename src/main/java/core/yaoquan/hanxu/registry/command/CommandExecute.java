@@ -21,6 +21,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WritableBookContent;
+import net.minecraft.world.level.GameRules;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.io.IOException;
@@ -33,47 +34,6 @@ import java.util.stream.Stream;
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 class CommandExecute {
-    static int executeBare(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, 
-                Component.translatable("commands.chx.bare")
-                    .withColor(0xFFD700)
-        );
-        return 1;
-    }
-
-    static int executeHelp(CommandContext<CommandSourceStack> context) {
-        Player player = context.getSource().getPlayer();
-
-        if (player != null) {
-            boolean agreedLicense = player.getPersistentData()
-                    .getBoolean("core.yaoquan.hanxu.agreed_license")
-                    .orElse(false);
-
-            if (agreedLicense || PermissionHolder.hasPermission(context.getSource(), 2)) {
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_title").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_page").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext1").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext2").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext3").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext4").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext8").withColor(0xFFFACD));
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext9").withColor(0xFFFACD));
-            }
-            else {
-                PermissionHolder.sendMessageToNotAgreedLicense(context.getSource(), player);
-            }
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
-        }
-
-        return 1;
-    }
-
     static int executeDetail(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_title").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext1").withColor(0xFFFACD));
@@ -164,21 +124,6 @@ class CommandExecute {
         return 0;
     }
 
-    static int executeScene(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene").withColor(0xFFD700));
-        return 1;
-    }
-
-    static int executeScene_Help(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_introduction").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext4").withColor(0xFFFACD));
-        return 1;
-    }
-
     static int executeScene_List(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
@@ -240,7 +185,7 @@ class CommandExecute {
 
         try {
             MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx-a.scene_now_playing")
+                Component.translatable("commands.chx.scene_now_playing")
                         .append(Component.literal(": " + sceneName))
                         .withColor(0xFFFACD));
             SceneHolder.playScene(player, sceneName);
@@ -264,7 +209,7 @@ class CommandExecute {
 
         try {
             MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx-a.scene_now_playing_to_everyone")
+                    Component.translatable("commands.chx.scene_now_playing_to_everyone")
                             .append(Component.literal(": " + sceneName))
                             .withColor(0xFFFACD));
             SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
@@ -277,7 +222,7 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminLicense_State(CommandContext<CommandSourceStack> context) {
+    static int executeAdvancedLicense_State(CommandContext<CommandSourceStack> context) {
         String playerId = StringArgumentType.getString(context, "player_id");
         UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
         if (playerUUID == null) {
@@ -300,50 +245,55 @@ class CommandExecute {
         }
     }
 
-    static int executeAdminTimer(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer").withColor(0xFFD700));
+    static int executeTimer(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer").withColor(0xFFD700));
         return 1;
     }
 
-    static int executeAdminBare(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.bare1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.bare2").withColor(0xFFD700));
+    static int executeBare(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.bare1").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.bare2").withColor(0xFFD700));
         return 1;
     }
 
-    static int executeAdminHelp(CommandContext<CommandSourceStack> context) {
+    static int executeHelp(CommandContext<CommandSourceStack> context) {
         Player player = context.getSource().getPlayer();
         if (player == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
             return 0;
         }
 
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_page").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_title").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_page").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext4").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext5").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext6").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext7").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext8").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext9").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext10").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext11").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext12").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.help_innertext13").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext4").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext8").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext9").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext10").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext11").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext12").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext13").withColor(0xFFFACD));
         return 1;
     }
 
-    static int executeAdminPermission_Check(CommandContext<CommandSourceStack> context, String target) {
+    static int executePermission_Check(CommandContext<CommandSourceStack> context, String target) {
         String playerId;
         try {
             playerId = StringArgumentType.getString(context, "player_id");
         }
         catch (IllegalArgumentException e) {
-            playerId = "null";
+            if (context.getSource().getPlayer() != null) {
+                playerId = context.getSource().getPlayer().getName().getString();
+            }
+            else {
+                playerId = null;
+            }
         }
 
         switch (target) {
@@ -369,12 +319,16 @@ class CommandExecute {
                 }
             }
             case "server" -> {
-                int commandblockPermissionLevel = PermissionHolder.getCommandBlockOverridePermissionLevel();
+                int commandblockPermissionLevel = context.getSource().getLevel().getGameRules().getInt(PermissionHolder.OVERRIDE_COMMAND_BLOCK_PERMISSION);
                 MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(commandblockPermissionLevel)).withColor(0xFFD700));
             }
             case "player_override" -> {
                 int overridePlayerPermissionLevel = PermissionHolder.getPlayerOverridePermissionLevel();
                 MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(overridePlayerPermissionLevel)).withColor(0xFFD700));
+            }
+            case "player_first_grant" -> {
+                int autoAuthorizedPermissionLevel = ModConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
+                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(autoAuthorizedPermissionLevel)).withColor(0xFFD700));
             }
             default -> {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
@@ -384,7 +338,7 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminPermission_Set(CommandContext<CommandSourceStack> context) {
+    static int executePermission_Set(CommandContext<CommandSourceStack> context) {
         String playerId = StringArgumentType.getString(context, "player_id");
 
         MinecraftServer server = context.getSource().getServer();
@@ -421,41 +375,41 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminTimer_Help(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Help(CommandContext<CommandSourceStack> context) {
         Player player = context.getSource().getPlayer();
         if (player == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
             return 0;
         }
 
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_introduction").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_title").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_introduction").withColor(0xFFD700));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create_argument1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create-range_argument1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext4").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext5").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create_argument2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext6").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_create-range_argument2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext7").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext8").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext9").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext10").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext11").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext12").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext13").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_modify_argument").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_innertext14").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_read_argument1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_help_read_argument2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create_argument1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create-range_argument1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext4").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext5").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create_argument2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext6").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create-range_argument2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext7").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext8").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext9").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext10").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext11").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext12").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext13").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_modify_argument").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext14").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument2").withColor(0xFFFACD));
         return 1;
     }
 
-    static int executeAdminTimer_Template_Create(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Template_Create(CommandContext<CommandSourceStack> context, String endBehavior) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         int timeAmount = IntegerArgumentType.getInteger(context, "time_amount");
@@ -479,14 +433,14 @@ class CommandExecute {
 
         // Check if timer exist.
         if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
-            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx-a.timer_already_exist"));
+            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.timer_already_exist"));
             return 0;
         }
 
         return commandCreateTemplateTimer(context, timerId, timeUnit, timeAmount, endBehavior, behaviorContent);
     }
 
-    static int executeAdminTimer_Template_Read(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Template_Read(CommandContext<CommandSourceStack> context) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         String infoCategory = StringArgumentType.getString(context, "category");
@@ -502,14 +456,14 @@ class CommandExecute {
         return CommandDisplay.displayCommandTimerRead(context, timerId, "", timeUnit, infoCategory, "template");
     }
 
-    static int executeAdminTimer_Template_Delete(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Template_Delete(CommandContext<CommandSourceStack> context) {
         // Receive argument.
         String timerId = StringArgumentType.getString(context, "timer_id");
 
         boolean isDeleted = TimeHolder.deleteTemplateTimer(timerId);
         if (isDeleted) {
-            MessagePublisher.sendSystemMessage(context, 
-                    Component.translatable("commands.chx-a.timer_deleted")
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.timer_deleted")
                             .append(Component.literal(" (" + timerId + ")"))
                             .withColor(0xFFD700)
             );
@@ -520,7 +474,7 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminTimer_Template_CreateRange(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Template_CreateRange(CommandContext<CommandSourceStack> context, String endBehavior) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         int timeFirstRange = IntegerArgumentType.getInteger(context, "time_first_range");
@@ -547,20 +501,20 @@ class CommandExecute {
 
         // Check if timer exist.
         if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
-            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx-a.timer_already_exist"));
+            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.timer_already_exist"));
             return 0;
         }
 
         return commandCreateTemplateTimer(context, timerId, timeUnit, selectedTimeAmount, endBehavior, behaviorContent);
     }
 
-    static int executeAdminTimer_Template_List(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Template_List(CommandContext<CommandSourceStack> context) {
         String[] templateIds = TimeHolder.getAllTemplateIds();
 
         return CommandDisplay.displayIdList(context, templateIds);
     }
 
-    static int executeAdminTimer_Instance_Apply(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Instance_Apply(CommandContext<CommandSourceStack> context) {
         // Receive arguments.
         String templateTimerId = StringArgumentType.getString(context, "template_timer_id");
         String applyTarget = StringArgumentType.getString(context, "apply_target");
@@ -581,7 +535,7 @@ class CommandExecute {
 
         // Determine if target exist.
         if (targetUUID == null) {
-            MessagePublisher.sendFailureMessage(context, 
+            MessagePublisher.sendFailureMessage(context,
                     returnGeneralError(GeneralError.targetNotExist)
             );
             return 0;
@@ -589,8 +543,8 @@ class CommandExecute {
 
         // Determine if template timer exist and if instance timer exist, then register (Copy).
         if (TimeHolder.createInstanceFromTemplate(targetUUID, templateTimerId)) {
-            MessagePublisher.sendSystemMessage(context, 
-                    Component.translatable("commands.chx-a.timer_instantiated")
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.timer_instantiated")
                             .append(Component.literal(" " + templateTimerId + " -> " + displayTarget))
                             .withColor(0x66FF66)
             );
@@ -603,7 +557,7 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminTimer_Instance_Create(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Instance_Create(CommandContext<CommandSourceStack> context, String endBehavior) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         String masterString = StringArgumentType.getString(context, "master_id");
@@ -637,7 +591,7 @@ class CommandExecute {
         }
     }
 
-    static int executeAdminTimer_Instance_CreateRange(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Instance_CreateRange(CommandContext<CommandSourceStack> context, String endBehavior) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         String masterString = StringArgumentType.getString(context, "master_id");
@@ -673,36 +627,36 @@ class CommandExecute {
             return 0;
         }
     }
-    
-    static int executeAdminTimer_Instance_Start(CommandContext<CommandSourceStack> context) {
+
+    static int executeTimer_Instance_Start(CommandContext<CommandSourceStack> context) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
         return commandOperateInstanceTimer(context, timerId, masterString, "start");
     }
 
-    static int executeAdminTimer_Instance_Stop(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Instance_Stop(CommandContext<CommandSourceStack> context) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
         return commandOperateInstanceTimer(context, timerId, masterString, "stop");
     }
 
-    static int executeAdminTimer_Instance_Reset(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Instance_Reset(CommandContext<CommandSourceStack> context) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
         return commandOperateInstanceTimer(context, timerId, masterString, "reset");
     }
 
-    static int executeAdminTimer_Instance_Delete(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Instance_Delete(CommandContext<CommandSourceStack> context) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
         return commandOperateInstanceTimer(context, timerId, masterString, "delete");
     }
 
-    static int executeAdminTimer_Instance_Modify(CommandContext<CommandSourceStack> context, String category) {
+    static int executeTimer_Instance_Modify(CommandContext<CommandSourceStack> context, String category) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
@@ -727,7 +681,7 @@ class CommandExecute {
             case "t", "tick", "s", "second", "m", "minute", "h", "hour":
                 if (TimeHolder.modifyInstanceTimer(masterId, timerId, timeAmount, timeUnit, category)) {
                     MessagePublisher.sendSystemMessage(context,
-                            Component.translatable("commands.chx-a.timer_success_modification")
+                            Component.translatable("commands.chx.timer_success_modification")
                                     .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + category + " " + timeAmount + " " + timeUnit))
                                     .withColor(0xFFD700)
                     );
@@ -743,7 +697,7 @@ class CommandExecute {
         }
     }
 
-    static int executeAdminTimer_Instance_Read(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Instance_Read(CommandContext<CommandSourceStack> context) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
         String infoCategory = StringArgumentType.getString(context, "category");
@@ -759,7 +713,7 @@ class CommandExecute {
         return CommandDisplay.displayCommandTimerRead(context, timerId, masterString, timeUnit, infoCategory, "instance");
     }
 
-    static int executeAdminTimer_Instance_List(CommandContext<CommandSourceStack> context) {
+    static int executeTimer_Instance_List(CommandContext<CommandSourceStack> context) {
         String masterString = StringArgumentType.getString(context, "master_id");
 
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
@@ -774,7 +728,7 @@ class CommandExecute {
         return CommandDisplay.displayIdList(context, instanceIds);
     }
 
-    static int executeAdminTimer_Instance_Display(CommandContext<CommandSourceStack> context, boolean state) {
+    static int executeTimer_Instance_Display(CommandContext<CommandSourceStack> context, boolean state) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
@@ -787,7 +741,7 @@ class CommandExecute {
         ServerPlayer player = context.getSource().getPlayer();
 
         TimeHolder.displayToInfoPage(player, masterId, timerId, state, false);
-        MessagePublisher.sendSystemMessage(context, 
+        MessagePublisher.sendSystemMessage(context,
                 Component.literal("[HX] " + timerId + " ")
                         .append(Component.translatable("commands." + CoreHanXu.MOD_ID + ".has_changed_to"))
                         .append(Component.literal(" " + state))
@@ -797,25 +751,25 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminScene(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene").withColor(0xFFD700));
+    static int executeScene(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene").withColor(0xFFD700));
         return 1;
     }
 
-    static int executeAdminScene_Help(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_introduction").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext4").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext5").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext6").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_help_innertext7").withColor(0xFFFACD));
+    static int executeScene_Help(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_title").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_introduction").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext3").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext4").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext5").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext6").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext7").withColor(0xFFFACD));
         return 1;
     }
 
-    static int executeAdminScene_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
+    static int executeScene_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
@@ -847,7 +801,7 @@ class CommandExecute {
             case "world":
                 if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_WORLD)) {
                     MessagePublisher.sendSystemMessage(context,
-                            Component.translatable("commands.chx-a.scene_deleted")
+                            Component.translatable("commands.chx.scene_deleted")
                                     .withColor(0xFFFACD));
                     break;
                 }
@@ -856,7 +810,7 @@ class CommandExecute {
             case "global":
                 if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_GLOBAL)) {
                     MessagePublisher.sendSystemMessage(context,
-                            Component.translatable("commands.chx-a.scene_deleted")
+                            Component.translatable("commands.chx.scene_deleted")
                                     .withColor(0xFFFACD));
                     break;
                 }
@@ -867,7 +821,7 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeAdminScene_Template(CommandContext<CommandSourceStack> context) {
+    static int executeScene_Template(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
@@ -888,11 +842,11 @@ class CommandExecute {
             player.drop(book, false);
         }
 
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_get_template").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_get_template").withColor(0xFFFACD));
         return 1;
     }
 
-    static int executeAdminScene_Create(CommandContext<CommandSourceStack> context) {
+    static int executeScene_Create(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
@@ -950,7 +904,7 @@ class CommandExecute {
             // Prase data to map for storage.
             Map<String, Object> yamlMap = YamlReader.stringToMap(yamlContent);
             YamlReader.save("scene", sceneId + ".yaml", yamlMap, targetPath);
-            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.scene_created").withColor(0xFFFACD));
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_created").withColor(0xFFFACD));
         }
         catch (Exception e) {
             MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToSave));
@@ -1036,7 +990,7 @@ class CommandExecute {
                 int startingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                 String endBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx-a.timer_started").withColor(0x66FF66)
+                        Component.translatable("commands.chx.timer_started").withColor(0x66FF66)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + startingTime + " tick(s) ->> " + endBehavior)
@@ -1054,7 +1008,7 @@ class CommandExecute {
                 // Send success message.
                 int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx-a.timer_stopped").withColor(0x66FF66)
+                        Component.translatable("commands.chx.timer_stopped").withColor(0x66FF66)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " tick(s)")
@@ -1072,7 +1026,7 @@ class CommandExecute {
                 // Send success message.
                 int initialTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx-a.timer_reset").withColor(0x66FF66)
+                        Component.translatable("commands.chx.timer_reset").withColor(0x66FF66)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + initialTime + " tick(s)")
@@ -1088,7 +1042,7 @@ class CommandExecute {
 
                 // Send success message.
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx-a.timer_deleted")
+                        Component.translatable("commands.chx.timer_deleted")
                                 .withColor(0x66FF66)
                 );
                 MessagePublisher.sendSystemMessage(context,

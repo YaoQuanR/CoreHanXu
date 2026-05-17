@@ -49,25 +49,25 @@ public class Error {
 
     public static Component returnTimerError(TimerError timerError) {
         return switch (timerError) {
-            case alreadyExist -> Component.translatable("commands.chx-a.timer_already_exist");
-            case notExist -> Component.translatable("commands.chx-a.timer_not_exist");
-            case notExistOrAlreadyInstantiated -> Component.translatable("commands.chx-a.timer_not_exist_or_already_instantiated");
-            case unableToStart -> Component.translatable("commands.chx-a.timer_unable_to_start");
-            case unableToStop -> Component.translatable("commands.chx-a.timer_unable_to_stop");
-            case unableToReset -> Component.translatable("commands.chx-a.timer_unable_to_reset");
-            case unableToDeleteInstance -> Component.translatable("commands.chx-a.timer_unable_to_delete_instance");
+            case alreadyExist -> Component.translatable("commands.chx.timer_already_exist");
+            case notExist -> Component.translatable("commands.chx.timer_not_exist");
+            case notExistOrAlreadyInstantiated -> Component.translatable("commands.chx.timer_not_exist_or_already_instantiated");
+            case unableToStart -> Component.translatable("commands.chx.timer_unable_to_start");
+            case unableToStop -> Component.translatable("commands.chx.timer_unable_to_stop");
+            case unableToReset -> Component.translatable("commands.chx.timer_unable_to_reset");
+            case unableToDeleteInstance -> Component.translatable("commands.chx.timer_unable_to_delete_instance");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }
 
     public static Component returnSceneError(SceneError sceneError) {
         return switch (sceneError) {
-            case notFound -> Component.translatable("commands.chx-a.scene_not_found");
-            case playFailed -> Component.translatable("commands.chx-a.scene_play_failed");
-            case failedToDelete -> Component.translatable("commands.chx-a.scene_failed_to_delete");
-            case alreadyExist -> Component.translatable("commands.chx-a.scene_already_exist");
-            case sameNameFound -> Component.translatable("commands.chx-a.scene_same_name_found");
-            case failedToSave ->  Component.translatable("commands.chx-a.scene_failed_to_save");
+            case notFound -> Component.translatable("commands.chx.scene_not_found");
+            case playFailed -> Component.translatable("commands.chx.scene_play_failed");
+            case failedToDelete -> Component.translatable("commands.chx.scene_failed_to_delete");
+            case alreadyExist -> Component.translatable("commands.chx.scene_already_exist");
+            case sameNameFound -> Component.translatable("commands.chx.scene_same_name_found");
+            case failedToSave ->  Component.translatable("commands.chx.scene_failed_to_save");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

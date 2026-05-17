@@ -241,6 +241,12 @@ public class TimeHolder {
         return true;
     }
 
+    public static boolean restartInstanceTimer(UUID masterId, String timerId) {
+        boolean isReset = resetInstanceTimer(masterId, timerId);
+        boolean isStart = startInstanceTimer(masterId, timerId);
+        return isReset && isStart;
+    }
+
     public static boolean deleteInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 

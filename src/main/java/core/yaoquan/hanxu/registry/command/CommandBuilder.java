@@ -328,6 +328,18 @@ public class CommandBuilder {
                                         )
                                 )
                                 .then(
+                                    Commands.literal("restart")
+                                        .then(
+                                            Commands.argument("master_id", StringArgumentType.word())
+                                                .then(
+                                                    Commands.argument("timer_id", StringArgumentType.word())
+                                                        .suggests(CommandSuggest::suggestInstanceTimer)
+                                                        .executes(CommandExecute::executeTimer_Instance_Restart)
+                                                )
+                                                .suggests(CommandSuggest::suggestUUIDOwner)
+                                        )
+                                )
+                                .then(
                                     Commands.literal("modify")
                                         .then(
                                             Commands.argument("master_id", StringArgumentType.word())

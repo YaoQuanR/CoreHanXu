@@ -21,7 +21,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WritableBookContent;
-import net.minecraft.world.level.GameRules;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.io.IOException;
@@ -402,8 +401,9 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext11").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext12").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext13").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_modify_argument").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext14").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_modify_argument").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext15").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument1").withColor(0xFFFACD));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument2").withColor(0xFFFACD));
         return 1;
@@ -647,6 +647,13 @@ class CommandExecute {
         String timerId = StringArgumentType.getString(context, "timer_id");
 
         return commandOperateInstanceTimer(context, timerId, masterString, "reset");
+    }
+
+    static int executeTimer_Instance_Restart(CommandContext<CommandSourceStack> context) {
+        String masterString = StringArgumentType.getString(context, "master_id");
+        String timerId = StringArgumentType.getString(context, "timer_id");
+
+        return commandOperateInstanceTimer(context, timerId, masterString, "restart");
     }
 
     static int executeTimer_Instance_Delete(CommandContext<CommandSourceStack> context) {
@@ -1031,6 +1038,24 @@ class CommandExecute {
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + initialTime + " tick(s)")
                                 .withColor(0x66FF66)
+                );
+
+                break;
+            case "restart":
+                if (!TimeHolder.restartInstanceTimer(masterId, timerId)) {
+                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToRestart));
+                    return 0;
+                }
+
+                // Send success message.
+                int restartTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
+                String restartEndBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.timer_restart").withColor(0x66FF66)
+                );
+                MessagePublisher.sendSystemMessage(context,
+                        Component.literal("(" + timerId + " -> " + masterString + "): " + restartTime + " tick(s) ->> " + restartEndBehavior)
+                        .withColor(0x66FF66)
                 );
 
                 break;

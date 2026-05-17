@@ -10,6 +10,7 @@ public class Error {
         unableToStart,
         unableToStop,
         unableToReset,
+        unableToRestart,
         unableToDeleteInstance,
     }
 
@@ -55,6 +56,7 @@ public class Error {
             case unableToStart -> Component.translatable("commands.chx.timer_unable_to_start");
             case unableToStop -> Component.translatable("commands.chx.timer_unable_to_stop");
             case unableToReset -> Component.translatable("commands.chx.timer_unable_to_reset");
+            case unableToRestart -> Component.translatable("commands.chx.timer_unable_to_restart");
             case unableToDeleteInstance -> Component.translatable("commands.chx.timer_unable_to_delete_instance");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };

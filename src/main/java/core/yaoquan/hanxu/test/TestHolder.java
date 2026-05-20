@@ -3,14 +3,21 @@ package core.yaoquan.hanxu.test;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
+import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Set;
@@ -78,9 +85,9 @@ public class TestHolder {
 
                 // Then create timer:
                 // Delete old timer for new (For test usage), normally advised to delete old and mask it, or else use "reset".
-                if (TimeHolder.getInstanceId(TimeHolder.GLOBAL_UUID, "test1") != null) {
+                if (TimeHolder.getInstanceId(General.GLOBAL_UUID, "test1") != null) {
                     TimeHolder.deleteInstanceTimer(
-                            TimeHolder.GLOBAL_UUID,
+                            General.GLOBAL_UUID,
                             "test1"
                     );
                 }
@@ -106,8 +113,7 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test1",
-                        true,
-                        false
+                        true
                 );
 
                 break;
@@ -140,8 +146,7 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test2",
-                        true,
-                        false
+                        true
                 );
 
                 break;
@@ -150,13 +155,13 @@ public class TestHolder {
 
                 if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test3") != null) {
                     TimeHolder.deleteInstanceTimer(
-                            TimeHolder.GLOBAL_UUID,
+                            General.GLOBAL_UUID,
                             "test3"
                     );
                 }
 
                 TimeHolder.createInstanceTimer(
-                        TimeHolder.GLOBAL_UUID,
+                        General.GLOBAL_UUID,
                         "test3",
                         8,
                         "second",
@@ -167,10 +172,9 @@ public class TestHolder {
                 );
                 TimeHolder.displayToInfoPage(
                         serverPlayer,
-                        TimeHolder.GLOBAL_UUID,
+                        General.GLOBAL_UUID,
                         "test3",
-                        true,
-                        false
+                        true
                 );
 
                 break;
@@ -198,8 +202,7 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test4",
-                        true,
-                        false
+                        true
                 );
 
                 break;
@@ -215,7 +218,7 @@ public class TestHolder {
                                 "test5"
                     );
                     TimeHolder.deleteInstanceTimer(
-                            TimeHolder.GLOBAL_UUID,
+                            General.GLOBAL_UUID,
                                 "test5"
                     );
                 }
@@ -240,7 +243,7 @@ public class TestHolder {
                         "test5"
                 );
                 TimeHolder.createInstanceFromTemplate(
-                        TimeHolder.GLOBAL_UUID,
+                        General.GLOBAL_UUID,
                         "test5"
                 );
 
@@ -249,15 +252,13 @@ public class TestHolder {
                         serverPlayer,
                         serverPlayer.getUUID(),
                         "test5",
-                        true,
-                        false
+                        true
                 );
                 TimeHolder.displayToInfoPage(
                         serverPlayer,
-                        TimeHolder.GLOBAL_UUID,
+                        General.GLOBAL_UUID,
                         "test5",
-                        true,
-                        false
+                        true
                 );
 
                 break;
@@ -283,9 +284,130 @@ public class TestHolder {
                 serverPlayer,
                 serverPlayer.getUUID(),
                 masterGroup + ":" + timerId,
-                state,
-                false
+                state
         );
+
+        return 1;
+    }
+
+    public static int executeTest_Attribute(CommandContext<CommandSourceStack> context) {
+        int testId = IntegerArgumentType.getInteger(context, "test_id");
+
+        if (!(context.getSource().getEntity() instanceof ServerPlayer serverPlayer)) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        // A set that contains some tool value for determination.
+        final Set<String> triggered = ConcurrentHashMap.newKeySet();
+
+        switch (testId) {
+            case 1:
+                // Unregister when existed.
+                AttributeHolder.CustomAttribute currentAttribute = AttributeHolder.getAttributeDefinition("tut-run_value", true);
+                if (currentAttribute != null) {
+                    AttributeHolder.unregister(currentAttribute);
+                }
+
+                // Define a attribute.
+                AttributeHolder.CustomAttribute attribute1 = new AttributeHolder.CustomAttribute(
+                    "tut-run_value", 80, 10)
+                    // Fluent factory: define threshold and zero behaviors.
+                    .onThreshold(20, "tut-give_sword")
+                    .onThreshold(50, "tut-give_speed")
+                    .onZero("tut-clear_all")
+                    .setRecovery("tut-recovery1");
+
+                // Then register.
+                AttributeHolder.register(attribute1);
+
+                // Register and define the callback behaviors.
+                BehaviorRegistry.register("tut-give_sword", (player, parameters) -> {
+                    /*
+                       Consider as server or console if "player" is null.
+                       Parameters is a map that receive elements from system.
+                       In attribute system, this elements will be provided as String:
+                       master_id, master_name, attribute_id, threshold, current_value, new_value, direction.
+                    */
+                    if (player == null) {
+                        return;
+                    }
+
+                    // Reject to give another item repeatedly.
+                    if (player.getInventory().contains(new ItemStack(Items.DIAMOND_SWORD))) {
+                        return;
+                    }
+
+                    player.getInventory().add(new ItemStack(Items.DIAMOND_SWORD));
+                    player.sendSystemMessage(Component.literal("[HX] Received reward sword!"));
+                });
+
+                BehaviorRegistry.register("tut-give_speed", (player, parameters) -> {
+                    if (player == null) {
+                        return;
+                    }
+
+                    // Set a state that avoid to trigger repeatedly.
+                    if (triggered.contains("tut-give_speed")) {
+                        return;
+                    }
+
+                    player.addEffect(new MobEffectInstance(MobEffects.SPEED, 160, 1, true, false));
+                    player.sendSystemMessage(Component.literal("[HX] Received reward speed!"));
+
+                    triggered.add("tut-give_speed");
+                });
+
+                // Register zero behavior as same method.
+                BehaviorRegistry.register("tut-clear_all", (player, parameters) -> {
+                    if (player == null) {
+                        return;
+                    }
+                    player.removeAllEffects();
+                    player.getInventory().clearOrCountMatchingItems(
+                        item -> item.is(Items.DIAMOND_SWORD), 64, player.inventoryMenu.getCraftSlots()
+                    );
+                    player.sendSystemMessage(Component.literal("[HX] Clear all rewards!"));
+                });
+
+                // Register recovery curve behavior as same method.
+                BehaviorRegistry.register("tut-recovery1", (player, parameters) -> {
+                    if (player == null) {
+                        return;
+                    }
+                    // You can get parameter from map (All are string).
+                    float currentValue = Float.parseFloat(parameters.get("current_value"));
+
+                    // Decrease behavior (In every tick).
+                    AttributeHolder.reduceValue(player.getUUID(), "tut-run_value", 0.05f, true);
+
+                    // Increase when running.
+                    if (player.isSprinting() && player.tickCount % 20 == 0) {
+                        AttributeHolder.addValue(player.getUUID(), "tut-run_value", 3f, true);
+                    }
+
+                    // Allowed to trigger again when satisfied.
+                    if (currentValue <= 40) {
+                        triggered.remove("tut-give_speed");
+                    }
+                });
+
+                // Then set display.
+                AttributeHolder.displayToInfoPage(
+                    serverPlayer,
+                    serverPlayer.getUUID(),
+                    "tut-run_value",
+                    true,
+                    true
+                );
+
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Registered attribute 1!"));
+
+                break;
+            default:
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+                return 0;
+        }
 
         return 1;
     }

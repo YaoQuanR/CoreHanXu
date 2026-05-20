@@ -3,9 +3,11 @@ package core.yaoquan.hanxu.api;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.TimerCallback;
 import core.yaoquan.hanxu.api.define.FilePath;
+import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.event.ModPayload;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.Creator;
+import core.yaoquan.hanxu.util.Resolver;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -26,7 +28,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-// Reminder: API will use "get" for getter, but out of API, "return" is used for general returning methods.
 /**
  * Timer system API
  * @since 0.2.0
@@ -37,10 +38,6 @@ public class TimeHolder {
     public static final int TICKS_PER_SECOND = 20;
     public static final int TICKS_PER_MINUTE = 20 * 60;
     public static final int TICKS_PER_HOUR = 20 * 3600;
-
-    // UUID constant.
-    public static final UUID GLOBAL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-    public static final UUID TEMPORARY_UUID = UUID.fromString("00000000-0000-0000-0000-00000000000f");
 
     // Storage template timer (in safety method).
     private static final Map<String, TimerData> templateTimer = new ConcurrentHashMap<>();
@@ -190,7 +187,7 @@ public class TimeHolder {
             return false;
         }
         // Else start depend on master id.
-        if (masterId.equals(GLOBAL_UUID) || masterId.equals(TEMPORARY_UUID)) {
+        if (masterId.equals(General.GLOBAL_UUID) || masterId.equals(General.TEMPORARY_UUID)) {
             timerData.start(null);
         }
         else {
@@ -527,28 +524,27 @@ public class TimeHolder {
     }
 
     // Display out to F4 page (info page).
-    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state, boolean isRefresh) {
+    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state) {
         if (masterId == null) {
             return;
         }
 
         int remainingTicks = getRemainingTimeFromInstance(masterId, timerId, "tick");
         boolean isCounting = isInstanceTimerCounting(masterId, timerId);
-        String masterName = returnMasterName(masterId);
+        String masterName = Resolver.resolveTargetMasterName(masterId);
+        String key = player.getUUID() + ":" + masterId + ":" + timerId;
 
-        if (!isRefresh) {
-            if (state) {
-                refreshDisplayList.add(player.getUUID() + ":" + masterId + ":" + timerId);
-            }
-            else {
-                refreshDisplayList.remove(player.getUUID() + ":" + masterId + ":" + timerId);
-            }
+        if (state) {
+            refreshDisplayList.add(key);
+        }
+        else {
+            refreshDisplayList.remove(key);
         }
 
-        CoreHanXu.LOGGER.info("[HX] Display debug timer info. State: {}, Refresh: {}", state, isRefresh);
+        CoreHanXu.LOGGER.info("[HX] Display debug timer info. State: {}", state);
 
         PacketDistributor.sendToPlayer(
-                player, new ModPayload.F4DisplayPacket(masterId, timerId, state, remainingTicks, isCounting, masterName)
+                player, new ModPayload.TimerF4Packet(masterId, timerId, state, remainingTicks, isCounting, masterName)
         );
     }
 
@@ -560,7 +556,7 @@ public class TimeHolder {
 
         if (refreshDisplayList.contains(key)) {
             CoreHanXu.LOGGER.info("[HX] Refresh check: true");
-            displayToInfoPage(player, masterId, timerId, true, true);
+            displayToInfoPage(player, masterId, timerId, true);
         }
         else {
             CoreHanXu.LOGGER.info("[HX] Refresh check: false");
@@ -602,7 +598,7 @@ public class TimeHolder {
         CompoundTag dataRoot = new CompoundTag();
         CompoundTag allTimersTag = new CompoundTag();
 
-        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(GLOBAL_UUID);
+        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(General.GLOBAL_UUID);
         if (globalInstanceTimers != null) {
             for (var entry : globalInstanceTimers.entrySet()) {
                 // Put timer's data into NBT tag.
@@ -647,8 +643,9 @@ public class TimeHolder {
     }
 
     public static void loadInstanceTimerForPlayer(ServerPlayer player) {
+        String headKey = "core.yaoquan.hanxu.player_instance_timers";
         CompoundTag dataRoot = player.getPersistentData();
-        CompoundTag allTimersTag = dataRoot.getCompound("core.yaoquan.hanxu.player_instance_timers").orElse(new CompoundTag());
+        CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
 
         rebuildTimerData(allTimersTag, player.getUUID());
     }
@@ -664,7 +661,7 @@ public class TimeHolder {
 
         CompoundTag dataRoot;
         try {
-            // Limited to 32MB -> 512 Depth.
+            // Limited to 32MB -> 128 Depth.
             NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
             dataRoot = NbtIo.readCompressed(file, accounter);
         }
@@ -675,7 +672,7 @@ public class TimeHolder {
 
         CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
 
-        rebuildTimerData(allTimersTag, GLOBAL_UUID);
+        rebuildTimerData(allTimersTag, General.GLOBAL_UUID);
     }
 
     private static void rebuildTimerData(CompoundTag allTimersTag, UUID masterId) {
@@ -722,26 +719,6 @@ public class TimeHolder {
             CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
             return null;
         }
-    }
-
-    private static String returnMasterName(UUID masterId) {
-        if (TimeHolder.GLOBAL_UUID.equals(masterId)) {
-            return "-global";
-        }
-        else if (TimeHolder.TEMPORARY_UUID.equals(masterId)) {
-            return "-temporary";
-        }
-
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        if (server != null) {
-            ServerPlayer player = server.getPlayerList().getPlayer(masterId);
-            if (player != null) {
-                return player.getName().getString();
-            }
-        }
-
-        // If no pair target exist, return this.
-        return "-not_found";
     }
 
     // Register timers into game.

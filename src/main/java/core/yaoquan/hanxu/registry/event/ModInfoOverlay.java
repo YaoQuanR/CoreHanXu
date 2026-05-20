@@ -13,7 +13,6 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID, value = Dist.CLIENT)
 public class ModInfoOverlay {
@@ -32,7 +31,7 @@ public class ModInfoOverlay {
             isShownInfo = !isShownInfo;
         }
 
-        ModNetwork.ClientF4Display.tick();
+        ModNetwork.TimerF4Client.tick();
     }
 
     @SubscribeEvent
@@ -48,15 +47,15 @@ public class ModInfoOverlay {
         displayLines.add("-= Core HanXu Information =-");
         displayLines.add("Loaded.");
 
-        int displayedTimer = 0;
+        int displayedAttribute = 0;
         displayLines.add("");
         displayLines.add("-> Timer");
-        for (String key : ModNetwork.ClientF4Display.getAllInfoKeys()) {
-            if (displayedTimer < 10) {
+        for (String key : ModNetwork.TimerF4Client.getAllInfoKeys()) {
+            if (displayedAttribute < 10) {
                 String[] parts = key.split(":", 2);
                 String timerId = parts[1];
 
-                ModNetwork.ClientF4Display.TimerInfo timerInfo = ModNetwork.ClientF4Display.getTimerInfo(key);
+                ModNetwork.TimerF4Client.TimerInfo timerInfo = ModNetwork.TimerF4Client.getTimerInfo(key);
                 int remainingTime = timerInfo.remainingTicks();
                 String masterName = timerInfo.masterName();
 
@@ -72,7 +71,31 @@ public class ModInfoOverlay {
                     displayLines.add("(" + timerId + " -> " + masterName + ") " + remainingHours + ":" + remainingMinutes + ":" + remainingSeconds + ":" + remainingTicks + (isItCounting? " (-)" : " (#)"));
                 }
 
-                displayedTimer++;
+                displayedAttribute++;
+            }
+            else {
+                displayLines.add("And more...");
+                break;
+            }
+        }
+
+        displayLines.add("");
+        displayLines.add("-> Attribute");
+        for (String key : ModNetwork.AttributeF4Client.getAllInfoKeys()) {
+            if (displayedAttribute < 10) {
+                String[] parts = key.split(":", 2);
+                String attributeId = parts[1];
+                ModNetwork.AttributeF4Client.AttributeInfo attributeInfo = ModNetwork.AttributeF4Client.getAttributeInfo(key);
+
+                String displayValue = String.format("%.2f", attributeInfo.value());
+
+                if (attributeInfo.value() == -1.0f) {
+                    displayLines.add("(" + attributeId + " -> " + attributeInfo.masterName() + ") REMOVED");
+                }
+                else {
+                    displayLines.add("(" + attributeId + " -> " + attributeInfo.masterName() + ") " + displayValue);
+                }
+                displayedAttribute++;
             }
             else {
                 displayLines.add("And more...");

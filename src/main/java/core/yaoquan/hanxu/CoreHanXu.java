@@ -1,5 +1,6 @@
 package core.yaoquan.hanxu;
 
+import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.registry.ModConfig;
 import core.yaoquan.hanxu.registry.ModDataGenerator;
@@ -74,8 +75,12 @@ public class CoreHanXu {
         LOGGER.info("[HX] Test: Custom Timer Callback.");
 
         ServerLevel overworld = event.getServer().overworld();
+
         TimeHolder.loadInstanceTimerForGlobal(overworld);
         LOGGER.info("[HX] Rebuild Procedure: Timer - Global");
+
+        AttributeHolder.loadAttributeForGlobal(overworld);
+        LOGGER.info("[HX] Rebuild Procedure: Attribute - Global");
     }
 
     @SubscribeEvent
@@ -106,6 +111,9 @@ public class CoreHanXu {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             TimeHolder.loadInstanceTimerForPlayer(serverPlayer);
             LOGGER.info("[HX] Load Procedure: Timer - Player: {}", serverPlayer.getName().getString());
+
+            AttributeHolder.loadAttributeForPlayer(serverPlayer);
+            LOGGER.info("[HX] Load Procedure: Attribute - Player: {}", serverPlayer.getName().getString());
         }
     }
 
@@ -114,6 +122,8 @@ public class CoreHanXu {
         if (event.getEntity() instanceof ServerPlayer player) {
             TimeHolder.saveInstanceTimerForPlayer(player);
             LOGGER.info("[HX] Save Procedure: Timer - Player: {}", player.getName().getString());
+
+            AttributeHolder.saveAttributeToPlayer(player);
         }
     }
 
@@ -126,8 +136,11 @@ public class CoreHanXu {
         }
 
         ServerLevel overworld = event.getServer().overworld();
+
         TimeHolder.saveInstanceTimerForGlobal(overworld);
         LOGGER.info("[HX] Save Procedure: Timer - Global");
+
+        AttributeHolder.saveAttributeToGlobal(overworld);
     }
 
     public static void gatherData(GatherDataEvent.Client event) {

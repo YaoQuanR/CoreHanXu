@@ -12,10 +12,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ModNetwork {
-    public static class ClientF4Display {
+    public static class TimerF4Client {
         private static final Map<String, TimerInfo> localInfoDisplayTimer = new ConcurrentHashMap<>();
 
-        public static void add(ModPayload.F4DisplayPacket packet) {
+        public static void add(ModPayload.TimerF4Packet packet) {
             UUID masterId = packet.masterId();
             String timerId = packet.timerId();
             String key = masterId.toString() + ":" + timerId;
@@ -64,6 +64,46 @@ public class ModNetwork {
         }
     }
 
+    public static class AttributeF4Client {
+        private static final Map<String, AttributeInfo> localInfoDisplayAttribute = new ConcurrentHashMap<>();
+
+        public static void add(ModPayload.AttributeF4Packet packet) {
+            UUID masterId = packet.masterId();
+            String attributeId = packet.attributeId();
+            String key = masterId.toString() + ":" + attributeId;
+
+            localInfoDisplayAttribute.put(key, new AttributeInfo(packet.value(), packet.fromApi(), packet.masterName()));
+        }
+
+        public static void remove(UUID masterId, String attributeId) {
+            String key = masterId.toString() + ":" + attributeId;
+            localInfoDisplayAttribute.remove(key);
+        }
+
+        public static  void clear() {
+            localInfoDisplayAttribute.clear();
+        }
+
+        public static Set<String> getAllInfoKeys() {
+            return localInfoDisplayAttribute.keySet();
+        }
+
+        public static AttributeInfo getAttributeInfo(String key) {
+            return localInfoDisplayAttribute.get(key);
+        }
+
+        public static boolean isInfoDisplay(UUID masterId, String attributeId) {
+            String key = masterId.toString() + ":" + attributeId;
+
+            Map<String, AttributeInfo> compareMap = new ConcurrentHashMap<>();
+            compareMap.put(key, getAttributeInfo(key));
+
+            return localInfoDisplayAttribute.equals(compareMap);
+        }
+
+        public record AttributeInfo(float value, boolean fromApi, String masterName) {}
+    }
+
     @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
     public static class RegisterNetworking {
         @SubscribeEvent
@@ -71,9 +111,15 @@ public class ModNetwork {
             final PayloadRegistrar registrar = event.registrar("1");
 
             registrar.playToClient(
-                    ModPayload.F4DisplayPacket.TYPE,
-                    ModPayload.F4DisplayPacket.STREAM_CODEC,
-                    ModPayload.F4DisplayPacket::handleClient
+                    ModPayload.TimerF4Packet.TYPE,
+                    ModPayload.TimerF4Packet.STREAM_CODEC,
+                    ModPayload.TimerF4Packet::handleClient
+            );
+
+            registrar.playToClient(
+                    ModPayload.AttributeF4Packet.TYPE,
+                    ModPayload.AttributeF4Packet.STREAM_CODEC,
+                    ModPayload.AttributeF4Packet::handleClient
             );
         }
     }

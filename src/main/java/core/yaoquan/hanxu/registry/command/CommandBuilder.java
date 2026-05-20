@@ -43,6 +43,7 @@ public class CommandBuilder {
                                         .suggests(CommandSuggest::suggestPlayer)
                                         .executes(CommandExecute::executeAdvancedLicense_State)
                                 )
+                                .executes(CommandExecute::executeLicense_State)
                                 .requires(cs -> PermissionHolder.hasPermission(cs,1))
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,0))
@@ -526,6 +527,60 @@ public class CommandBuilder {
                         )
                         .requires(cs -> PermissionHolder.hasPermission(cs,1))
                         .executes(CommandExecute::executeScene)
+                )
+                .then(
+                    Commands.literal("attribute")
+                        .then(
+                            Commands.literal("help")
+                        )
+                        .then(
+                            Commands.literal("list")
+                        )
+                        .then(
+                            Commands.literal("create")
+                        )
+                        .then(
+                            Commands.literal("define")
+                        )
+                        .then(
+                            Commands.literal("delete")
+                        )
+                        .then(
+                            Commands.literal("read")
+                        )
+                        .then(
+                            Commands.literal("modify")
+                                .then(
+                                    Commands.literal("value")
+                                )
+                                .then(
+                                    Commands.literal("add")
+                                )
+                                .then(
+                                    Commands.literal("reduce")
+                                )
+                                .then(
+                                    Commands.literal("auto")
+                                )
+                        )
+                        .then(
+                            Commands.literal("display")
+                        )
+                        .then(
+                            Commands.literal("test")
+                                .then(
+                                    Commands.literal("example")
+                                        .then(
+                                            Commands.argument("test_id", IntegerArgumentType.integer())
+                                                .executes(TestHolder::executeTest_Attribute)
+                                        )
+                                )
+                                .then(
+                                    Commands.literal("attribute_display")
+                                )
+                                .requires(TestHolder::hasPrivateTestPermission)
+                        )
+                        .requires(cs -> PermissionHolder.hasPermission(cs, 1))
                 )
                 .requires(cs -> PermissionHolder.hasPermission(cs,0))
                 .executes(CommandExecute::executeBare)

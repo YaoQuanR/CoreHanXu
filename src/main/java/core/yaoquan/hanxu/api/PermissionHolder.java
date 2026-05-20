@@ -9,9 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
-// Reminder: API will use "get" for getter, but out of API, "return" is used for general returning methods.
 /**
- * Permission system
+ * Permission system API
  * @since 0.1ea
  */
 public class PermissionHolder {

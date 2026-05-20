@@ -747,7 +747,7 @@ class CommandExecute {
 
         ServerPlayer player = context.getSource().getPlayer();
 
-        TimeHolder.displayToInfoPage(player, masterId, timerId, state, false);
+        TimeHolder.displayToInfoPage(player, masterId, timerId, state);
         MessagePublisher.sendSystemMessage(context,
                 Component.literal("[HX] " + timerId + " ")
                         .append(Component.translatable("commands." + CoreHanXu.MOD_ID + ".has_changed_to"))

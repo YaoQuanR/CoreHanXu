@@ -12,19 +12,19 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class ModPayload {
-    public record F4DisplayPacket(UUID masterId, String timerId, boolean isVisible, int remainingTicks, boolean isCounting, String masterName)
+    public record TimerF4Packet(UUID masterId, String timerId, boolean isVisible, int remainingTicks, boolean isCounting, String masterName)
             implements CustomPacketPayload {
-        public static final CustomPacketPayload.Type<F4DisplayPacket> TYPE =
-                new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "f4_display_packet"));
+        public static final CustomPacketPayload.Type<TimerF4Packet> TYPE =
+                new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "timer_f4_packet"));
 
-        public static final StreamCodec<ByteBuf, F4DisplayPacket> STREAM_CODEC = StreamCodec.composite(
-                ByteBufCodecs.STRING_UTF8.map(UUID::fromString, UUID::toString), F4DisplayPacket::masterId,
-                ByteBufCodecs.STRING_UTF8, F4DisplayPacket::timerId,
-                ByteBufCodecs.BOOL, F4DisplayPacket::isVisible,
-                ByteBufCodecs.INT, F4DisplayPacket::remainingTicks,
-                ByteBufCodecs.BOOL, F4DisplayPacket::isCounting,
-                ByteBufCodecs.STRING_UTF8, F4DisplayPacket::masterName,
-                F4DisplayPacket::new
+        public static final StreamCodec<ByteBuf, TimerF4Packet> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8.map(UUID::fromString, UUID::toString), TimerF4Packet::masterId,
+                ByteBufCodecs.STRING_UTF8, TimerF4Packet::timerId,
+                ByteBufCodecs.BOOL, TimerF4Packet::isVisible,
+                ByteBufCodecs.INT, TimerF4Packet::remainingTicks,
+                ByteBufCodecs.BOOL, TimerF4Packet::isCounting,
+                ByteBufCodecs.STRING_UTF8, TimerF4Packet::masterName,
+                TimerF4Packet::new
         );
 
         @Override
@@ -32,16 +32,51 @@ public class ModPayload {
             return TYPE;
         }
 
-        public static void handleClient(F4DisplayPacket packet, IPayloadContext context) {
+        public static void handleClient(TimerF4Packet packet, IPayloadContext context) {
             context.enqueueWork(() -> {
                 if (packet.isVisible()) {
-                    ModNetwork.ClientF4Display.add(packet);
+                    ModNetwork.TimerF4Client.add(packet);
                 }
                 else {
-                    ModNetwork.ClientF4Display.remove(packet.masterId(), packet.timerId());
+                    ModNetwork.TimerF4Client.remove(packet.masterId(), packet.timerId());
                 }
             }).exceptionally(e -> {
                 CoreHanXu.LOGGER.error("[HX] Failed to update F4 list to timer system: ", e);
+                return null;
+            });
+        }
+    }
+
+    public record AttributeF4Packet(UUID masterId, String attributeId, boolean isVisible, float value, boolean fromApi, String masterName)
+            implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<AttributeF4Packet> TYPE =
+                new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "attribute_f4_packet"));
+
+        public static final StreamCodec<ByteBuf, AttributeF4Packet> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8.map(UUID::fromString, UUID::toString), AttributeF4Packet::masterId,
+                ByteBufCodecs.STRING_UTF8, AttributeF4Packet::attributeId,
+                ByteBufCodecs.BOOL, AttributeF4Packet::isVisible,
+                ByteBufCodecs.FLOAT, AttributeF4Packet::value,
+                ByteBufCodecs.BOOL, AttributeF4Packet::fromApi,
+                ByteBufCodecs.STRING_UTF8, AttributeF4Packet::masterName,
+                AttributeF4Packet::new
+        );
+
+        @Override
+        public @NotNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+
+        public static void handleClient(AttributeF4Packet packet, IPayloadContext context) {
+            context.enqueueWork(() -> {
+                if (packet.isVisible()) {
+                    ModNetwork.AttributeF4Client.add(packet);
+                }
+                else {
+                    ModNetwork.AttributeF4Client.remove(packet.masterId(), packet.attributeId());
+                }
+            }).exceptionally(e -> {
+                CoreHanXu.LOGGER.error("[HX] Failed to update F4 list to attribute system: ", e);
                 return null;
             });
         }

@@ -314,7 +314,7 @@ public class TestHolder {
                     "tut-run_value", 80, 10)
                     // Fluent factory: define threshold and zero behaviors.
                     .onThreshold(20, "tut-give_sword")
-                    .onThreshold(50, "tut-give_speed")
+                    .onThreshold(40, "tut-give_speed")
                     .onZero("tut-clear_all")
                     .setRecovery("tut-recovery1");
 
@@ -378,12 +378,13 @@ public class TestHolder {
                     // You can get parameter from map (All are string).
                     float currentValue = Float.parseFloat(parameters.get("current_value"));
 
+                    // Using UP direction will avoid trigger when decreasing value (Normal: POINT).
                     // Decrease behavior (In every tick).
-                    AttributeHolder.reduceValue(player.getUUID(), "tut-run_value", 0.05f, true);
+                    AttributeHolder.reduceValue(player.getUUID(), "tut-run_value", 0.05f, true, AttributeHolder.ThresholdDirection.UP);
 
                     // Increase when running.
                     if (player.isSprinting() && player.tickCount % 20 == 0) {
-                        AttributeHolder.addValue(player.getUUID(), "tut-run_value", 3f, true);
+                        AttributeHolder.addValue(player.getUUID(), "tut-run_value", 3f, true, AttributeHolder.ThresholdDirection.UP);
                     }
 
                     // Allowed to trigger again when satisfied.

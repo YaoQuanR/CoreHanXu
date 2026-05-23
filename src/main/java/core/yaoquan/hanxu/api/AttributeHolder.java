@@ -17,7 +17,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -476,12 +475,12 @@ public class AttributeHolder {
             String triggeredType = null;
 
             // Trigger: new (x) ~= threshold (x).
-            if (Math.abs(newValue - threshold) < 0.01f) {
+            if (Math.abs(newValue - threshold) < 0.01f && direction == ThresholdDirection.POINT) {
                 triggered = true;
                 triggeredType = "point";
             }
             // else determine if required.
-            if (direction != ThresholdDirection.POINT && !triggered) {
+            if (direction != ThresholdDirection.POINT) {
                 // Trigger: current (x=0) -> threshold (x+1) -> new (x+2).
                 boolean triggeredByUp = currentValue <= threshold && newValue > threshold;
                 // Trigger: new (x-2) <- threshold (x-1) <- current (x=0).

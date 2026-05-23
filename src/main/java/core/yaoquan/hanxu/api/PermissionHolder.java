@@ -16,10 +16,10 @@ import static core.yaoquan.hanxu.api.define.Error.*;
 public class PermissionHolder {
     // Permission manager list:
     // Always level 2.
-    private static final Set<String> ADMIN_LIST = ConcurrentHashMap.newKeySet();
+    private static final Set<String> adminList = ConcurrentHashMap.newKeySet();
 
     static {
-        ADMIN_LIST.add("Dev");
+        adminList.add("Dev");
     }
 
     // Join admin group by method.
@@ -28,7 +28,7 @@ public class PermissionHolder {
             return false;
         }
         else {
-            ADMIN_LIST.add(playerId);
+            adminList.add(playerId);
             return true;
         }
     }
@@ -130,7 +130,7 @@ public class PermissionHolder {
         int determinedMaxPermissionLevel;
         if (source.getEntity() instanceof Player player) {
             // Check if equal to admin:
-            if (ADMIN_LIST.contains(player.getName().getString())) {
+            if (adminList.contains(player.getName().getString())) {
                 return true;
             }
 

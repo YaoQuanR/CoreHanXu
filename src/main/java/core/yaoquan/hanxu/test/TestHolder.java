@@ -27,17 +27,17 @@ import java.util.function.Consumer;
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class TestHolder {
-    private static final Set<String> PRIVATE_TEST_LIST = ConcurrentHashMap.newKeySet();
+    private static final Set<String> privateTestList = ConcurrentHashMap.newKeySet();
 
     static {
-        PRIVATE_TEST_LIST.add("Dev");
-        PRIVATE_TEST_LIST.add("YaoQuanR");
+        privateTestList.add("Dev");
+        privateTestList.add("YaoQuanR");
         // Join test group by here, or add by code.
     }
 
     // Permission check.
     public static boolean hasPrivateTestPermission(CommandSourceStack source) {
-        return source.getEntity() instanceof Player player && PRIVATE_TEST_LIST.contains(player.getName().getString());
+        return source.getEntity() instanceof Player player && privateTestList.contains(player.getName().getString());
     }
 
     public static int executeTest_Timer(CommandContext<CommandSourceStack> context) {

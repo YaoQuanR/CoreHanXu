@@ -120,9 +120,20 @@ class CommandSuggest {
     }
 
     // For scene create to save path suggestion.
-    static <S> CompletableFuture<Suggestions> suggestSceneSavePath(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static <S> CompletableFuture<Suggestions> suggestSavePath(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("world");
         builder.suggest("global");
+
+        return builder.buildFuture();
+    }
+
+    // For YAML attribute suggestion.
+    static <S> CompletableFuture<Suggestions> suggestYamlAttribute(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        List<Path> attributeFiles = YamlReader.listOut("attribute");
+        for (Path path : attributeFiles) {
+            String fileName = path.getFileName().toString().replace(".yaml", "");
+            builder.suggest(fileName);
+        }
 
         return builder.buildFuture();
     }

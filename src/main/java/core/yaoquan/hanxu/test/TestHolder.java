@@ -20,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -304,25 +305,28 @@ public class TestHolder {
         switch (testId) {
             case 1:
                 // Unregister when existed.
-                AttributeHolder.CustomAttribute currentAttribute = AttributeHolder.getAttributeDefinition("tut-run_value", true);
+                AttributeHolder.CustomAttribute currentAttribute = AttributeHolder.getAttributeDefinition("core_hanxu-test:run_value", true);
                 if (currentAttribute != null) {
                     AttributeHolder.unregister(currentAttribute);
                 }
 
+                // Remember: Register your own attribute when server start!
+
                 // Define a attribute.
                 AttributeHolder.CustomAttribute attribute1 = new AttributeHolder.CustomAttribute(
-                    "tut-run_value", 80, 10)
+                    "core_hanxu-test:run_value", 60, 10)
                     // Fluent factory: define threshold and zero behaviors.
-                    .onThreshold(20, "tut-give_sword")
-                    .onThreshold(40, "tut-give_speed")
-                    .onZero("tut-clear_all")
-                    .setRecovery("tut-recovery1");
+                    // It must be satisfied of the rule [function name]:[name space]:[threshold name].
+                    .onThreshold(20, "attribute:core_hanxu-test:give_sword")
+                    .onThreshold(40, "attribute:core_hanxu-test:give_speed")
+                    .onZero("attribute:core_hanxu-test:clear_all")
+                    .setRecovery("attribute:core_hanxu-test:recovery1");
 
                 // Then register.
                 AttributeHolder.register(attribute1);
 
                 // Register and define the callback behaviors.
-                BehaviorRegistry.register("tut-give_sword", (player, parameters) -> {
+                BehaviorRegistry.register("attribute:core_hanxu-test:give_sword", (player, parameters) -> {
                     /*
                        Consider as server or console if "player" is null.
                        Parameters is a map that receive elements from system.
@@ -342,24 +346,24 @@ public class TestHolder {
                     player.sendSystemMessage(Component.literal("[HX] Received reward sword!"));
                 });
 
-                BehaviorRegistry.register("tut-give_speed", (player, parameters) -> {
+                BehaviorRegistry.register("attribute:core_hanxu-test:give_speed", (player, parameters) -> {
                     if (player == null) {
                         return;
                     }
 
                     // Set a state that avoid to trigger repeatedly.
-                    if (triggered.contains("tut-give_speed")) {
+                    if (triggered.contains("core_hanxu-test:give_speed")) {
                         return;
                     }
 
                     player.addEffect(new MobEffectInstance(MobEffects.SPEED, 160, 1, true, false));
                     player.sendSystemMessage(Component.literal("[HX] Received reward speed!"));
 
-                    triggered.add("tut-give_speed");
+                    triggered.add("core_hanxu-test:give_speed");
                 });
 
                 // Register zero behavior as same method.
-                BehaviorRegistry.register("tut-clear_all", (player, parameters) -> {
+                BehaviorRegistry.register("attribute:core_hanxu-test:clear_all", (player, parameters) -> {
                     if (player == null) {
                         return;
                     }
@@ -371,7 +375,7 @@ public class TestHolder {
                 });
 
                 // Register recovery curve behavior as same method.
-                BehaviorRegistry.register("tut-recovery1", (player, parameters) -> {
+                BehaviorRegistry.register("attribute:core_hanxu-test:recovery1", (player, parameters) -> {
                     if (player == null) {
                         return;
                     }
@@ -379,17 +383,18 @@ public class TestHolder {
                     float currentValue = Float.parseFloat(parameters.get("current_value"));
 
                     // Using UP direction will avoid trigger when decreasing value (Normal: POINT).
-                    // Decrease behavior (In every tick).
-                    AttributeHolder.reduceValue(player.getUUID(), "tut-run_value", 0.05f, true, AttributeHolder.ThresholdDirection.UP);
-
                     // Increase when running.
                     if (player.isSprinting() && player.tickCount % 20 == 0) {
-                        AttributeHolder.addValue(player.getUUID(), "tut-run_value", 3f, true, AttributeHolder.ThresholdDirection.UP);
+                        AttributeHolder.addValue(player.getUUID(), "core_hanxu-test:run_value", 3f, true, AttributeHolder.ThresholdDirection.UP);
+                    }
+                    // Decrease behavior.
+                    else if (!player.isSprinting()) {
+                        AttributeHolder.reduceValue(player.getUUID(), "core_hanxu-test:run_value", 0.15f, true, AttributeHolder.ThresholdDirection.UP);
                     }
 
                     // Allowed to trigger again when satisfied.
-                    if (currentValue <= 40) {
-                        triggered.remove("tut-give_speed");
+                    if (currentValue <= 30) {
+                        triggered.remove("core_hanxu-test:give_speed");
                     }
                 });
 
@@ -397,7 +402,7 @@ public class TestHolder {
                 AttributeHolder.displayToInfoPage(
                     serverPlayer,
                     serverPlayer.getUUID(),
-                    "tut-run_value",
+                    "core_hanxu-test:run_value",
                     true,
                     true
                 );
@@ -408,6 +413,37 @@ public class TestHolder {
             default:
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
                 return 0;
+        }
+
+        return 1;
+    }
+
+    public static int executeTest_AttributeYamlDisplay(CommandContext<CommandSourceStack> context) {
+        if (context.getSource().getPlayer() == null) {
+            return 0;
+        }
+        MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Now display all attributes to F4 debugging page."));
+        if (AttributeHolder.getCommandAttributes().isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+        }
+        else {
+            // Then display.
+            for (Map.Entry<String, AttributeHolder.CustomAttribute> entry : AttributeHolder.getCommandAttributes().entrySet()) {
+                String id = entry.getKey();
+                AttributeHolder.CustomAttribute attribute = entry.getValue();
+
+                if (attribute == null) {
+                    continue;
+                }
+
+                AttributeHolder.displayToInfoPage(
+                    context.getSource().getPlayer(),
+                    context.getSource().getPlayer().getUUID(),
+                    id,
+                    false,
+                    true
+                );
+            }
         }
 
         return 1;

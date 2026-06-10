@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu.util;
 
 import com.mojang.brigadier.context.CommandContext;
+import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.Error;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -85,7 +86,7 @@ public class Creator {
                     callback = player -> {
                         if (player != null) {
                             player.sendSystemMessage(
-                                Component.translatable("commands.chx-a.timer_time_out")
+                                Component.translatable("commands.chx.timer_time_out")
                                     .append(Component.literal(" " + timerId))
                                     .withColor(0xFFD700)
                             );
@@ -95,14 +96,14 @@ public class Creator {
                             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
                             if (server != null) {
                                 server.getPlayerList().getPlayers().forEach(p -> {
-                                    p.sendSystemMessage(Component.translatable("commands.chx-a.timer_time_out")
+                                    p.sendSystemMessage(Component.translatable("commands.chx.timer_time_out")
                                         .append(Component.literal(" " + timerId))
                                         .withColor(0xFFD700));
                                 });
                             }
                         }
                     };
-                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx-a.timer_default_remind").withColor(0xFFD700));
+                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_default_remind").withColor(0xFFD700));
                 }
                 break;
             case "n", "null":
@@ -113,5 +114,79 @@ public class Creator {
         }
 
         return callback;
+    }
+
+    /// Register callback for commands/YAML's behaviors.
+    public static void registerCallback(String callbackId, String callbackBehavior, String callbackContent) {
+        if (callbackId != null && !callbackId.isEmpty()) {
+            String fullCallbackId = "attribute:core_hanxu-command:" + callbackId;
+            if (callbackContent != null && !callbackContent.isEmpty()) {
+                switch (callbackBehavior) {
+                    case "e", "execute":
+                        BehaviorRegistry.register(
+                            fullCallbackId, (player, parameters) -> {
+                                MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+                                if (server != null && player != null) {
+                                    String content = callbackContent;
+                                    if (content.contains("@s") || content.contains("@p")) {
+                                        content = content.replace("@s", player.getName().getString());
+                                    }
+                                    if (!content.startsWith("/")) {
+                                        content = "/" + content;
+                                    }
+                                    server.getCommands().performPrefixedCommand(
+                                        player.createCommandSourceStack(), content
+                                    );
+                                }
+                            }
+                        );
+                        return;
+                    case "r", "remind":
+                        BehaviorRegistry.register(
+                            fullCallbackId, (player, parameters) -> {
+                                if (player != null) {
+                                    player.sendSystemMessage(Component.literal(callbackContent));
+                                }
+                            }
+                        );
+                        return;
+                    case "n", "null":
+                        return;
+                    default:
+                        break;
+                }
+            }
+            else {
+                switch (callbackBehavior) {
+                    case "e", "execute", "r", "remind":
+                        BehaviorRegistry.register(
+                            fullCallbackId, (player, parameters) -> {
+                                if (player != null) {
+                                    player.sendSystemMessage(
+                                        Component.translatable("commands.chx.attribute_reached_threshold")
+                                                .append(Component.literal(" " + callbackId))
+                                                .withColor(0xFFD700)
+                                    );
+                                }
+                            }
+                        );
+                        return;
+                    case "n", "null":
+                        return;
+                    default:
+                        break;
+                }
+            }
+
+            // Mod will try to load callback if existed.
+            if (callbackBehavior.equals("a") || callbackBehavior.equals("api")) {
+                BehaviorRegistry.BehaviorCallback callback = BehaviorRegistry.getCallback(callbackId);
+                if (callback != null) {
+                    BehaviorRegistry.register(
+                        callbackId, BehaviorRegistry.getCallback(callbackId)
+                    );
+                }
+            }
+        }
     }
 }

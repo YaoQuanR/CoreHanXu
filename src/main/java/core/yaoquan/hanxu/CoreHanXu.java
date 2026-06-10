@@ -81,6 +81,9 @@ public class CoreHanXu {
 
         AttributeHolder.loadAttributeForGlobal(overworld);
         LOGGER.info("[HX] Rebuild Procedure: Attribute - Global");
+
+        AttributeHolder.registerAllYamlAttributes();
+        LOGGER.info("[HX] Rebuild Procedure: Attribute - Yaml Attribute Callbacks");
     }
 
     @SubscribeEvent

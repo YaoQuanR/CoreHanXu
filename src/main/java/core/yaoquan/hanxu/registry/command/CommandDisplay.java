@@ -167,9 +167,9 @@ public class CommandDisplay {
         }
     }
 
-    static int displayIdList(CommandContext<CommandSourceStack> context, String[] idList) {
+    static int displayTimerIdList(CommandContext<CommandSourceStack> context, String[] idList) {
         if (idList.length == 0) {
-            MessagePublisher.sendFailureMessage(context, returnTimerError(Error.TimerError.notExist));
+            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.fixed.empty"));
             return 0;
         }
 
@@ -177,13 +177,13 @@ public class CommandDisplay {
                 Component.translatable("commands.chx.timer_list_title").withColor(0xFFD700)
         );
         for (String id : idList) {
-            MessagePublisher.sendSystemMessage(context, Component.literal(id).withColor(0xFFD700));
+            MessagePublisher.sendSystemMessage(context, Component.literal(id).withColor(0xFFFACD));
         }
 
         return 1;
     }
 
-    static void displayCreateMessage(CommandContext<CommandSourceStack> context, String timerId, int timeAmount, String timeUnit, String endBehavior, String behaviorContent) {
+    static void displayTimerCreateMessage(CommandContext<CommandSourceStack> context, String timerId, int timeAmount, String timeUnit, String endBehavior, String behaviorContent) {
         // Output message.
         MessagePublisher.sendSystemMessage(context,
                 Component.translatable("commands.chx.timer_created")
@@ -210,10 +210,50 @@ public class CommandDisplay {
         }
     }
 
-    static void displaySceneList(CommandContext<CommandSourceStack> context, List<Component> displayList) {
+    static void displaySceneIdList(CommandContext<CommandSourceStack> context, List<Component> displayList) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_list_title").withColor(0xFFD700));
         for (Component line : displayList) {
             MessagePublisher.sendSystemMessage(context, line);
+        }
+    }
+
+    static int displayAttributeIdList(CommandContext<CommandSourceStack> context, String[] attributeArrayList, boolean fromApi) {
+        MessagePublisher.sendSystemMessage(
+            context,
+            fromApi?
+                Component.translatable("commands.chx.attribute_api_list_title").withColor(0xFFD700) :
+                Component.translatable("commands.chx.attribute_yaml_list_title").withColor(0xFFD700)
+            );
+
+        if (attributeArrayList.length == 0) {
+            MessagePublisher.sendFailureMessage(
+                context, Component.translatable("commands.chx.fixed.empty")
+            );
+            return 0;
+        }
+
+        for (String attribute : attributeArrayList) {
+            MessagePublisher.sendSystemMessage(context, Component.literal(attribute).withColor(0xFFFACD));
+        }
+
+        return 1;
+    }
+
+    static void displayAttributeCreateMessage(CommandContext<CommandSourceStack> context, String attributeId, float maximum, float defaultValue, boolean registered) {
+        if (registered) {
+            MessagePublisher.sendSystemMessage(
+                context,
+                Component.translatable("commands.chx.attribute_created")
+                        .append(Component.literal(" " + attributeId + " -> " + maximum + " _ " + defaultValue))
+                        .withColor(0x66FF66)
+            );
+        }
+        else {
+            MessagePublisher.sendFailureMessage(
+                    context,
+                    Component.translatable("commands.chx.attribute_not_created")
+                            .withColor(0x66FF66)
+            );
         }
     }
 }

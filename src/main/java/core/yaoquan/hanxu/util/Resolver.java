@@ -70,4 +70,36 @@ public class Resolver {
         // If no pair target exist, return this.
         return "-not_found";
     }
+
+    public enum CallbackField {
+        attribute,
+    }
+
+    public static String resolveFullCallbackId(String callbackId) {
+        String[] callbackIdParts = callbackId.split(":", 3);
+        if (callbackIdParts.length == 3) {
+            String field = callbackIdParts[0];
+            for (CallbackField f : CallbackField.values()) {
+                if (f.name().equalsIgnoreCase(field)) {
+                    return callbackId;
+                }
+            }
+            return "custom:" + callbackIdParts[1] + ":" + callbackIdParts[2];
+        }
+        else if (callbackIdParts.length == 2) {
+            String field = callbackIdParts[0];
+            for (CallbackField f : CallbackField.values()) {
+                if (f.name().equalsIgnoreCase(field)) {
+                    return callbackIdParts[0] + ":custom:" + callbackIdParts[1];
+                }
+            }
+            return "custom:" + callbackIdParts[0] + ":" + callbackIdParts[1];
+        }
+        else if (callbackIdParts.length == 1) {
+            return "custom:custom:" + callbackIdParts[0];
+        }
+        else {
+            return "custom:custom:unknown";
+        }
+    }
 }

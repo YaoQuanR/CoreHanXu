@@ -56,7 +56,7 @@ public class SceneHolder {
      * @return                    New scene class data: Scene.
      */
     public static Scene loadScene(String fileName) throws IOException {
-        Map<String, Object> sceneData = YamlReader.read("scene", fileName + ".yaml");
+        Map<String, Object> sceneData = YamlReader.read("scene", fileName);
 
         // Check if the id equals to file name.
         Scene scene = parseSceneData(sceneData);
@@ -65,7 +65,7 @@ public class SceneHolder {
             throw new IOException(returnCodeError(CodeError.mismatchFileElement) + fileName + " ≠ " + yamlFileName);
         }
 
-        return parseSceneData(sceneData);
+        return scene;
     }
 
     // Play scene.
@@ -120,7 +120,7 @@ public class SceneHolder {
      */
     public static boolean doesSceneExist(String sceneName) {
         try {
-            YamlReader.read("scene", sceneName + ".yaml");
+            YamlReader.read("scene", sceneName);
             return true;
         }
         catch (FileNotFoundException e) {
@@ -138,7 +138,7 @@ public class SceneHolder {
      * @return                    Does scene exist: boolean.
      */
     public static boolean doesSceneExist(String sceneName, YamlReader.TargetPath targetPath) {
-        return YamlReader.doesFileExist(targetPath, "scene", sceneName + ".yaml");
+        return YamlReader.doesFileExist(targetPath, "scene", sceneName);
     }
 
     @SuppressWarnings("unchecked")

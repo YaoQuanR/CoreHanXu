@@ -1,9 +1,10 @@
 package core.yaoquan.hanxu.registry.command;
 
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.PermissionHolder;
 import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
@@ -124,11 +125,6 @@ class CommandExecute {
     }
 
     static int executeScene_List(CommandContext<CommandSourceStack> context) {
-        ServerPlayer player = context.getSource().getPlayer();
-        if (player == null) {
-            return 0;
-        }
-
         List<Component> displayList = new ArrayList<>();
 
         // Scan global path.
@@ -161,7 +157,7 @@ class CommandExecute {
             MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
         }
         else {
-            CommandDisplay.displaySceneList(context, displayList);
+            CommandDisplay.displaySceneIdList(context, displayList);
         }
 
         return 1;
@@ -511,7 +507,7 @@ class CommandExecute {
     static int executeTimer_Template_List(CommandContext<CommandSourceStack> context) {
         String[] templateIds = TimeHolder.getAllTemplateIds();
 
-        return CommandDisplay.displayIdList(context, templateIds);
+        return CommandDisplay.displayTimerIdList(context, templateIds);
     }
 
     static int executeTimer_Instance_Apply(CommandContext<CommandSourceStack> context) {
@@ -583,7 +579,7 @@ class CommandExecute {
         int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, timeAmount, endBehavior, behaviorContent);
 
         if (returnValue == 1) {
-            CommandDisplay.displayCreateMessage(context, timerId, timeAmount, timeUnit, endBehavior, behaviorContent);
+            CommandDisplay.displayTimerCreateMessage(context, timerId, timeAmount, timeUnit, endBehavior, behaviorContent);
             return 1;
         }
         else {
@@ -620,7 +616,7 @@ class CommandExecute {
         int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, selectedTimeAmount, endBehavior, behaviorContent);
 
         if (returnValue == 1) {
-            CommandDisplay.displayCreateMessage(context, timerId, selectedTimeAmount, timeUnit, endBehavior, behaviorContent);
+            CommandDisplay.displayTimerCreateMessage(context, timerId, selectedTimeAmount, timeUnit, endBehavior, behaviorContent);
             return 1;
         }
         else {
@@ -699,7 +695,7 @@ class CommandExecute {
                     return 0;
                 }
             default:
-                MessagePublisher.sendFailureMessage(context, Component.translatable("commands." + CoreHanXu.MOD_ID + ".invalid_unit_argument"));
+                MessagePublisher.sendFailureMessage(context, Component.translatable("commands.core_hanxu.invalid_unit_argument"));
                 return 0;
         }
     }
@@ -732,7 +728,7 @@ class CommandExecute {
 
         String[] instanceIds = TimeHolder.getAllInstanceIds(masterId);
 
-        return CommandDisplay.displayIdList(context, instanceIds);
+        return CommandDisplay.displayTimerIdList(context, instanceIds);
     }
 
     static int executeTimer_Instance_Display(CommandContext<CommandSourceStack> context, boolean state) {
@@ -750,7 +746,7 @@ class CommandExecute {
         TimeHolder.displayToInfoPage(player, masterId, timerId, state);
         MessagePublisher.sendSystemMessage(context,
                 Component.literal("[HX] " + timerId + " ")
-                        .append(Component.translatable("commands." + CoreHanXu.MOD_ID + ".has_changed_to"))
+                        .append(Component.translatable("commands.core_hanxu.has_changed_to"))
                         .append(Component.literal(" " + state))
                         .withColor(0x66FF66)
         );
@@ -910,13 +906,132 @@ class CommandExecute {
         try {
             // Prase data to map for storage.
             Map<String, Object> yamlMap = YamlReader.stringToMap(yamlContent);
-            YamlReader.save("scene", sceneId + ".yaml", yamlMap, targetPath);
+            YamlReader.save("scene", sceneId, yamlMap, targetPath);
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_created").withColor(0xFFFACD));
         }
         catch (Exception e) {
             MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToSave));
             return 0;
         }
+
+        return 1;
+    }
+
+    static int executeAttribute_List(CommandContext<CommandSourceStack> context) {
+        Map<String, AttributeHolder.CustomAttribute> commandAttributes = AttributeHolder.getCommandAttributes();
+        String[] commandAttributeList = commandAttributes.keySet().toArray(new String[0]);
+
+        return CommandDisplay.displayAttributeIdList(context, commandAttributeList, false);
+    }
+
+    static int executeAdvancedAttribute_List(CommandContext<CommandSourceStack> context) {
+        Map<String, AttributeHolder.CustomAttribute> apiAttributes = AttributeHolder.getApiAttributes();
+        Map<String, AttributeHolder.CustomAttribute> commandAttributes = AttributeHolder.getCommandAttributes();
+
+        String[] commandAttributeList = commandAttributes.keySet().toArray(new String[0]);
+        String[] apiAttributeList = apiAttributes.keySet().toArray(new String[0]);
+
+        int returnValue1 = CommandDisplay.displayAttributeIdList(context, commandAttributeList, false);
+        int returnValue2 = CommandDisplay.displayAttributeIdList(context, apiAttributeList, true);
+
+        if (returnValue1 == 1 || returnValue2 == 1) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    static int executeAttribute_Create(CommandContext<CommandSourceStack> context) {
+        String attributeId = StringArgumentType.getString(context, "attribute_id");
+        String toPath = StringArgumentType.getString(context, "to_path");
+        YamlReader.TargetPath targetPath;
+        float maximum, defaultValue;
+        try {
+            maximum = FloatArgumentType.getFloat(context, "maximum");
+        }
+        catch (Exception e) {
+            maximum = 100.0f;
+        }
+        try {
+            defaultValue = FloatArgumentType.getFloat(context, "default_value");
+        }
+        catch (Exception e) {
+            defaultValue = 0.0f;
+        }
+
+        targetPath = toPath.equals("global")? YamlReader.TargetPath.TO_GLOBAL : YamlReader.TargetPath.TO_WORLD;
+
+        boolean registered = AttributeHolder.register(attributeId, maximum, defaultValue, targetPath);
+
+        CommandDisplay.displayAttributeCreateMessage(context, attributeId, maximum, defaultValue, registered);
+
+        if (registered) {
+            AttributeHolder.registerAllYamlAttributes();
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+    
+    static int executeAttribute_Define(CommandContext<CommandSourceStack> context, String category) {
+        String attributeId = StringArgumentType.getString(context, "attribute_id");
+        float threshold = FloatArgumentType.getFloat(context, "threshold");
+        String content = null, callbackId = null;
+
+        if (category.equals("remind") || category.equals("execute")) {
+            try {
+                content = StringArgumentType.getString(context, "content");
+            }
+            catch (IllegalArgumentException ignored) {}
+        }
+        else if (category.equals("api")) {
+            try {
+                callbackId = StringArgumentType.getString(context, "callback_id");
+            }
+            catch (IllegalArgumentException e) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+                return 0;
+            }
+        }
+
+        AttributeHolder.CustomAttribute attribute = AttributeHolder.getCommandAttributes().get(attributeId);
+        if (attribute == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            return 0;
+        }
+
+        switch (category) {
+            case "remind", "execute" -> {
+                String fullCallbackId = "attribute:core_hanxu-command:" + attributeId + "-" + threshold;
+                attribute.onThreshold(threshold, fullCallbackId);
+                Creator.registerCallback(fullCallbackId, category, content);
+                // Update YAML document.
+                AttributeHolder.saveYamlAttribute(
+                    attributeId,
+                    AttributeHolder.UpdateCategory.normalThreshold,
+                    threshold,
+                    fullCallbackId,
+                    category,
+                    content
+                );
+            }
+            case "api" -> {
+                attribute.onThreshold(threshold, callbackId);
+            }
+            default -> {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+                return 0;
+            }
+        }
+
+        // Output message.
+        MessagePublisher.sendSystemMessage(
+                context, Component.translatable("commands.chx.attribute_threshold_modified")
+                        .append(Component.literal(" " + threshold + " -> " + category))
+                        .withColor(0x66FF66)
+        );
 
         return 1;
     }
@@ -933,7 +1048,7 @@ class CommandExecute {
                 TimeHolder.createTemplateTimer(timerId, timeAmount, timeUnit, callback, endBehavior, behaviorContent, "core_hanxu-command");
                 break;
             default:
-                MessagePublisher.sendFailureMessage(context, Component.translatable("commands." + CoreHanXu.MOD_ID + ".invalid_unit_argument"));
+                MessagePublisher.sendFailureMessage(context, Component.translatable("commands.core_hanxu.invalid_unit_argument"));
                 return 0;
         }
 
@@ -968,7 +1083,7 @@ class CommandExecute {
                     return 1;
                 }
             default:
-                MessagePublisher.sendFailureMessage(context, Component.translatable("commands." + CoreHanXu.MOD_ID + ".invalid_unit_argument"));
+                MessagePublisher.sendFailureMessage(context, Component.translatable("commands.core_hanxu.invalid_unit_argument"));
                 return 0;
         }
     }

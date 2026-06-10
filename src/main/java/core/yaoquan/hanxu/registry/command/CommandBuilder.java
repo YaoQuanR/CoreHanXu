@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu.registry.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import core.yaoquan.hanxu.api.PermissionHolder;
@@ -449,7 +450,7 @@ public class CommandBuilder {
                                         )
                                 )
                                 .then(
-                                    Commands.literal("timer_display")
+                                    Commands.literal("display")
                                         .then(
                                             Commands.argument("master_group", StringArgumentType.word())
                                                 .then(
@@ -521,7 +522,7 @@ public class CommandBuilder {
                             Commands.literal("create")
                                 .then(
                                     Commands.argument("to_path", StringArgumentType.string())
-                                        .suggests(CommandSuggest::suggestSceneSavePath)
+                                        .suggests(CommandSuggest::suggestSavePath)
                                         .executes(CommandExecute::executeScene_Create)
                                 )
                         )
@@ -535,12 +536,60 @@ public class CommandBuilder {
                         )
                         .then(
                             Commands.literal("list")
+                                .then(
+                                    Commands.literal("api")
+                                        .requires(cs -> PermissionHolder.hasPermission(cs,2))
+                                        .executes(CommandExecute::executeAdvancedAttribute_List)
+                                )
+                                .executes(CommandExecute::executeAttribute_List)
                         )
                         .then(
                             Commands.literal("create")
+                                .then(
+                                    Commands.argument("attribute_id", StringArgumentType.word())
+                                        .then(
+                                            Commands.argument("to_path", StringArgumentType.string())
+                                                .then(
+                                                    Commands.argument("maximum", FloatArgumentType.floatArg())
+                                                        .then(
+                                                            Commands.argument("default_value", FloatArgumentType.floatArg())
+                                                                .executes(CommandExecute::executeAttribute_Create)
+                                                        )
+                                                        .executes(CommandExecute::executeAttribute_Create)
+                                                )
+                                                .suggests(CommandSuggest::suggestSavePath)
+                                                .executes(CommandExecute::executeAttribute_Create)
+                                        )
+                                        .suggests(CommandSuggest::suggestYamlAttribute)
+                                )
                         )
                         .then(
                             Commands.literal("define")
+                                .then(
+                                    Commands.argument("attribute_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("threshold", FloatArgumentType.floatArg())
+                                                .then(
+                                                    Commands.literal("remind")
+                                                        .then(
+                                                            Commands.argument("content", StringArgumentType.greedyString())
+                                                        )
+                                                )
+                                                .then(
+                                                    Commands.literal("execute")
+                                                        .then(
+                                                            Commands.argument("content", StringArgumentType.greedyString())
+                                                        )
+                                                )
+                                                .then(
+                                                    Commands.literal("api")
+                                                        .then(
+                                                            Commands.argument("callback_id", StringArgumentType.string())
+                                                        )
+                                                        .requires(cs -> PermissionHolder.hasPermission(cs,2))
+                                                )
+                                        )
+                                )
                         )
                         .then(
                             Commands.literal("delete")
@@ -576,7 +625,8 @@ public class CommandBuilder {
                                         )
                                 )
                                 .then(
-                                    Commands.literal("attribute_display")
+                                    Commands.literal("yaml_display")
+                                        .executes(TestHolder::executeTest_AttributeYamlDisplay)
                                 )
                                 .requires(TestHolder::hasPrivateTestPermission)
                         )

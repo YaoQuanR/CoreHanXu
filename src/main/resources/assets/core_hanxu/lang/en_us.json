@@ -18,6 +18,7 @@
 
   "commands.chx.fixed.available_commands": "Available commands:",
   "commands.chx.fixed.admin_reminder": "Other available commands for admin...",
+  "commands.chx.fixed.empty": "[HX] Empty.",
   
   "commands.chx.detail_title": "[HX] Detail",
   "commands.chx.detail_innertext1": "Author: YaoQuanR, License: AGPL (Code) + CC BY-NC-ND (Resource) + Extra Requirements",
@@ -117,7 +118,6 @@
 
   "commands.chx.timer_already_exist": "[HX] Timer has already exist!",
   "commands.chx.timer_not_exist": "[HX] Timer does not exist!",
-  "commands.chx.timer_time_out": "[HX] Time out:",
   "commands.chx.timer_not_exist_or_already_instantiated": "[HX] Timer not exist or already instantiated!",
   "commands.chx.timer_unable_to_start": "[HX] Unable to start timer, check if target offline, run off, or not exist!",
   "commands.chx.timer_unable_to_stop": "[HX] Unable to stop timer, check if targeted timer exist!",
@@ -125,21 +125,22 @@
   "commands.chx.timer_unable_to_restart": "[HX] Unable to restart timer, check if targeted timer exist!",
   "commands.chx.timer_unable_to_delete_instance": "[HX] Unable to delete instance timer, check if targeted timer exist!",
 
-  "commands.chx.timer_created": "[HX] Timer create success!",
+  "commands.chx.timer_created": "[HX] Timer created!",
   "commands.chx.timer_with_execute_behavior": "[HX] Execute when time out",
   "commands.chx.timer_with_remind_behavior": "[HX] Remind when time out",
   "commands.chx.timer_read_remaining_time": "[HX] Remaining time",
   "commands.chx.timer_read_initial_time": "[HX] Initial time",
   "commands.chx.timer_state": "[HX] Timer state",
-  "commands.chx.timer_deleted": "[HX] Timer was deleted!",
-  "commands.chx.timer_instantiated": "[HX] Timer was success instantiated!",
+  "commands.chx.timer_deleted": "[HX] Timer deleted!",
+  "commands.chx.timer_instantiated": "[HX] Timer instantiated!",
   "commands.chx.timer_list_title": "[HX] Timer found. List:",
   "commands.chx.timer_started": "[HX] Timer start!",
   "commands.chx.timer_stopped": "[HX] Timer stopped!",
-  "commands.chx.timer_reset": "[HX] Timer was reset!",
-  "commands.chx.timer_restart": "[HX] Timer was restart!",
-  "commands.chx.timer_success_modification": "[HX] Timer was modified.",
+  "commands.chx.timer_reset": "[HX] Timer reset!",
+  "commands.chx.timer_restart": "[HX] Timer restart!",
+  "commands.chx.timer_success_modification": "[HX] Timer modified.",
   "commands.chx.timer_default_remind": "[HX] No specific remind content, default content will be used.",
+  "commands.chx.timer_time_out": "[HX] Time out:",
 
   "commands.chx.scene_not_found": "[HX] Scene not found!",
   "commands.chx.scene_play_failed": "[HX] Scene play failed!",
@@ -154,6 +155,13 @@
   "commands.chx.scene_deleted": "[HX] Scene is now deleted!",
   "commands.chx.scene_get_template": "[HX] Received template book.",
   "commands.chx.scene_created": "[HX] Scene created!",
+
+  "commands.chx.attribute_yaml_list_title": "[HX] Attribute List from YAML (command):",
+  "commands.chx.attribute_api_list_title": "[HX] Attribute List from API:",
+  "commands.chx.attribute_created": "[HX] Attribute created!",
+  "commands.chx.attribute_create_failed": "[HX] Same name attribute found, create failed!",
+  "commands.chx.attribute_threshold_triggered": "[HX] Threshold triggered:",
+  "commands.chx.attribute_reached_threshold": "[HX] Attribute threshold reached:",
 
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
   "commands.core_hanxu.uneditable_player_permission": "[HX] Uneditable player permission! Config:player_permission_editable is false.",

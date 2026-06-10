@@ -355,26 +355,6 @@ public class TimeHolder {
         return getInitialTicks(timeUnit, timerData);
     }
 
-    private static int getRemainingTicks(String timeUnit, TimerData timerData) {
-        return switch (timeUnit) {
-            case "t", "tick" -> timerData != null? timerData.getRemainingTicks() : -1;
-            case "s", "second" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_SECOND : -1;
-            case "m", "minute" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_MINUTE : -1;
-            case "h", "hour" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_HOUR : -1;
-            default -> -1;
-        };
-    }
-
-    private static int getInitialTicks(String timeUnit, TimerData timerData) {
-        return switch (timeUnit) {
-            case "t", "tick" -> timerData != null? timerData.getInitialTicks() : -1;
-            case "s", "second" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_SECOND : -1;
-            case "m", "minute" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_MINUTE : -1;
-            case "h", "hour" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_HOUR : -1;
-            default -> -1;
-        };
-    }
-
     public static boolean isTemplateTimerCounting(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
         return timerData != null && timerData.isItCounting();
@@ -400,6 +380,235 @@ public class TimeHolder {
             return new String[0];
         }
         return instantiatedData.keySet().toArray(new String[0]);
+    }
+
+    // Display out to F4 page (info page).
+    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state) {
+        if (masterId == null) {
+            return;
+        }
+
+        int remainingTicks = getRemainingTimeFromInstance(masterId, timerId, "tick");
+        boolean isCounting = isInstanceTimerCounting(masterId, timerId);
+        String masterName = Resolver.resolveTargetMasterName(masterId);
+        String key = player.getUUID() + ":" + masterId + ":" + timerId;
+
+        if (state) {
+            refreshDisplayList.add(key);
+        }
+        else {
+            refreshDisplayList.remove(key);
+        }
+
+        CoreHanXu.LOGGER.info("[HX] Display debug timer info. State: {}", state);
+
+        PacketDistributor.sendToPlayer(
+                player, new ModPayload.TimerF4Packet(masterId, timerId, state, remainingTicks, isCounting, masterName)
+        );
+    }
+
+    // Check if required to refresh the F4 timer display.
+    public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String timerId) {
+        String key = player.getUUID() + ":" + masterId.toString() + ":" + timerId;
+
+        CoreHanXu.LOGGER.info("[HX] About to refresh display: {}", key);
+
+        if (refreshDisplayList.contains(key)) {
+            CoreHanXu.LOGGER.info("[HX] Refresh check: true");
+            displayToInfoPage(player, masterId, timerId, true);
+        }
+        else {
+            CoreHanXu.LOGGER.info("[HX] Refresh check: false");
+        }
+    }
+
+    // Save and load methods:
+    public static void registerCallback(TimerCallback callback) {
+        callbacks.put(callback.getMasterGroupId(), callback);
+    }
+
+    public static TimerCallback getCallback(String modId) {
+        return callbacks.get(modId);
+    }
+
+    public static void saveInstanceTimerForPlayer(ServerPlayer player) {
+        String headKey = "core.yaoquan.hanxu.player_instance_timers";
+        CompoundTag dataRoot = player.getPersistentData();
+        CompoundTag allTimersTag = new CompoundTag();
+
+        // Get all specific player's timer, then save.
+        Map<String, TimerData> specificPlayerInstanceTimers = instantiatedTimer.get(player.getUUID());
+        if (specificPlayerInstanceTimers != null) {
+            // For each set, save arguments.
+            for (var entry : specificPlayerInstanceTimers.entrySet()) {
+                // Put timer's data into NBT tag.
+                CompoundTag timerDataTag = saveTimerData(entry);
+
+                // Then save.
+                allTimersTag.put(entry.getKey(), timerDataTag);
+            }
+        }
+
+        dataRoot.put(headKey, allTimersTag);
+    }
+
+    public static void saveInstanceTimerForGlobal(ServerLevel level) {
+        String headKey = "core.yaoquan.hanxu.global_instance_timers";
+        CompoundTag dataRoot = new CompoundTag();
+        CompoundTag allTimersTag = new CompoundTag();
+
+        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(General.GLOBAL_UUID);
+        if (globalInstanceTimers != null) {
+            for (var entry : globalInstanceTimers.entrySet()) {
+                // Put timer's data into NBT tag.
+                CompoundTag timerDataTag = saveTimerData(entry);
+
+                // Then save.
+                allTimersTag.put(entry.getKey(), timerDataTag);
+            }
+        }
+
+        dataRoot.put(headKey, allTimersTag);
+
+        Path file = FilePath.getModDataPath(level);
+        try {
+            NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
+        }
+        catch (IOException e) {
+            CoreHanXu.LOGGER.error("[HX] Failed to save global timers", e);
+        }
+    }
+
+    public static void loadInstanceTimerForPlayer(ServerPlayer player) {
+        String headKey = "core.yaoquan.hanxu.player_instance_timers";
+        CompoundTag dataRoot = player.getPersistentData();
+        CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
+
+        rebuildTimerData(allTimersTag, player.getUUID());
+    }
+
+    public static void loadInstanceTimerForGlobal(ServerLevel level) {
+        String headKey = "core.yaoquan.hanxu.global_instance_timers";
+        Path file = FilePath.getModDataPath(level);
+
+        // Skip load if not exist.
+        if (!file.toFile().exists()) {
+            return;
+        }
+
+        CompoundTag dataRoot;
+        try {
+            // Limited to 32MB -> 128 Depth.
+            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
+            dataRoot = NbtIo.readCompressed(file, accounter);
+        }
+        catch (IOException e) {
+            CoreHanXu.LOGGER.error("[HX] Failed to load global timers", e);
+            return;
+        }
+
+        CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
+
+        rebuildTimerData(allTimersTag, General.GLOBAL_UUID);
+    }
+
+    private static int getRemainingTicks(String timeUnit, TimerData timerData) {
+        return switch (timeUnit) {
+            case "t", "tick" -> timerData != null? timerData.getRemainingTicks() : -1;
+            case "s", "second" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_SECOND : -1;
+            case "m", "minute" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_MINUTE : -1;
+            case "h", "hour" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_HOUR : -1;
+            default -> -1;
+        };
+    }
+
+    private static int getInitialTicks(String timeUnit, TimerData timerData) {
+        return switch (timeUnit) {
+            case "t", "tick" -> timerData != null? timerData.getInitialTicks() : -1;
+            case "s", "second" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_SECOND : -1;
+            case "m", "minute" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_MINUTE : -1;
+            case "h", "hour" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_HOUR : -1;
+            default -> -1;
+        };
+    }
+
+    private static CompoundTag saveTimerData(Map.Entry<String, TimerData> entry) {
+        CompoundTag timerDataTag = new CompoundTag();
+        TimerData timerData = entry.getValue();
+
+        timerDataTag.putString("timer_id", timerData.getTimerId());
+        timerDataTag.putInt("remaining_ticks", timerData.getRemainingTicks());
+        timerDataTag.putInt("initial_ticks", timerData.getInitialTicks());
+        timerDataTag.putBoolean("is_counting", timerData.isItCounting());
+        timerDataTag.putString("end_behavior", timerData.getEndBehavior());
+        if (timerData.getBehaviorContent() != null) {
+            timerDataTag.putString("behavior_content", timerData.getBehaviorContent());
+        }
+        if (timerData.getMasterGroup() != null) {
+            timerDataTag.putString("master_group", timerData.getMasterGroup());
+        }
+        else {
+            timerDataTag.putString("master_group", "core_hanxu-command");
+        }
+
+        return timerDataTag;
+    }
+
+    private static void rebuildTimerData(CompoundTag allTimersTag, UUID masterId) {
+        for (String eachTimerId : allTimersTag.keySet()) {
+            CompoundTag timerTag = allTimersTag.getCompound(eachTimerId).orElse(new CompoundTag());
+
+            String timerId = timerTag.getString("timer_id").orElse(eachTimerId);
+
+            int remainingTicks = timerTag.getInt("remaining_ticks").orElse(0);
+            int initialTicks = timerTag.getInt("initial_ticks").orElse(0);
+
+            boolean isCounting = timerTag.getBoolean("is_counting").orElse(false);
+
+            String endBehavior = timerTag.getString("end_behavior").orElse("null");
+            String behaviorContent = timerTag.getString("behavior_content").orElse(null);
+            String masterGroup = timerTag.getString("master_group").orElse("core_hanxu-command");
+
+            // Rebuild timer data.
+            Consumer<ServerPlayer> callback = rebuildCallback(masterGroup, timerId, endBehavior, behaviorContent);
+            // Skip when no callback.
+            if (callback == null) {
+                continue;
+            }
+
+            // Rebuild timer data.
+            TimerData rebuildTimer = new TimerData(timerId, initialTicks, callback, endBehavior, behaviorContent, masterGroup, isCounting);
+            rebuildTimer.remainingTicks = remainingTicks;
+
+            // Then recover.
+            Map<String, TimerData> instanceTimers = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
+            instanceTimers.put(timerId, rebuildTimer);
+        }
+    }
+
+    private static Consumer<ServerPlayer> rebuildCallback(String masterGroup, String timerId, String endBehavior, String behaviorContent) {
+        if (masterGroup.equals("core_hanxu-command")) {
+            return Creator.createCallback(null, timerId, endBehavior, behaviorContent);
+        }
+        else {
+            TimerCallback callback = getCallback(masterGroup);
+            if (callback != null) {
+                return callback.createCustomCallback(timerId, endBehavior, behaviorContent);
+            }
+            CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
+            return null;
+        }
+    }
+
+    // Register timers into game.
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        // Double foreach for event tick recall.
+        for (Map<String, TimerData> map : instantiatedTimer.values()) {
+            for (TimerData timerData : map.values()) {
+                timerData.tickRecall();
+            }
+        }
     }
 
     // Define an actual timer data system.
@@ -520,215 +729,6 @@ public class TimeHolder {
 
         boolean isItCounting() {
             return isCounting;
-        }
-    }
-
-    // Display out to F4 page (info page).
-    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state) {
-        if (masterId == null) {
-            return;
-        }
-
-        int remainingTicks = getRemainingTimeFromInstance(masterId, timerId, "tick");
-        boolean isCounting = isInstanceTimerCounting(masterId, timerId);
-        String masterName = Resolver.resolveTargetMasterName(masterId);
-        String key = player.getUUID() + ":" + masterId + ":" + timerId;
-
-        if (state) {
-            refreshDisplayList.add(key);
-        }
-        else {
-            refreshDisplayList.remove(key);
-        }
-
-        CoreHanXu.LOGGER.info("[HX] Display debug timer info. State: {}", state);
-
-        PacketDistributor.sendToPlayer(
-                player, new ModPayload.TimerF4Packet(masterId, timerId, state, remainingTicks, isCounting, masterName)
-        );
-    }
-
-    // Check if required to refresh the F4 timer display.
-    public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String timerId) {
-        String key = player.getUUID() + ":" + masterId.toString() + ":" + timerId;
-
-        CoreHanXu.LOGGER.info("[HX] About to refresh display: {}", key);
-
-        if (refreshDisplayList.contains(key)) {
-            CoreHanXu.LOGGER.info("[HX] Refresh check: true");
-            displayToInfoPage(player, masterId, timerId, true);
-        }
-        else {
-            CoreHanXu.LOGGER.info("[HX] Refresh check: false");
-        }
-    }
-
-    // Save and load methods:
-    public static void registerCallback(TimerCallback callback) {
-        callbacks.put(callback.getMasterGroupId(), callback);
-    }
-
-    public static TimerCallback getCallback(String modId) {
-        return callbacks.get(modId);
-    }
-
-    public static void saveInstanceTimerForPlayer(ServerPlayer player) {
-        String headKey = "core.yaoquan.hanxu.player_instance_timers";
-        CompoundTag dataRoot = player.getPersistentData();
-        CompoundTag allTimersTag = new CompoundTag();
-
-        // Get all specific player's timer, then save.
-        Map<String, TimerData> specificPlayerInstanceTimers = instantiatedTimer.get(player.getUUID());
-        if (specificPlayerInstanceTimers != null) {
-            // For each set, save arguments.
-            for (var entry : specificPlayerInstanceTimers.entrySet()) {
-                // Put timer's data into NBT tag.
-                CompoundTag timerDataTag = saveTimerData(entry);
-
-                // Then save.
-                allTimersTag.put(entry.getKey(), timerDataTag);
-            }
-        }
-
-        dataRoot.put(headKey, allTimersTag);
-    }
-
-    public static void saveInstanceTimerForGlobal(ServerLevel level) {
-        String headKey = "core.yaoquan.hanxu.global_instance_timers";
-        CompoundTag dataRoot = new CompoundTag();
-        CompoundTag allTimersTag = new CompoundTag();
-
-        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(General.GLOBAL_UUID);
-        if (globalInstanceTimers != null) {
-            for (var entry : globalInstanceTimers.entrySet()) {
-                // Put timer's data into NBT tag.
-                CompoundTag timerDataTag = saveTimerData(entry);
-
-                // Then save.
-                allTimersTag.put(entry.getKey(), timerDataTag);
-            }
-        }
-
-        dataRoot.put(headKey, allTimersTag);
-
-        Path file = FilePath.getModDataPath(level);
-        try {
-            NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
-        }
-        catch (IOException e) {
-            CoreHanXu.LOGGER.error("[HX] Failed to save global timers", e);
-        }
-    }
-
-    private static CompoundTag saveTimerData(Map.Entry<String, TimerData> entry) {
-        CompoundTag timerDataTag = new CompoundTag();
-        TimerData timerData = entry.getValue();
-
-        timerDataTag.putString("timer_id", timerData.getTimerId());
-        timerDataTag.putInt("remaining_ticks", timerData.getRemainingTicks());
-        timerDataTag.putInt("initial_ticks", timerData.getInitialTicks());
-        timerDataTag.putBoolean("is_counting", timerData.isItCounting());
-        timerDataTag.putString("end_behavior", timerData.getEndBehavior());
-        if (timerData.getBehaviorContent() != null) {
-            timerDataTag.putString("behavior_content", timerData.getBehaviorContent());
-        }
-        if (timerData.getMasterGroup() != null) {
-            timerDataTag.putString("master_group", timerData.getMasterGroup());
-        }
-        else {
-            timerDataTag.putString("master_group", "core_hanxu-command");
-        }
-
-        return timerDataTag;
-    }
-
-    public static void loadInstanceTimerForPlayer(ServerPlayer player) {
-        String headKey = "core.yaoquan.hanxu.player_instance_timers";
-        CompoundTag dataRoot = player.getPersistentData();
-        CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
-
-        rebuildTimerData(allTimersTag, player.getUUID());
-    }
-
-    public static void loadInstanceTimerForGlobal(ServerLevel level) {
-        String headKey = "core.yaoquan.hanxu.global_instance_timers";
-        Path file = FilePath.getModDataPath(level);
-
-        // Skip load if not exist.
-        if (!file.toFile().exists()) {
-            return;
-        }
-
-        CompoundTag dataRoot;
-        try {
-            // Limited to 32MB -> 128 Depth.
-            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
-            dataRoot = NbtIo.readCompressed(file, accounter);
-        }
-        catch (IOException e) {
-            CoreHanXu.LOGGER.error("[HX] Failed to load global timers", e);
-            return;
-        }
-
-        CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
-
-        rebuildTimerData(allTimersTag, General.GLOBAL_UUID);
-    }
-
-    private static void rebuildTimerData(CompoundTag allTimersTag, UUID masterId) {
-        for (String eachTimerId : allTimersTag.keySet()) {
-            CompoundTag timerTag = allTimersTag.getCompound(eachTimerId).orElse(new CompoundTag());
-
-            String timerId = timerTag.getString("timer_id").orElse(eachTimerId);
-
-            int remainingTicks = timerTag.getInt("remaining_ticks").orElse(0);
-            int initialTicks = timerTag.getInt("initial_ticks").orElse(0);
-
-            boolean isCounting = timerTag.getBoolean("is_counting").orElse(false);
-
-            String endBehavior = timerTag.getString("end_behavior").orElse("null");
-            String behaviorContent = timerTag.getString("behavior_content").orElse(null);
-            String masterGroup = timerTag.getString("master_group").orElse("core_hanxu-command");
-
-            // Rebuild timer data.
-            Consumer<ServerPlayer> callback = rebuildCallback(masterGroup, timerId, endBehavior, behaviorContent);
-            // Skip when no callback.
-            if (callback == null) {
-                continue;
-            }
-
-            // Rebuild timer data.
-            TimerData rebuildTimer = new TimerData(timerId, initialTicks, callback, endBehavior, behaviorContent, masterGroup, isCounting);
-            rebuildTimer.remainingTicks = remainingTicks;
-
-            // Then recover.
-            Map<String, TimerData> instanceTimers = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
-            instanceTimers.put(timerId, rebuildTimer);
-        }
-    }
-
-    private static Consumer<ServerPlayer> rebuildCallback(String masterGroup, String timerId, String endBehavior, String behaviorContent) {
-        if (masterGroup.equals("core_hanxu-command")) {
-            return Creator.createCallback(null, timerId, endBehavior, behaviorContent);
-        }
-        else {
-            TimerCallback callback = getCallback(masterGroup);
-            if (callback != null) {
-                return callback.createCustomCallback(timerId, endBehavior, behaviorContent);
-            }
-            CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
-            return null;
-        }
-    }
-
-    // Register timers into game.
-    @SubscribeEvent
-    public static void onServerTick(ServerTickEvent.Post event) {
-        // Double foreach for event tick recall.
-        for (Map<String, TimerData> map : instantiatedTimer.values()) {
-            for (TimerData timerData : map.values()) {
-                timerData.tickRecall();
-            }
         }
     }
 }

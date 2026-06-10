@@ -76,7 +76,7 @@ public class YamlReader {
         // If existed, read.
         if (worldPath != null) {
             // .minecraft\saves\[save]\data\core_hanxu\[subPath]\[fileName].yaml
-            Path worldSpecificFile = worldPath.resolve(subPath).resolve(fileName);
+            Path worldSpecificFile = worldPath.resolve(subPath).resolve(fileName + ".yaml");
             if (Files.exists(worldSpecificFile)) {
                 return read(worldSpecificFile);
             }
@@ -84,7 +84,7 @@ public class YamlReader {
 
         // Then read global YAML:
         // .minecraft\config\core_hanxu\[subPath]\[fileName].yaml
-        Path globalPath = FilePath.getGlobalPath().resolve(subPath).resolve(fileName);
+        Path globalPath = FilePath.getGlobalPath().resolve(subPath).resolve(fileName + ".yaml");
         if (Files.exists(globalPath)) {
             return read(globalPath);
         }
@@ -155,12 +155,12 @@ public class YamlReader {
         if (targetPath == TargetPath.TO_WORLD) {
             Path worldPath = FilePath.getWorldPath();
             if (worldPath != null) {
-                Path worldSpecificFile = worldPath.resolve(subPath).resolve(fileName);
+                Path worldSpecificFile = worldPath.resolve(subPath).resolve(fileName + ".yaml");
                 return Files.exists(worldSpecificFile);
             }
         }
         else if (targetPath == TargetPath.TO_GLOBAL) {
-            Path globalPath = FilePath.getGlobalPath().resolve(subPath).resolve(fileName);
+            Path globalPath = FilePath.getGlobalPath().resolve(subPath).resolve(fileName + ".yaml");
             return Files.exists(globalPath);
         }
 
@@ -230,7 +230,7 @@ public class YamlReader {
             throw new IOException(returnCodeError(CodeError.unavailableTargetPath));
         }
 
-        Path targetFile = targetRootPath.resolve(subPath).resolve(fileName);
+        Path targetFile = targetRootPath.resolve(subPath).resolve(fileName + ".yaml");
         Files.createDirectories(targetFile.getParent());
 
         try (Writer writer = Files.newBufferedWriter(targetFile)) {

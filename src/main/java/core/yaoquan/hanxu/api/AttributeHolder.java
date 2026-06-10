@@ -5,7 +5,9 @@ import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.event.ModPayload;
+import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.Resolver;
+import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -18,13 +20,14 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 /**
  * Attribute system API
@@ -56,6 +59,12 @@ public class AttributeHolder {
         POINT
     }
 
+    public enum UpdateCategory {
+        normalThreshold,
+        zeroThreshold,
+        recovery,
+    }
+
     /**
      * For API register.
      * @param attribute         Create a new CustomAttribute {@link CustomAttribute}
@@ -79,7 +88,7 @@ public class AttributeHolder {
      * @param defaultValue      Define the start value of attribute.
      * @return                  Does register success: boolean.
      */
-    public static boolean register(String attributeId, float maximum, float defaultValue) {
+    public static boolean register(String attributeId, float maximum, float defaultValue, YamlReader.TargetPath targetPath) {
         if (apiAttributes.containsKey(attributeId) || commandAttributes.containsKey(attributeId)) {
             CoreHanXu.LOGGER.info("[HX] Rejected duplicate attribute: {}", attributeId);
             return false;
@@ -87,6 +96,8 @@ public class AttributeHolder {
 
         CustomAttribute attribute = new CustomAttribute(attributeId, maximum, defaultValue);
         commandAttributes.put(attributeId, attribute);
+
+        saveYamlAttributeSkeleton(attributeId, maximum, defaultValue, targetPath);
 
         CoreHanXu.LOGGER.info("[HX] Registered attribute by command: {}", attribute.getAttributeId());
         return true;
@@ -103,6 +114,28 @@ public class AttributeHolder {
 
             CoreHanXu.LOGGER.info("[HX] Unregistered attribute by string: {}", attributeId);
             return true;
+        }
+        return false;
+    }
+
+    /**
+     * For command unregister (delete YAML).
+     * @param attributeId       Unique title of attribute.
+     * @param targetPath        Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                  Does unregister success: boolean.
+     */
+    public static boolean unregisterAndDelete(String attributeId, YamlReader.TargetPath targetPath) {
+        boolean unregister = unregister(attributeId);
+
+        if (unregister) {
+            try {
+                YamlReader.delete("attribute", attributeId, targetPath);
+                CoreHanXu.LOGGER.info("[HX] Deleted attribute YAML: {}", attributeId);
+                return true;
+            }
+            catch (IOException e) {
+                CoreHanXu.LOGGER.warn("[HX] Failed to unregister attribute and deleted YAML: {}", attributeId, e);
+            }
         }
         return false;
     }
@@ -288,60 +321,56 @@ public class AttributeHolder {
         return setValue(General.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), fromApi, ThresholdDirection.POINT);
     }
 
-    // Define values.
-    public static class CustomAttribute {
-        private final String attributeId;
-        private final float maximum;
-        private final float defaultValue;
+    // Load YAML data for import.
+    /**
+     * Get the YAML attribute data from sub path "attribute" for all .yaml documents.
+     * @param fileName          The file name of YAML.
+     * @return                  New attribute class data: Attribute.
+     */
+    public static Attribute loadYamlAttribute(String fileName) throws IOException {
+        Map<String, Object> attributeData = YamlReader.read("attribute", fileName);
 
-        private static final Map<Float, String> thresholdCallbacks = new ConcurrentHashMap<>();
-        private String zeroCallbackId;
-        private String recoveryCurveId;
-
-        public CustomAttribute(String attributeId, float maximum, float defaultValue) {
-            this.attributeId = attributeId;
-            this.maximum = maximum;
-            this.defaultValue = defaultValue;
-        }
-        
-        public CustomAttribute onThreshold(float thresholdValue, String callbackId) {
-            thresholdCallbacks.put(thresholdValue, callbackId);
-            return this;
-        }
-        
-        public CustomAttribute onZero(String callbackId) {
-            this.zeroCallbackId = callbackId;
-            return this;
-        }
-        
-        public CustomAttribute setRecovery(String callbackId) {
-            this.recoveryCurveId = callbackId;
-            return this;
+        // Check if the id equals to file name.
+        Attribute attribute = parseAttributeData(attributeData);
+        String yamlFileName = attribute.id;
+        if (yamlFileName != null && !yamlFileName.equals(fileName)) {
+            throw new IOException(returnCodeError(CodeError.mismatchFileElement) + fileName + "≠" + yamlFileName);
         }
 
-        public String getAttributeId() {
-            return attributeId;
-        }
+        return attribute;
+    }
 
-        public float getMaximum() {
-            return maximum;
+    /**
+     * Delete YAML attribute from selected target.
+     * @param fileName            As same as file name.
+     * @param targetPath          Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                    Does the delete success: boolean.
+     */
+    public static boolean deleteYamlAttribute(String fileName, YamlReader.TargetPath targetPath) throws IOException {
+        try {
+            YamlReader.delete("attribute", fileName, targetPath);
+            return true;
         }
+        catch (IOException e) {
+            return false;
+        }
+    }
 
-        public float getDefaultValue() {
-            return defaultValue;
+    public static boolean doesYamlAttributeExist(String fileName) {
+        try {
+            YamlReader.read("attribute", fileName);
+            return true;
         }
-        
-        public Map<Float, String> getThresholdCallbacks() {
-            return thresholdCallbacks;
+        catch (FileNotFoundException e) {
+            return false;
         }
+        catch (IOException e) {
+            return true;
+        }
+    }
 
-        public String getZeroCallbackId() {
-            return zeroCallbackId;
-        }
-
-        public String getRecoveryCurveId() {
-            return recoveryCurveId;
-        }
+    public static boolean doesYamlAttributeExist(String fileName, YamlReader.TargetPath targetPath) {
+        return YamlReader.doesFileExist(targetPath, "attribute", fileName);
     }
 
     // Display out to F4 page (info page).
@@ -464,6 +493,190 @@ public class AttributeHolder {
         }
     }
 
+    public static void saveAttributeToPlayer(ServerPlayer player) {
+        String headKey = "core.yaoquan.hanxu.player_attributes";
+        CompoundTag dataRoot = player.getPersistentData();
+        CompoundTag allAttributesTag = new CompoundTag();
+
+        Map<String, Float> playerValues = attributeValues.get(player.getUUID());
+        if (playerValues != null) {
+            for (var entry : playerValues.entrySet()) {
+                CompoundTag attributeDataTag = saveAttributeData(entry);
+
+                allAttributesTag.put(entry.getKey(), attributeDataTag);
+            }
+        }
+
+        dataRoot.put(headKey, allAttributesTag);
+    }
+
+    public static void saveAttributeToGlobal(ServerLevel level) {
+        String headKey = "core.yaoquan.hanxu.global_attributes";
+        CompoundTag dataRoot = new CompoundTag();
+        CompoundTag allAttributesTag = new CompoundTag();
+
+        Map<String, Float> globalValues = attributeValues.get(General.GLOBAL_UUID);
+        if (globalValues != null) {
+            for (var entry : globalValues.entrySet()) {
+                CompoundTag attributeDataTag = saveAttributeData(entry);
+
+                allAttributesTag.put(entry.getKey(), attributeDataTag);
+            }
+        }
+
+        dataRoot.put(headKey, allAttributesTag);
+
+        Path file = FilePath.getModDataPath(level);
+        try {
+            NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
+        }
+        catch (IOException e) {
+            CoreHanXu.LOGGER.error("[HX] Failed to save global attribute", e);
+        }
+    }
+
+    public static void loadAttributeForPlayer(ServerPlayer player) {
+        String headKey = "core.yaoquan.hanxu.player_attributes";
+        CompoundTag dataRoot = player.getPersistentData();
+        CompoundTag allAttributesTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
+
+        rebuildAttributeData(player.getUUID(), allAttributesTag);
+    }
+
+    public static void loadAttributeForGlobal(ServerLevel level) {
+        String headKey = "core.yaoquan.hanxu.global_attributes";
+        Path file = FilePath.getModDataPath(level);
+
+        // Skip load if not exist.
+        if (!file.toFile().exists()) {
+            return;
+        }
+
+        CompoundTag dataRoot;
+        try {
+            // Limited to 32MB -> 128 Depth.
+            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
+            dataRoot = NbtIo.readCompressed(file, accounter);
+        }
+        catch (IOException e) {
+            CoreHanXu.LOGGER.error("[HX] Failed to load global attributes", e);
+            return;
+        }
+
+        CompoundTag allAttributesTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
+
+        rebuildAttributeData(General.GLOBAL_UUID, allAttributesTag);
+    }
+
+    public static void registerAllYamlAttributes() {
+        List<Path> files = YamlReader.listOut("attribute");
+        for (Path file : files) {
+            String fileName = file.getFileName().toString().replace(".yaml", "");
+            try {
+                Attribute attribute = loadYamlAttribute(fileName);
+                registerYamlAttribute(attribute, false);
+            }
+            catch (IOException e) {
+                CoreHanXu.LOGGER.warn("[HX] Failed to load YAML attribute: {}", fileName, e);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void saveYamlAttribute(String attributeId, UpdateCategory updateCategory, float threshold, String callbackId, String behavior, String content) {
+        Path globalFile = FilePath.getGlobalPath().resolve("attribute").resolve(attributeId + ".yaml");
+        Path worldRoot = FilePath.getWorldPath();
+        Path worldFile = worldRoot != null? worldRoot.resolve("attribute").resolve(attributeId + ".yaml") : null;
+        Path targetFile;
+        YamlReader.TargetPath targetPath;
+
+        if (worldFile != null && Files.exists(worldFile)) {
+            targetFile = worldFile;
+            targetPath = YamlReader.TargetPath.TO_WORLD;
+        }
+        else {
+            targetFile = globalFile;
+            targetPath = YamlReader.TargetPath.TO_GLOBAL;
+        }
+
+        Map<String, Object> yamlAttributeData;
+
+        if (Files.exists(targetFile)) {
+            try {
+                yamlAttributeData = YamlReader.read(targetFile);
+            }
+            catch (IOException e) {
+                CoreHanXu.LOGGER.warn("[HX] Failed to read attribute data: {}", targetFile);
+                return;
+            }
+        }
+        else {
+            CustomAttribute attribute = commandAttributes.get(attributeId);
+            if (attribute == null) {
+                CoreHanXu.LOGGER.warn("[HX] No defined YAML (command) attribute found: {}", attributeId);
+                return;
+            }
+            yamlAttributeData = new LinkedHashMap<>();
+            yamlAttributeData.put("id", attributeId);
+            yamlAttributeData.put("maximum", attribute.getMaximum());
+            yamlAttributeData.put("default", attribute.getDefaultValue());
+        }
+
+        switch (updateCategory) {
+            case normalThreshold -> {
+                if (threshold > 0.0f) {
+                    List<Map<String, Object>> thresholds =
+                        (List<Map<String, Object>>) yamlAttributeData.getOrDefault("thresholds", new ArrayList<>());
+                    Map<String, Object> newThreshold = new LinkedHashMap<>();
+
+                    newThreshold.put("threshold", threshold);
+                    newThreshold.put("id", callbackId);
+                    newThreshold.put("behavior", behavior);
+                    newThreshold.put("content", content);
+
+                    thresholds.add(newThreshold);
+                    yamlAttributeData.put("thresholds", thresholds);
+                }
+                else {
+                    CoreHanXu.LOGGER.warn("[HX] Threshold is non-positive, but using normal threshold category: {}", attributeId);
+                    return;
+                }
+            }
+            case zeroThreshold -> {
+                if (threshold == 0.0f) {
+                    Map<String, Object> zero = new LinkedHashMap<>();
+
+                    zero.put("id", callbackId);
+                    zero.put("behavior", behavior);
+                    zero.put("content", content);
+
+                    yamlAttributeData.put("zero", zero);
+                }
+                else {
+                    CoreHanXu.LOGGER.warn("[HX] Threshold is non-zero, but using zero threshold category: {}", attributeId);
+                    return;
+                }
+            }
+            case recovery -> {
+                Map<String, Object> recovery = new LinkedHashMap<>();
+
+                recovery.put("id", callbackId);
+                recovery.put("behavior", behavior);
+                recovery.put("content", content);
+
+                yamlAttributeData.put("recovery", recovery);
+            }
+        }
+
+        // Then save.
+        try {
+            YamlReader.save("attribute", attributeId, yamlAttributeData, targetPath);
+        }
+        catch (IOException e) {
+            CoreHanXu.LOGGER.warn("[HX] Failed to save YAML attribute: {}", targetFile);
+        }
+    }
+
     // Check if trigger threshold behavior.
     private static void checkThresholdTriggered(UUID masterId, CustomAttribute attribute, String attributeId,
                                                 float currentValue, float newValue, ThresholdDirection direction) {
@@ -531,7 +744,7 @@ public class AttributeHolder {
     }
 
     private static void checkZeroTriggered(UUID masterId, CustomAttribute attribute, String attributeId,
-                                              float currentValue, float newValue) {
+                                           float currentValue, float newValue) {
         if (currentValue > 0.0f && newValue <= 0.0f && attribute.getZeroCallbackId() != null) {
             Map<String, String> parameters = new HashMap<>();
             parameters.put("master_id", masterId.toString());
@@ -547,46 +760,61 @@ public class AttributeHolder {
         }
     }
 
-    public static void saveAttributeToPlayer(ServerPlayer player) {
-        String headKey = "core.yaoquan.hanxu.player_attributes";
-        CompoundTag dataRoot = player.getPersistentData();
-        CompoundTag allAttributesTag = new CompoundTag();
+    @SuppressWarnings("unchecked")
+    private static Attribute parseAttributeData(Map<String, Object> attributeData) {
+        // Read general.
+        Attribute attribute = new Attribute();
+        attribute.id = (String) attributeData.getOrDefault("id", null);
+        Number maximum = (Number) attributeData.getOrDefault("maximum", 100.0f);
+        attribute.maximum = maximum.floatValue();
+        Number defaultValue = (Number) attributeData.getOrDefault("default", 1.0f);
+        attribute.defaultValue = defaultValue.floatValue();
 
-        Map<String, Float> playerValues = attributeValues.get(player.getUUID());
-        if (playerValues != null) {
-            for (var entry : playerValues.entrySet()) {
-                CompoundTag attributeDataTag = saveAttributeData(entry);
+        // Read threshold node.
+        List<Map<String, Object>> thresholds = (List<Map<String, Object>>) attributeData.get("thresholds");
+        if (thresholds != null) {
+            attribute.thresholdCallbacks = new ArrayList<>();
+            for (Map<String, Object> thresholdCallback : thresholds) {
+                ThresholdNode thresholdNode = new ThresholdNode();
+                Number threshold = (Number) thresholdCallback.getOrDefault("threshold", null);
+                thresholdNode.threshold = threshold.floatValue();
+                thresholdNode.callbackId = (String) thresholdCallback.getOrDefault("id", null);
+                thresholdNode.behavior = (String) thresholdCallback.getOrDefault("behavior", "null");
+                thresholdNode.content = (String) thresholdCallback.getOrDefault("content", null);
 
-                allAttributesTag.put(entry.getKey(), attributeDataTag);
+                if (thresholdNode.callbackId != null) {
+                    attribute.thresholdCallbacks.add(thresholdNode);
+                }
             }
         }
 
-        dataRoot.put(headKey, allAttributesTag);
-    }
-
-    public static void saveAttributeToGlobal(ServerLevel level) {
-        String headKey = "core.yaoquan.hanxu.global_attributes";
-        CompoundTag dataRoot = new CompoundTag();
-        CompoundTag allAttributesTag = new CompoundTag();
-
-        Map<String, Float> globalValues = attributeValues.get(General.GLOBAL_UUID);
-        if (globalValues != null) {
-            for (var entry : globalValues.entrySet()) {
-                CompoundTag attributeDataTag = saveAttributeData(entry);
-
-                allAttributesTag.put(entry.getKey(), attributeDataTag);
-            }
+        // Read zero node.
+        Map<String, Object> zero = (Map<String, Object>) attributeData.get("zero");
+        if (zero != null) {
+            attribute.zeroCallbackId = (String) zero.getOrDefault("id", null);
+            attribute.zeroCallbackBehavior = (String) zero.getOrDefault("behavior", "null");
+            attribute.zeroCallbackContent = (String) zero.getOrDefault("content", "/say MISSING ARGUMENT.");
+        }
+        else {
+            attribute.zeroCallbackId = null;
+            attribute.zeroCallbackBehavior = "null";
+            attribute.zeroCallbackContent = "/say MISSING ARGUMENT.";
         }
 
-        dataRoot.put(headKey, allAttributesTag);
+        // Read recovery node.
+        Map<String, Object> recovery = (Map<String, Object>) attributeData.get("recovery");
+        if (recovery != null) {
+            attribute.recoveryCurveId = (String) recovery.getOrDefault("id", null);
+            attribute.recoveryCurveBehavior = (String) recovery.getOrDefault("behavior", "null");
+            attribute.recoveryCurveContent = (String) recovery.getOrDefault("content", "null");
+        }
+        else {
+            attribute.recoveryCurveId = null;
+            attribute.recoveryCurveBehavior = "null";
+            attribute.recoveryCurveContent = "null";
+        }
 
-        Path file = FilePath.getModDataPath(level);
-        try {
-            NbtIo.writeCompressed(dataRoot, file.toFile().toPath());
-        }
-        catch (IOException e) {
-            CoreHanXu.LOGGER.error("[HX] Failed to save global attribute", e);
-        }
+        return attribute;
     }
 
     private static CompoundTag saveAttributeData(Map.Entry<String, Float> entry) {
@@ -595,39 +823,6 @@ public class AttributeHolder {
         attributeDataTag.putFloat(entry.getKey(), entry.getValue());
 
         return attributeDataTag;
-    }
-
-    public static void loadAttributeForPlayer(ServerPlayer player) {
-        String headKey = "core.yaoquan.hanxu.player_attributes";
-        CompoundTag dataRoot = player.getPersistentData();
-        CompoundTag allAttributesTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
-
-        rebuildAttributeData(player.getUUID(), allAttributesTag);
-    }
-
-    public static void loadAttributeForGlobal(ServerLevel level) {
-        String headKey = "core.yaoquan.hanxu.global_attributes";
-        Path file = FilePath.getModDataPath(level);
-
-        // Skip load if not exist.
-        if (!file.toFile().exists()) {
-            return;
-        }
-
-        CompoundTag dataRoot;
-        try {
-            // Limited to 32MB -> 128 Depth.
-            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
-            dataRoot = NbtIo.readCompressed(file, accounter);
-        }
-        catch (IOException e) {
-            CoreHanXu.LOGGER.error("[HX] Failed to load global attributes", e);
-            return;
-        }
-
-        CompoundTag allAttributesTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
-
-        rebuildAttributeData(General.GLOBAL_UUID, allAttributesTag);
     }
 
     // Rebuild data.
@@ -641,10 +836,135 @@ public class AttributeHolder {
         attributeValues.put(masterId, ownerValues);
     }
 
+    // Register all YAML attributes.
+    private static void registerYamlAttribute(Attribute attribute, boolean isOverride) {
+        if (isOverride) {
+            // Only command/YAML will override their attributes.
+            commandAttributes.remove(attribute.id);
+        }
+        if (apiAttributes.containsKey(attribute.id) || commandAttributes.containsKey(attribute.id)) {
+            CoreHanXu.LOGGER.warn("[HX] Rejected duplicate attribute: {}", attribute.id);
+            return;
+        }
+
+        CustomAttribute customAttribute = new CustomAttribute(attribute.id, attribute.maximum, attribute.defaultValue);
+        commandAttributes.put(attribute.id, customAttribute);
+
+        for (ThresholdNode thresholdNode : attribute.thresholdCallbacks) {
+            if (thresholdNode == null) {
+                continue;
+            }
+
+            customAttribute.onThreshold(thresholdNode.threshold, thresholdNode.callbackId);
+            Creator.registerCallback(thresholdNode.callbackId, thresholdNode.behavior, thresholdNode.content);
+        }
+
+        if (attribute.zeroCallbackId != null && !attribute.zeroCallbackId.isEmpty()) {
+            Creator.registerCallback(attribute.zeroCallbackId, attribute.zeroCallbackBehavior, attribute.zeroCallbackContent);
+            customAttribute.onZero(attribute.zeroCallbackId);
+        }
+
+        if (attribute.recoveryCurveId != null && !attribute.recoveryCurveId.isEmpty()) {
+            Creator.registerCallback(attribute.recoveryCurveId, attribute.recoveryCurveBehavior, attribute.recoveryCurveContent);
+            customAttribute.setRecovery(attribute.recoveryCurveId);
+        }
+    }
+
+    private static void saveYamlAttributeSkeleton(String attributeId, float maximum, float defaultValue, YamlReader.TargetPath targetPath) {
+        Map<String, Object> skeleton = new LinkedHashMap<>();
+        skeleton.put("id", attributeId);
+        skeleton.put("maximum", maximum);
+        skeleton.put("default", defaultValue);
+
+        try {
+            YamlReader.save("attribute", attributeId, skeleton, targetPath);
+        }
+        catch (IOException e) {
+            CoreHanXu.LOGGER.warn("[HX] Failed to save YAML attribute skeleton: {}", attributeId, e);
+        }
+    }
+
     // Register and tick attribute changes.
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         tickSync();
         tickRecovery();
+    }
+
+    // Define values.
+    public static class CustomAttribute {
+        private final String attributeId;
+        private final float maximum;
+        private final float defaultValue;
+
+        private static final Map<Float, String> thresholdCallbacks = new ConcurrentHashMap<>();
+        private String zeroCallbackId;
+        private String recoveryCurveId;
+
+        public CustomAttribute(String attributeId, float maximum, float defaultValue) {
+            this.attributeId = attributeId;
+            this.maximum = maximum;
+            this.defaultValue = defaultValue;
+        }
+
+        public CustomAttribute onThreshold(float thresholdValue, String callbackId) {
+            thresholdCallbacks.put(thresholdValue, callbackId);
+            return this;
+        }
+
+        public CustomAttribute onZero(String callbackId) {
+            this.zeroCallbackId = callbackId;
+            return this;
+        }
+
+        public CustomAttribute setRecovery(String callbackId) {
+            this.recoveryCurveId = callbackId;
+            return this;
+        }
+
+        public String getAttributeId() {
+            return attributeId;
+        }
+
+        public float getMaximum() {
+            return maximum;
+        }
+
+        public float getDefaultValue() {
+            return defaultValue;
+        }
+
+        public Map<Float, String> getThresholdCallbacks() {
+            return thresholdCallbacks;
+        }
+
+        public String getZeroCallbackId() {
+            return zeroCallbackId;
+        }
+
+        public String getRecoveryCurveId() {
+            return recoveryCurveId;
+        }
+    }
+
+    // Define YAML nodes.
+    public static class Attribute {
+        public String id;
+        public Float maximum;
+        public Float defaultValue;
+        public List<ThresholdNode> thresholdCallbacks;
+        public String zeroCallbackId;
+        public String recoveryCurveId;
+        public String zeroCallbackBehavior;
+        public String recoveryCurveBehavior;
+        public String zeroCallbackContent;
+        public String recoveryCurveContent;
+    }
+
+    public static class ThresholdNode {
+        public Float threshold;
+        public String callbackId;
+        public String behavior;
+        public String content;
     }
 }

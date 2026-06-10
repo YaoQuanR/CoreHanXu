@@ -34,6 +34,7 @@ public class FilePath {
     // Get defined Yaml subpath.
     public static final List<String> SUB_DIRS = List.of(
             "scene",
+            "attribute",
             "galaxy"
     );
 }

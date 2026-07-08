@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import core.yaoquan.hanxu.api.PermissionHolder;
+import core.yaoquan.hanxu.registry.config.PermissionConfig;
 import core.yaoquan.hanxu.test.TestHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -17,37 +18,37 @@ public class CommandBuilder {
                 // Subcommands.
                 .then(
                     Commands.literal("help")
-                        .requires(cs -> PermissionHolder.hasPermission(cs,0))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
                         .executes(CommandExecute::executeHelp)
                 )
                 .then(
                     Commands.literal("detail")
-                        .requires(cs -> PermissionHolder.hasPermission(cs,0))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_DETAIL.getAsInt()))
                         .executes(CommandExecute::executeDetail)
                 )
                 .then(
                     Commands.literal("license")
                         .then(
                             Commands.literal("agree")
-                                .requires(cs -> PermissionHolder.hasPermission(cs,0))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs,0))
                                 .executes(CommandExecute::executeLicense_Agree)
                         )
                         .then(
                             Commands.literal("origin")
-                                .requires(cs -> PermissionHolder.hasPermission(cs,0))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs,0))
                                 .executes(CommandExecute::executeLicense_Origin)
                         )
                         .then(
                             Commands.literal("state")
                                 .then(
                                     Commands.argument("player_id", StringArgumentType.word())
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_LICENSE_ADVANCED_STATE.getAsInt()))
                                         .suggests(CommandSuggest::suggestPlayer)
                                         .executes(CommandExecute::executeAdvancedLicense_State)
                                 )
                                 .executes(CommandExecute::executeLicense_State)
-                                .requires(cs -> PermissionHolder.hasPermission(cs,1))
                         )
-                        .requires(cs -> PermissionHolder.hasPermission(cs,0))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs,0))
                         .executes(CommandExecute::executeLicense)
                 )
                 .then(
@@ -73,20 +74,16 @@ public class CommandBuilder {
                                 .executes(cs -> CommandExecute.executePermission_Check(cs, "server"))
                         )
                         .then(
-                            Commands.literal("player_override")
-                                .executes(cs -> CommandExecute.executePermission_Check(cs, "player_override"))
-                        )
-                        .then(
                             Commands.literal("player_first_grant")
                                 .executes(cs -> CommandExecute.executePermission_Check(cs, "player_first_grant"))
                         )
-                        .requires(cs -> PermissionHolder.hasPermission(cs,2))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_PERMISSION_LEVEL.getAsInt()))
                 )
                 .then(
                     Commands.literal("timer")
                         .then(
                             Commands.literal("help")
-                                .requires(cs -> PermissionHolder.hasPermission(cs,0))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_HELP.getAsInt()))
                                 .executes(CommandExecute::executeTimer_Help)
                         )
                         .then(
@@ -197,6 +194,7 @@ public class CommandBuilder {
                                     Commands.literal("list")
                                         .executes(CommandExecute::executeTimer_Template_List)
                                 )
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_TEMPLATE.getAsInt()))
                         )
                         .then(
                             Commands.literal("instance")
@@ -206,6 +204,7 @@ public class CommandBuilder {
                                             Commands.argument("template_timer_id", StringArgumentType.word())
                                                 .then(
                                                     Commands.argument("apply_target", StringArgumentType.word())
+                                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_CREATE.getAsInt()))
                                                         .suggests(CommandSuggest::suggestUUIDOwner)
                                                         .executes(CommandExecute::executeTimer_Instance_Apply)
                                                 )
@@ -250,6 +249,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
                                         )
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_CREATE.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("create_range")
@@ -292,6 +292,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
                                         )
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_CREATE.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("start")
@@ -304,6 +305,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_RUN.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("stop")
@@ -316,6 +318,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_RUN.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("reset")
@@ -437,8 +440,9 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
-                                        .requires(cs -> PermissionHolder.hasPermission(cs,2))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_F4.getAsInt()))
                                 )
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_OTHERS.getAsInt()))
                         )
                         .then(
                             Commands.literal("test")
@@ -469,13 +473,14 @@ public class CommandBuilder {
                                 )
                                 .requires(TestHolder::hasPrivateTestPermission)
                         )
-                        .requires(cs -> PermissionHolder.hasPermission(cs,1))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_HELP.getAsInt()))
                         .executes(CommandExecute::executeTimer)
                 )
                 .then(
                     Commands.literal("scene")
                         .then(
                             Commands.literal("help")
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_HELP.getAsInt()))
                                 .executes(CommandExecute::executeScene_Help)
                         )
                         .then(
@@ -486,6 +491,7 @@ public class CommandBuilder {
                             Commands.literal("play")
                                 .then(
                                     Commands.argument("scene_name", StringArgumentType.string())
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_PLAY.getAsInt()))
                                         .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Play)
                                 )
@@ -494,6 +500,7 @@ public class CommandBuilder {
                             Commands.literal("broadcast")
                                 .then(
                                     Commands.argument("scene_name", StringArgumentType.string())
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_PLAY.getAsInt()))
                                         .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Broadcast)
                                 )
@@ -526,19 +533,21 @@ public class CommandBuilder {
                                         .executes(CommandExecute::executeScene_Create)
                                 )
                         )
-                        .requires(cs -> PermissionHolder.hasPermission(cs,1))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_OTHERS.getAsInt()))
                         .executes(CommandExecute::executeScene)
                 )
                 .then(
                     Commands.literal("attribute")
                         .then(
                             Commands.literal("help")
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_HELP.getAsInt()))
+                                .executes(CommandExecute::executeAttribute_Help)
                         )
                         .then(
                             Commands.literal("list")
                                 .then(
                                     Commands.literal("api")
-                                        .requires(cs -> PermissionHolder.hasPermission(cs,2))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs,10))
                                         .executes(CommandExecute::executeAdvancedAttribute_List)
                                 )
                                 .executes(CommandExecute::executeAttribute_List)
@@ -562,6 +571,7 @@ public class CommandBuilder {
                                         )
                                         .suggests(CommandSuggest::suggestYamlAttribute)
                                 )
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_CREATE.getAsInt()))
                         )
                         .then(
                             Commands.literal("define")
@@ -573,47 +583,192 @@ public class CommandBuilder {
                                                     Commands.literal("remind")
                                                         .then(
                                                             Commands.argument("content", StringArgumentType.greedyString())
+                                                                .executes(cs -> CommandExecute.executeAttribute_Define(cs, "remind"))
                                                         )
                                                 )
                                                 .then(
                                                     Commands.literal("execute")
                                                         .then(
                                                             Commands.argument("content", StringArgumentType.greedyString())
+                                                                .executes(cs -> CommandExecute.executeAttribute_Define(cs, "execute"))
                                                         )
                                                 )
                                                 .then(
                                                     Commands.literal("api")
                                                         .then(
                                                             Commands.argument("callback_id", StringArgumentType.string())
+                                                                .executes(cs -> CommandExecute.executeAttribute_Define(cs, "api"))
                                                         )
-                                                        .requires(cs -> PermissionHolder.hasPermission(cs,2))
+                                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs,10))
                                                 )
                                         )
+                                        .suggests(CommandSuggest::suggestYamlAttribute)
                                 )
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_CREATE.getAsInt()))
                         )
                         .then(
                             Commands.literal("delete")
+                                .then(
+                                    Commands.argument("attribute_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("world")
+                                                .executes(cs -> CommandExecute.executeAttribute_Delete(cs, "world"))
+                                        )
+                                        .then(
+                                            Commands.literal("global")
+                                                .executes(cs -> CommandExecute.executeAttribute_Delete(cs, "global"))
+                                        )
+                                        .suggests(CommandSuggest::suggestYamlAttribute)
+                                        .executes(cs -> CommandExecute.executeAttribute_Delete(cs, "try"))
+                                )
                         )
                         .then(
                             Commands.literal("read")
+                                .then(
+                                    Commands.argument("attribute_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("threshold")
+                                                .then(
+                                                    Commands.literal("all")
+                                                        .executes(cs -> CommandExecute.executeAttribute_Read(cs, "threshold_all"))
+                                                )
+                                                .then(
+                                                    Commands.literal("specific")
+                                                        .then(
+                                                            Commands.argument("threshold_value", FloatArgumentType.floatArg())
+                                                                .executes(cs -> CommandExecute.executeAttribute_Read(cs, "threshold_specific"))
+                                                        )
+                                                )
+                                        )
+                                        .then(
+                                            Commands.literal("zero")
+                                                .executes(cs -> CommandExecute.executeAttribute_Read(cs, "zero"))
+                                        )
+                                        .then(
+                                            Commands.literal("recovery")
+                                                .executes(cs -> CommandExecute.executeAttribute_Read(cs, "recovery"))
+                                        )
+                                        .then(
+                                            Commands.literal("maximum")
+                                                .executes(cs -> CommandExecute.executeAttribute_Read(cs, "maximum"))
+                                        )
+                                        .then(
+                                            Commands.literal("recovery_interval")
+                                                .executes(cs -> CommandExecute.executeAttribute_Read(cs, "recovery_interval"))
+                                        )
+                                        .then(
+                                            Commands.literal("value")
+                                                .then(
+                                                    Commands.argument("player_id", StringArgumentType.word())
+                                                        .suggests(CommandSuggest::suggestPlayer)
+                                                        .executes(cs -> CommandExecute.executeAttribute_Read(cs, "value"))
+                                                )
+                                                .executes(cs -> CommandExecute.executeAttribute_Read(cs, "value"))
+                                        )
+                                        .then(
+                                            Commands.literal("group")
+                                                .executes(cs -> CommandExecute.executeAttribute_Read(cs, "group"))
+                                        )
+                                        .suggests(CommandSuggest::suggestYamlAttribute)
+                                )
                         )
                         .then(
                             Commands.literal("modify")
                                 .then(
-                                    Commands.literal("value")
+                                    Commands.argument("attribute_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("player_id", StringArgumentType.word())
+                                                .then(
+                                                    Commands.literal("set")
+                                                        .then(
+                                                            Commands.argument("value", FloatArgumentType.floatArg())
+                                                                .then(
+                                                                    Commands.argument("direction", StringArgumentType.word())
+                                                                        .suggests(CommandSuggest::suggestAttributeDirection)
+                                                                        .executes(cs -> CommandExecute.executeAttribute_Modify(cs, "set"))
+                                                                )
+                                                                .executes(cs -> CommandExecute.executeAttribute_Modify(cs, "set"))
+                                                        )
+                                                )
+                                                .then(
+                                                    Commands.literal("add")
+                                                        .then(
+                                                            Commands.argument("value", FloatArgumentType.floatArg())
+                                                                .then(
+                                                                    Commands.argument("direction", StringArgumentType.word())
+                                                                        .suggests(CommandSuggest::suggestAttributeDirection)
+                                                                        .executes(cs -> CommandExecute.executeAttribute_Modify(cs, "add"))
+                                                                )
+                                                                .executes(cs -> CommandExecute.executeAttribute_Modify(cs, "add"))
+                                                        )
+                                                )
+                                                .then(
+                                                    Commands.literal("reduce")
+                                                        .then(
+                                                            Commands.argument("value", FloatArgumentType.floatArg())
+                                                                .then(
+                                                                    Commands.argument("direction", StringArgumentType.word())
+                                                                        .suggests(CommandSuggest::suggestAttributeDirection)
+                                                                        .executes(cs -> CommandExecute.executeAttribute_Modify(cs, "reduce"))
+                                                                )
+                                                                .executes(cs -> CommandExecute.executeAttribute_Modify(cs, "reduce"))
+                                                        )
+                                                )
+                                                .suggests(CommandSuggest::suggestPlayer)
+                                        )
+                                        .suggests(CommandSuggest::suggestYamlAttribute)
                                 )
+                        )
+                        .then(
+                            Commands.literal("recovery")
                                 .then(
-                                    Commands.literal("add")
-                                )
-                                .then(
-                                    Commands.literal("reduce")
-                                )
-                                .then(
-                                    Commands.literal("auto")
+                                    Commands.argument("attribute_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("simple")
+                                                .then(
+                                                    Commands.argument("interval", IntegerArgumentType.integer())
+                                                        .then(
+                                                            Commands.argument("interval_unit", StringArgumentType.word())
+                                                                .then(
+                                                                    Commands.argument("value", FloatArgumentType.floatArg())
+                                                                        .then(
+                                                                            Commands.argument("direction", StringArgumentType.word())
+                                                                                .suggests(CommandSuggest::suggestAttributeDirection)
+                                                                                .executes(cs -> CommandExecute.executeAttribute_Recovery(cs, "simple"))
+                                                                        )
+                                                                        .executes(cs -> CommandExecute.executeAttribute_Recovery(cs, "simple"))
+                                                                )
+                                                                .suggests(CommandSuggest::suggestUnit)
+                                                        )
+                                                )
+                                        )
+                                        .then(
+                                            Commands.literal("api")
+                                                .then(
+                                                    Commands.argument("callback_id", StringArgumentType.string())
+                                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, 10))
+                                                        .executes(cs -> CommandExecute.executeAttribute_Recovery(cs, "api"))
+                                                )
+                                        )
+                                        .suggests(CommandSuggest::suggestYamlAttribute)
                                 )
                         )
                         .then(
                             Commands.literal("display")
+                                .then(
+                                    Commands.argument("attribute_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("true")
+                                                .executes(cs -> CommandExecute.executeAttribute_Display(cs, true))
+                                        )
+                                        .then(
+                                            Commands.literal("false")
+                                                .executes(cs -> CommandExecute.executeAttribute_Display(cs, false))
+                                        )
+                                        .suggests(CommandSuggest::suggestAllAttribute)
+                                        .executes(cs -> CommandExecute.executeAttribute_Display(cs, true))
+                                )
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_F4.getAsInt()))
                         )
                         .then(
                             Commands.literal("test")
@@ -621,6 +776,10 @@ public class CommandBuilder {
                                     Commands.literal("example")
                                         .then(
                                             Commands.argument("test_id", IntegerArgumentType.integer())
+                                                    .then(
+                                                        Commands.argument("extra", StringArgumentType.string())
+                                                            .executes(TestHolder::executeTest_Attribute)
+                                                    )
                                                 .executes(TestHolder::executeTest_Attribute)
                                         )
                                 )
@@ -630,9 +789,10 @@ public class CommandBuilder {
                                 )
                                 .requires(TestHolder::hasPrivateTestPermission)
                         )
-                        .requires(cs -> PermissionHolder.hasPermission(cs, 1))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_OTHERS.getAsInt()))
+                        .executes(CommandExecute::executeAttribute)
                 )
-                .requires(cs -> PermissionHolder.hasPermission(cs,0))
+                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
                 .executes(CommandExecute::executeBare)
         );
     }

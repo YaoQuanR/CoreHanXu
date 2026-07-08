@@ -20,7 +20,6 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -159,8 +158,7 @@ public class AttributeHolder {
 
     /**
      * Get attribute value.
-     * @param masterId          Required when becoming an instance timer,
-     *                          use player id/"-global"/"-temporary" to define the master.
+     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
      *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param fromApi           True false that where you use this function.
@@ -195,8 +193,7 @@ public class AttributeHolder {
 
     /**
      * Set attribute value (Full direction trigger).
-     * @param masterId          Required when becoming an instance timer,
-     *                          use player id/"-global"/"-temporary" to define the master.
+     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
      *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
@@ -245,8 +242,7 @@ public class AttributeHolder {
 
     /**
      * Set player's attribute value (Default: Point trigger).
-     * @param masterId          Required when becoming an instance timer,
-     *                          use player id/"-global"/"-temporary" to define the master.
+     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
      *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
@@ -346,7 +342,7 @@ public class AttributeHolder {
      * @param targetPath          Enum path: TO_GLOBAL or TO_WORLD.
      * @return                    Does the delete success: boolean.
      */
-    public static boolean deleteYamlAttribute(String fileName, YamlReader.TargetPath targetPath) throws IOException {
+    public static boolean deleteYamlAttribute(String fileName, YamlReader.TargetPath targetPath) {
         try {
             YamlReader.delete("attribute", fileName, targetPath);
             return true;
@@ -361,16 +357,25 @@ public class AttributeHolder {
             YamlReader.read("attribute", fileName);
             return true;
         }
-        catch (FileNotFoundException e) {
-            return false;
-        }
         catch (IOException e) {
-            return true;
+            return false;
         }
     }
 
     public static boolean doesYamlAttributeExist(String fileName, YamlReader.TargetPath targetPath) {
         return YamlReader.doesFileExist(targetPath, "attribute", fileName);
+    }
+
+    public static boolean doesAttributeExist(String attributeId) {
+        return commandAttributes.containsKey(attributeId) || apiAttributes.containsKey(attributeId);
+    }
+
+    public static boolean doesAttributeExist(String attributeId, String attributeCategory) {
+        return switch (attributeCategory) {
+            case "api" -> apiAttributes.containsKey(attributeId);
+            case "command", "yaml" -> commandAttributes.containsKey(attributeId);
+            default -> false;
+        };
     }
 
     // Display out to F4 page (info page).
@@ -474,21 +479,27 @@ public class AttributeHolder {
                 if (attribute == null) {
                     attribute = commandAttributes.get(attributeId);
                 }
-                if (attribute == null || attribute.getRecoveryCurveId() == null) {
+                if (attribute == null || attribute.getRecoveryCurveId() == null || attribute.recoveryIntervalTicks <= 0) {
                     continue;
                 }
 
-                Map<String, String> parameters = new HashMap<>();
-                parameters.put("master_id", masterId.toString());
-                parameters.put("master_name", Resolver.resolveTargetMasterName(masterId));
-                parameters.put("attribute_id", attributeId);
-                parameters.put("threshold", "0"); // Meaningless.
-                parameters.put("current_value", String.valueOf(currentValue));
-                parameters.put("new_value", String.valueOf(currentValue)); // Meaningless.
-                parameters.put("direction", "point"); // Meaningless.
+                attribute.countTickRecovery();
 
-                ServerPlayer player = Resolver.resolveTargetPlayer(masterId);
-                BehaviorRegistry.execute(player, attribute.getRecoveryCurveId(), parameters);
+                if (attribute.recoveryTickCounter == attribute.recoveryIntervalTicks) {
+                    attribute.resetTickRecovery();
+
+                    Map<String, String> parameters = new HashMap<>();
+                    parameters.put("master_id", masterId.toString());
+                    parameters.put("master_name", Resolver.resolveTargetMasterName(masterId));
+                    parameters.put("attribute_id", attributeId);
+                    parameters.put("threshold", "0"); // Meaningless.
+                    parameters.put("current_value", String.valueOf(currentValue));
+                    parameters.put("new_value", String.valueOf(currentValue)); // Meaningless.
+                    parameters.put("direction", "point"); // Meaningless.
+
+                    ServerPlayer player = Resolver.resolveTargetPlayer(masterId);
+                    BehaviorRegistry.execute(player, attribute.getRecoveryCurveId(), parameters);
+                }
             }
         }
     }
@@ -620,6 +631,7 @@ public class AttributeHolder {
             yamlAttributeData.put("id", attributeId);
             yamlAttributeData.put("maximum", attribute.getMaximum());
             yamlAttributeData.put("default", attribute.getDefaultValue());
+            yamlAttributeData.put("recovery_interval", attribute.getRecoveryIntervalTicks());
         }
 
         switch (updateCategory) {
@@ -627,15 +639,28 @@ public class AttributeHolder {
                 if (threshold > 0.0f) {
                     List<Map<String, Object>> thresholds =
                         (List<Map<String, Object>>) yamlAttributeData.getOrDefault("thresholds", new ArrayList<>());
-                    Map<String, Object> newThreshold = new LinkedHashMap<>();
 
-                    newThreshold.put("threshold", threshold);
-                    newThreshold.put("id", callbackId);
-                    newThreshold.put("behavior", behavior);
-                    newThreshold.put("content", content);
+                    boolean exists = thresholds.stream().anyMatch(existing ->
+                            ((Number) existing.get("threshold")).floatValue() == threshold &&
+                                    existing.get("id").equals(callbackId) &&
+                                    existing.get("behavior").equals(behavior) &&
+                                    Objects.equals(existing.get("content"), content)
+                    );
 
-                    thresholds.add(newThreshold);
-                    yamlAttributeData.put("thresholds", thresholds);
+                    if (!exists) {
+                        Map<String, Object> newThreshold = new LinkedHashMap<>();
+                        newThreshold.put("threshold", threshold);
+                        newThreshold.put("id", callbackId);
+                        newThreshold.put("behavior", behavior);
+                        newThreshold.put("content", content);
+
+                        thresholds.add(newThreshold);
+                        yamlAttributeData.put("thresholds", thresholds);
+                    }
+                    else {
+                        String ignoredThreshold = threshold + " " + callbackId + " -> " + behavior + " + " + content;
+                        CoreHanXu.LOGGER.warn("[HX] Ignored to save for a completely same threshold: {}", ignoredThreshold);
+                    }
                 }
                 else {
                     CoreHanXu.LOGGER.warn("[HX] Threshold is non-positive, but using normal threshold category: {}", attributeId);
@@ -662,7 +687,12 @@ public class AttributeHolder {
 
                 recovery.put("id", callbackId);
                 recovery.put("behavior", behavior);
-                recovery.put("content", content);
+
+                if (content != null) {
+                    recovery.put("recovery_interval", Integer.valueOf(content.split(":", 3)[0]));
+                    recovery.put("value", Float.valueOf(content.split(":", 3)[1]));
+                    recovery.put("direction", content.split(":", 3)[2]);
+                }
 
                 yamlAttributeData.put("recovery", recovery);
             }
@@ -765,22 +795,34 @@ public class AttributeHolder {
         // Read general.
         Attribute attribute = new Attribute();
         attribute.id = (String) attributeData.getOrDefault("id", null);
-        Number maximum = (Number) attributeData.getOrDefault("maximum", 100.0f);
-        attribute.maximum = maximum.floatValue();
-        Number defaultValue = (Number) attributeData.getOrDefault("default", 1.0f);
-        attribute.defaultValue = defaultValue.floatValue();
+        attribute.maximum = ((Number) attributeData.getOrDefault("maximum", 100.0f)).floatValue();
+        attribute.defaultValue = ((Number) attributeData.getOrDefault("default", 1.0f)).floatValue();
 
         // Read threshold node.
         List<Map<String, Object>> thresholds = (List<Map<String, Object>>) attributeData.get("thresholds");
         if (thresholds != null) {
             attribute.thresholdCallbacks = new ArrayList<>();
+            Set<String> thisThresholds = new HashSet<>();
             for (Map<String, Object> thresholdCallback : thresholds) {
                 ThresholdNode thresholdNode = new ThresholdNode();
                 Number threshold = (Number) thresholdCallback.getOrDefault("threshold", null);
+
+                if (threshold == null) {
+                    continue;
+                }
+
                 thresholdNode.threshold = threshold.floatValue();
                 thresholdNode.callbackId = (String) thresholdCallback.getOrDefault("id", null);
                 thresholdNode.behavior = (String) thresholdCallback.getOrDefault("behavior", "null");
                 thresholdNode.content = (String) thresholdCallback.getOrDefault("content", null);
+
+                // Skip a completely same threshold.
+                String thisKey = thresholdNode.threshold + " " + thresholdNode.callbackId + " -> " + thresholdNode.behavior + " + " + thresholdNode.content;
+                if (thisThresholds.contains(thisKey)) {
+                    CoreHanXu.LOGGER.warn("[HX] Ignored to parse a completely same threshold: {}", thisKey);
+                    continue;
+                }
+                thisThresholds.add(thisKey);
 
                 if (thresholdNode.callbackId != null) {
                     attribute.thresholdCallbacks.add(thresholdNode);
@@ -805,13 +847,17 @@ public class AttributeHolder {
         Map<String, Object> recovery = (Map<String, Object>) attributeData.get("recovery");
         if (recovery != null) {
             attribute.recoveryCurveId = (String) recovery.getOrDefault("id", null);
-            attribute.recoveryCurveBehavior = (String) recovery.getOrDefault("behavior", "null");
-            attribute.recoveryCurveContent = (String) recovery.getOrDefault("content", "null");
+            attribute.recoveryCurveBehavior = (String) recovery.getOrDefault("behavior", "simple");
+            attribute.recoveryCurveValue = ((Number) recovery.getOrDefault("value", 0.0f)).floatValue();
+            attribute.recoveryCurveDirection = (String) recovery.getOrDefault("direction", "point");
+            attribute.recoveryIntervalTicks = (Integer) recovery.getOrDefault("recovery_interval", 1);
         }
         else {
             attribute.recoveryCurveId = null;
-            attribute.recoveryCurveBehavior = "null";
-            attribute.recoveryCurveContent = "null";
+            attribute.recoveryCurveBehavior = "simple";
+            attribute.recoveryCurveValue = 0.0f;
+            attribute.recoveryCurveDirection = "point";
+            attribute.recoveryIntervalTicks = 1;
         }
 
         return attribute;
@@ -847,7 +893,7 @@ public class AttributeHolder {
             return;
         }
 
-        CustomAttribute customAttribute = new CustomAttribute(attribute.id, attribute.maximum, attribute.defaultValue);
+        CustomAttribute customAttribute = new CustomAttribute(attribute.id, attribute.maximum, attribute.defaultValue).setRecoveryIntervalTicks(attribute.recoveryIntervalTicks);
         commandAttributes.put(attribute.id, customAttribute);
 
         for (ThresholdNode thresholdNode : attribute.thresholdCallbacks) {
@@ -865,7 +911,17 @@ public class AttributeHolder {
         }
 
         if (attribute.recoveryCurveId != null && !attribute.recoveryCurveId.isEmpty()) {
-            Creator.registerCallback(attribute.recoveryCurveId, attribute.recoveryCurveBehavior, attribute.recoveryCurveContent);
+            String behavior = attribute.recoveryCurveBehavior;
+            if (behavior.equals("simple")) {
+                Creator.registerCallback(attribute.recoveryCurveId, "recovery", attribute.id + ":" + attribute.recoveryCurveValue + ":" + attribute.recoveryCurveDirection);
+            }
+            else if (behavior.equals("api")) {
+                Creator.registerCallback(attribute.recoveryCurveId, "recovery", null);
+            }
+            else {
+                CoreHanXu.LOGGER.warn("[HX] Unknown recovery behavior for attribute, 'simple' mode used: {}", behavior);
+                Creator.registerCallback(attribute.recoveryCurveId, "recovery", attribute.id + ":" + attribute.recoveryCurveValue + ":" + attribute.recoveryCurveDirection);
+            }
             customAttribute.setRecovery(attribute.recoveryCurveId);
         }
     }
@@ -897,9 +953,12 @@ public class AttributeHolder {
         private final float maximum;
         private final float defaultValue;
 
-        private static final Map<Float, String> thresholdCallbacks = new ConcurrentHashMap<>();
+        private final Map<Float, String> thresholdCallbacks = new ConcurrentHashMap<>();
         private String zeroCallbackId;
         private String recoveryCurveId;
+
+        private int recoveryIntervalTicks = 1;
+        private int recoveryTickCounter = 0;
 
         public CustomAttribute(String attributeId, float maximum, float defaultValue) {
             this.attributeId = attributeId;
@@ -920,6 +979,23 @@ public class AttributeHolder {
         public CustomAttribute setRecovery(String callbackId) {
             this.recoveryCurveId = callbackId;
             return this;
+        }
+
+        public CustomAttribute setRecoveryIntervalTicks(int intervalTicks) {
+            this.recoveryIntervalTicks = intervalTicks;
+            return this;
+        }
+
+        public void countTickRecovery() {
+            recoveryTickCounter++;
+        }
+
+        public void resetTickRecovery() {
+            recoveryTickCounter = 0;
+        }
+
+        public boolean doesRecoveryRegistered() {
+            return recoveryCurveId != null && !recoveryCurveId.isEmpty();
         }
 
         public String getAttributeId() {
@@ -945,6 +1021,10 @@ public class AttributeHolder {
         public String getRecoveryCurveId() {
             return recoveryCurveId;
         }
+
+        public int getRecoveryIntervalTicks() {
+            return recoveryIntervalTicks;
+        }
     }
 
     // Define YAML nodes.
@@ -956,9 +1036,11 @@ public class AttributeHolder {
         public String zeroCallbackId;
         public String recoveryCurveId;
         public String zeroCallbackBehavior;
-        public String recoveryCurveBehavior;
         public String zeroCallbackContent;
-        public String recoveryCurveContent;
+        public String recoveryCurveBehavior;
+        public Float recoveryCurveValue;
+        public String recoveryCurveDirection;
+        public Integer recoveryIntervalTicks;
     }
 
     public static class ThresholdNode {

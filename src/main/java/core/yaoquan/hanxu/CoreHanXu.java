@@ -2,10 +2,11 @@ package core.yaoquan.hanxu;
 
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
-import core.yaoquan.hanxu.registry.ModConfig;
+import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.ModDataGenerator;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
+import core.yaoquan.hanxu.registry.config.PermissionConfig;
 import core.yaoquan.hanxu.registry.object.ModBlock;
 import core.yaoquan.hanxu.registry.object.ModBlockEntity;
 import core.yaoquan.hanxu.registry.object.ModCreativeModeTab;
@@ -15,6 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -58,7 +60,8 @@ public class CoreHanXu {
         modEventBus.addListener(CoreHanXu::gatherData);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, ModConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, GeneralConfig.SPEC_GENERAL, "core_hanxu-general.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, PermissionConfig.SPEC_PERMISSION, "core_hanxu-permission.toml");
 
         LOGGER.info("[HX] >>>>>> End register.");
     }
@@ -96,12 +99,12 @@ public class CoreHanXu {
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
 
-        if (PermissionHolder.autoAuthorizePermission) {
+        if (PermissionHolder.Storage.autoAuthorizePermission) {
             boolean hasPermissionLevel = player.getPersistentData()
                     .contains("core.yaoquan.hanxu.player_permission_level");
 
             // Changeable from config.
-            int autoLevel = ModConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
+            int autoLevel = GeneralConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
 
             if (!hasPermissionLevel) {
                 player.getPersistentData()
@@ -151,7 +154,8 @@ public class CoreHanXu {
     }
 
     private static void registerGameRules() {
-        PermissionHolder.OVERRIDE_COMMAND_BLOCK_PERMISSION.getClass();
+        PermissionHolder.Storage.ignorePermissionLevel.getClass();
+        PermissionHolder.Storage.nonPlayerSourcePermissionLevel.getClass();
         LOGGER.info("[HX] Custom Game Rule Registered.");
     }
 

@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
+import core.yaoquan.hanxu.api.define.Color;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.MessagePublisher;
@@ -55,7 +56,7 @@ public class TestHolder {
                 // If you did not finish API TimerCallback, callback will become null after restart the server.
                 Consumer<ServerPlayer> customCallback = player -> {
                     // Message.
-                    player.sendSystemMessage(Component.literal("[HX] From the emperor's madness!"));
+                    player.sendSystemMessage(Component.literal("[HX] From the emperor's madness!").withColor(Color.TEST));
 
                     // Get player's positions.
                     double x = player.getX();
@@ -320,7 +321,9 @@ public class TestHolder {
                     .onThreshold(20, "attribute:core_hanxu-test:give_sword")
                     .onThreshold(40, "attribute:core_hanxu-test:give_speed")
                     .onZero("attribute:core_hanxu-test:clear_all")
-                    .setRecovery("attribute:core_hanxu-test:recovery1");
+                    .setRecovery("attribute:core_hanxu-test:recovery1")
+                    // It defined how many ticks for interval to recovery (default = 1).
+                    .setRecoveryIntervalTicks(1);
 
                 // Then register.
                 AttributeHolder.register(attribute1);
@@ -343,7 +346,7 @@ public class TestHolder {
                     }
 
                     player.getInventory().add(new ItemStack(Items.DIAMOND_SWORD));
-                    player.sendSystemMessage(Component.literal("[HX] Received reward sword!"));
+                    player.sendSystemMessage(Component.literal("[HX] Received reward sword!").withColor(Color.TEST));
                 });
 
                 BehaviorRegistry.register("attribute:core_hanxu-test:give_speed", (player, parameters) -> {
@@ -357,7 +360,7 @@ public class TestHolder {
                     }
 
                     player.addEffect(new MobEffectInstance(MobEffects.SPEED, 160, 1, true, false));
-                    player.sendSystemMessage(Component.literal("[HX] Received reward speed!"));
+                    player.sendSystemMessage(Component.literal("[HX] Received reward speed!").withColor(Color.TEST));
 
                     triggered.add("core_hanxu-test:give_speed");
                 });
@@ -371,7 +374,7 @@ public class TestHolder {
                     player.getInventory().clearOrCountMatchingItems(
                         item -> item.is(Items.DIAMOND_SWORD), 64, player.inventoryMenu.getCraftSlots()
                     );
-                    player.sendSystemMessage(Component.literal("[HX] Clear all rewards!"));
+                    player.sendSystemMessage(Component.literal("[HX] Clear all rewards!").withColor(Color.TEST));
                 });
 
                 // Register recovery curve behavior as same method.
@@ -407,8 +410,54 @@ public class TestHolder {
                     true
                 );
 
-                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Registered attribute 1!"));
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Registered attribute 1!").withColor(Color.TEST));
 
+                break;
+            case 2:
+                // For test purpose: Register a callback and wait for command based attribute trigger this api callback.
+                BehaviorRegistry.register("attribute:core_hanxu-test:from_api", (player, parameters) -> {
+                    if (player == null) {
+                        return;
+                    }
+
+                    player.sendSystemMessage(Component.literal("[HX] This 'from_api' threshold was successfully triggered.").withColor(Color.TEST));
+                });
+
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] This 'from_api' threshold was registered.").withColor(Color.TEST));
+
+                break;
+            case 3:
+                // For test purpose: Only register a recovery.
+                String extra;
+                try {
+                    extra = StringArgumentType.getString(context, "extra");
+                }
+                catch (IllegalArgumentException e) {
+                    extra = "core_hanxu-test:run_value";
+                }
+
+                final String attributeId = extra.split(":", 2)[0];
+                boolean fromApi = extra.split(":", 2)[1].equals("true");
+
+                BehaviorRegistry.register("attribute:core_hanxu-test:recovery1", (player, parameters) -> {
+                    if (player == null) {
+                        return;
+                    }
+                    float currentValue = Float.parseFloat(parameters.get("current_value"));
+
+                    if (player.isSprinting() && player.tickCount % 20 == 0) {
+                        AttributeHolder.addValue(player.getUUID(), attributeId, 3f, fromApi, AttributeHolder.ThresholdDirection.UP);
+                    }
+                    else if (!player.isSprinting()) {
+                        AttributeHolder.reduceValue(player.getUUID(), attributeId, 0.15f, fromApi, AttributeHolder.ThresholdDirection.UP);
+                    }
+
+                    if (currentValue <= 30) {
+                        triggered.remove("core_hanxu-test:give_speed");
+                    }
+                });
+
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Execute attribute test 3 and build recovery.").withColor(Color.TEST));
                 break;
             default:
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
@@ -422,7 +471,7 @@ public class TestHolder {
         if (context.getSource().getPlayer() == null) {
             return 0;
         }
-        MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Now display all attributes to F4 debugging page."));
+        MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Now display all attributes to F4 debugging page.").withColor(Color.TEST));
         if (AttributeHolder.getCommandAttributes().isEmpty()) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
         }

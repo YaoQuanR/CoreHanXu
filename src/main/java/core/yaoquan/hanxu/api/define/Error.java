@@ -23,9 +23,24 @@ public class Error {
         failedToSave,
     }
 
+    public enum AttributeError {
+        tryToModifyApiTarget,
+        notFound,
+        sameNameFound,
+        failedToDelete,
+        noThreshold,
+        noSpecificThreshold,
+        noZero,
+        noIdFieldProvidedByNonPlayer,
+        noRecovery,
+        tryToOverrideApiRecovery,
+        tryToRegisterUnExistApiRecovery,
+    }
+
     public enum GeneralError {
         licenseAlreadyAgreed,
         uneditablePlayerPermission,
+        exceedMaximumPermissionLevel,
         notPlayer,
         notYetAgreed,
         invalidUnitArgument,
@@ -39,6 +54,7 @@ public class Error {
         noContentFound,
         missingIdField,
         uncompletedContent,
+        invalidMeFieldUsed,
     }
 
     public enum CodeError {
@@ -74,10 +90,28 @@ public class Error {
         };
     }
 
+    public static Component returnAttributeError(AttributeError attributeError) {
+        return switch (attributeError) {
+            case tryToModifyApiTarget -> Component.translatable("commands.chx.attribute_try_to_modify_api_target");
+            case notFound -> Component.translatable("commands.chx.attribute_not_found");
+            case sameNameFound -> Component.translatable("commands.chx.attribute_same_name_found");
+            case failedToDelete -> Component.translatable("commands.chx.attribute_failed_to_delete");
+            case noThreshold -> Component.translatable("commands.chx.attribute_no_threshold");
+            case noSpecificThreshold -> Component.translatable("commands.chx.attribute_no_specific_threshold");
+            case noZero -> Component.translatable("commands.chx.attribute_no_zero");
+            case noIdFieldProvidedByNonPlayer -> Component.translatable("commands.chx.attribute_no_id_with_non_player");
+            case noRecovery -> Component.translatable("commands.chx.attribute_no_recovery");
+            case tryToOverrideApiRecovery -> Component.translatable("commands.chx.attribute_try_to_override_api_recovery");
+            case tryToRegisterUnExistApiRecovery -> Component.translatable("commands.chx.attribute_try_to_register_un_exist_api_recovery");
+            default -> Component.translatable("commands.core_hanxu.undefined_error_type");
+        };
+    }
+
     public static Component returnGeneralError(GeneralError generalError) {
         return switch (generalError) {
             case licenseAlreadyAgreed -> Component.translatable("commands.core_hanxu.license_already_agreed");
             case uneditablePlayerPermission -> Component.translatable("commands.core_hanxu.uneditable_player_permission");
+            case exceedMaximumPermissionLevel -> Component.translatable("commands.core_hanxu.exceed_maximum_permission_level");
             case notPlayer -> Component.translatable("commands.core_hanxu.not_player");
             case notYetAgreed -> Component.translatable("commands.core_hanxu.not_yet_agreed");
             case invalidUnitArgument -> Component.translatable("commands.core_hanxu.invalid_unit_argument");
@@ -91,6 +125,7 @@ public class Error {
             case noContentFound ->  Component.translatable("commands.core_hanxu.no_content_found");
             case missingIdField -> Component.translatable("commands.core_hanxu.missing_id_field");
             case uncompletedContent -> Component.translatable("commands.core_hanxu.uncompleted_content");
+            case invalidMeFieldUsed -> Component.translatable("commands.core_hanxu.invalid_me_field_used");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

@@ -1,6 +1,8 @@
 package core.yaoquan.hanxu.util;
 
 import com.mojang.brigadier.context.CommandContext;
+import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.Error;
 import net.minecraft.commands.CommandSourceStack;
@@ -119,7 +121,13 @@ public class Creator {
     /// Register callback for commands/YAML's behaviors.
     public static void registerCallback(String callbackId, String callbackBehavior, String callbackContent) {
         if (callbackId != null && !callbackId.isEmpty()) {
-            String fullCallbackId = "attribute:core_hanxu-command:" + callbackId;
+            String fullCallbackId;
+            if (callbackId.split(":").length == 3) {
+                fullCallbackId = callbackId;
+            }
+            else {
+                fullCallbackId = "attribute:core_hanxu-command:" + callbackId;
+            }
             if (callbackContent != null && !callbackContent.isEmpty()) {
                 switch (callbackBehavior) {
                     case "e", "execute":
@@ -146,6 +154,26 @@ public class Creator {
                             fullCallbackId, (player, parameters) -> {
                                 if (player != null) {
                                     player.sendSystemMessage(Component.literal(callbackContent));
+                                }
+                            }
+                        );
+                        return;
+                    case "recovery":
+                        String[] recoveryData = callbackContent.split(":", 3);
+                        String attributeId = recoveryData[0];
+                        float value = Float.parseFloat(recoveryData[1]);
+
+                        AttributeHolder.ThresholdDirection thresholdDirection = getThresholdDirection(recoveryData);
+
+                        BehaviorRegistry.register(
+                            fullCallbackId, (player, parameters) -> {
+                                MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+                                if (server != null) {
+                                    for (ServerPlayer serverPlayer : server.getPlayerList().getPlayers()) {
+                                        if (serverPlayer != null) {
+                                            AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, false, thresholdDirection);
+                                        }
+                                    }
                                 }
                             }
                         );
@@ -186,7 +214,23 @@ public class Creator {
                         callbackId, BehaviorRegistry.getCallback(callbackId)
                     );
                 }
+                else {
+                    CoreHanXu.LOGGER.warn("[HX] Failed to register behavior callback: {}", callbackId);
+                }
             }
         }
+    }
+
+    private static AttributeHolder.ThresholdDirection getThresholdDirection(String[] recoveryData) {
+        String direction = recoveryData[2];
+
+        AttributeHolder.ThresholdDirection thresholdDirection;
+        switch (direction) {
+            case "up" -> thresholdDirection = AttributeHolder.ThresholdDirection.UP;
+            case "down" -> thresholdDirection = AttributeHolder.ThresholdDirection.DOWN;
+            case "flex" -> thresholdDirection = AttributeHolder.ThresholdDirection.FLEX;
+            default -> thresholdDirection = AttributeHolder.ThresholdDirection.POINT;
+        }
+        return thresholdDirection;
     }
 }

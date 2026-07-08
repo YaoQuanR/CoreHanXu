@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.util.Resolver;
 import core.yaoquan.hanxu.util.YamlReader;
@@ -134,6 +135,29 @@ class CommandSuggest {
             String fileName = path.getFileName().toString().replace(".yaml", "");
             builder.suggest(fileName);
         }
+
+        return builder.buildFuture();
+    }
+
+    // For all attribute suggestion.
+    static <S> CompletableFuture<Suggestions> suggestAllAttribute(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        for (String id : AttributeHolder.getApiAttributes().keySet()) {
+            builder.suggest("\"" + id + "\"");
+        }
+
+        for (String id : AttributeHolder.getCommandAttributes().keySet()) {
+            builder.suggest(id);
+        }
+
+        return builder.buildFuture();
+    }
+
+    // For attribute direction detection suggestion.
+    static <S> CompletableFuture<Suggestions> suggestAttributeDirection(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("up");
+        builder.suggest("down");
+        builder.suggest("flex");
+        builder.suggest("point");
 
         return builder.buildFuture();
     }

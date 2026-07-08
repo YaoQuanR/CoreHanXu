@@ -76,6 +76,11 @@ public class Resolver {
     }
 
     public static String resolveFullCallbackId(String callbackId) {
+        /*
+        * Resolve callback id as 3 parts: [function name]:[name space]:[callback name].
+        * If id provided is not completed form, replace missing part as "custom".
+        * You are advised to use your MOD_ID for name space; otherwise, same name callback id may be registered.
+        */
         String[] callbackIdParts = callbackId.split(":", 3);
         if (callbackIdParts.length == 3) {
             String field = callbackIdParts[0];

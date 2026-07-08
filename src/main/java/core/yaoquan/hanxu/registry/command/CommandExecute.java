@@ -8,9 +8,12 @@ import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.PermissionHolder;
 import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
+import core.yaoquan.hanxu.api.define.Color;
 import core.yaoquan.hanxu.api.define.FilePath;
+import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.api.define.Version;
-import core.yaoquan.hanxu.registry.ModConfig;
+import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.component.DataComponents;
@@ -35,73 +38,73 @@ import static core.yaoquan.hanxu.api.define.Error.*;
 
 class CommandExecute {
     static int executeDetail(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext1").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.detail_innertext1").withColor(Color.CONTENT));
         MessagePublisher.sendSystemMessage(context,
             Component.translatable("commands.chx.detail_innertext2")
                     .append(Component.literal(" " + Version.getCoreVersion()))
-                    .withColor(0xFFFACD)
+                    .withColor(Color.CONTENT)
         );
         return 1;
     }
 
     static int executeLicense(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext4").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext3").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_innertext4").withColor(Color.CONTENT));
         return 1;
     }
 
     static int executeLicense_Origin(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext4").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext5").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext6").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext7").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext8").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext9").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext10").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext11").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext12").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext13").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext14").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext15").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext16").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext17").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext18").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext19").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext20").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext21").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext22").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext23").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext24").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext25").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext26").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext27").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext28").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext29").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext30").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext31").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext32").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext3").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext4").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext5").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext6").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext7").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext8").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext9").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext10").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext11").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext12").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext13").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext14").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext15").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext16").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext17").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext18").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext19").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext20").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext21").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext22").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext23").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext24").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext25").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext26").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext27").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext28").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext29").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext30").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.literal("").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext31").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_origin_innertext32").withColor(Color.CONTENT));
         return 1;
     }
 
     static int executeLicense_Agree(CommandContext<CommandSourceStack> context) {
         if (context.getSource().getEntity() instanceof Player player) {
-            if (!PermissionHolder.getLicenseState(player)) {
-                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_agree").withColor(0xFFFACD));
+            if (!PermissionHolder.Storage.getLicenseState(player)) {
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.license_agree").withColor(Color.CONTENT));
                 player.getPersistentData()
                     .putBoolean("core.yaoquan.hanxu.agreed_license", true);
             }
@@ -117,8 +120,8 @@ class CommandExecute {
 
     static int executeLicense_State(CommandContext<CommandSourceStack> context) {
         if (context.getSource().getEntity() instanceof Player player) {
-            boolean state = PermissionHolder.getLicenseState(player);
-            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(0xFFD700));
+            boolean state = PermissionHolder.Storage.getLicenseState(player);
+            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(Color.TITLE));
             return 1;
         }
         return 0;
@@ -132,7 +135,7 @@ class CommandExecute {
         if (Files.isDirectory(globalPath)) {
             try (Stream<Path> stream = Files.list(globalPath)) {
                 stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
-                    displayList.add(Component.literal("(global): " + p.getFileName().toString()).withColor(0xFFFACD));
+                    displayList.add(Component.literal("(global): " + p.getFileName().toString()).withColor(Color.CONTENT));
                 });
             }
             catch (IOException ignored) {}
@@ -145,7 +148,7 @@ class CommandExecute {
             if (Files.isDirectory(worldScenePath)) {
                 try (Stream<Path> stream = Files.list(worldScenePath)) {
                     stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
-                        displayList.add(Component.literal("(world): " + p.getFileName().toString()).withColor(0xFFFACD));
+                        displayList.add(Component.literal("(world): " + p.getFileName().toString()).withColor(Color.CONTENT));
                     });
                 }
                 catch (IOException ignored) {}
@@ -157,7 +160,7 @@ class CommandExecute {
             MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
         }
         else {
-            CommandDisplay.displaySceneIdList(context, displayList);
+            displaySceneIdList(context, displayList);
         }
 
         return 1;
@@ -182,7 +185,7 @@ class CommandExecute {
             MessagePublisher.sendSystemMessage(context,
                 Component.translatable("commands.chx.scene_now_playing")
                         .append(Component.literal(": " + sceneName))
-                        .withColor(0xFFFACD));
+                        .withColor(Color.CONTENT));
             SceneHolder.playScene(player, sceneName);
         }
         catch (Exception e) {
@@ -206,7 +209,7 @@ class CommandExecute {
             MessagePublisher.sendSystemMessage(context,
                     Component.translatable("commands.chx.scene_now_playing_to_everyone")
                             .append(Component.literal(": " + sceneName))
-                            .withColor(0xFFFACD));
+                            .withColor(Color.CONTENT));
             SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
         }
         catch (Exception e) {
@@ -234,20 +237,20 @@ class CommandExecute {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
                 return 0;
             }
-            boolean state = PermissionHolder.getLicenseState(player);
-            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(0xFFD700));
+            boolean state = PermissionHolder.Storage.getLicenseState(player);
+            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(Color.TITLE));
             return 1;
         }
     }
 
     static int executeTimer(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer").withColor(Color.TITLE));
         return 1;
     }
 
     static int executeBare(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.bare1").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.bare2").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.bare1").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.bare2").withColor(Color.TITLE));
         return 1;
     }
 
@@ -258,22 +261,22 @@ class CommandExecute {
             return 0;
         }
 
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_page").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext4").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext8").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext9").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext10").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext11").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext12").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext13").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_page").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext3").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext4").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext5").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext6").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext7").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext8").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext9").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext10").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext11").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext12").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext13").withColor(Color.CONTENT));
         return 1;
     }
 
@@ -309,21 +312,17 @@ class CommandExecute {
                         return 0;
                     }
 
-                    int permissionLevel = PermissionHolder.getPlayerPermissionLevel(player);
-                    MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(permissionLevel)).withColor(0xFFD700));
+                    int permissionLevel = PermissionHolder.Storage.getPlayerPermissionLevel(player);
+                    MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(permissionLevel)).withColor(Color.TITLE));
                 }
             }
             case "server" -> {
-                int commandblockPermissionLevel = context.getSource().getLevel().getGameRules().getInt(PermissionHolder.OVERRIDE_COMMAND_BLOCK_PERMISSION);
-                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(commandblockPermissionLevel)).withColor(0xFFD700));
-            }
-            case "player_override" -> {
-                int overridePlayerPermissionLevel = PermissionHolder.getPlayerOverridePermissionLevel();
-                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(overridePlayerPermissionLevel)).withColor(0xFFD700));
+                int commandblockPermissionLevel = context.getSource().getLevel().getGameRules().getInt(PermissionHolder.Storage.nonPlayerSourcePermissionLevel);
+                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(commandblockPermissionLevel)).withColor(Color.TITLE));
             }
             case "player_first_grant" -> {
-                int autoAuthorizedPermissionLevel = ModConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
-                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(autoAuthorizedPermissionLevel)).withColor(0xFFD700));
+                int autoAuthorizedPermissionLevel = GeneralConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
+                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(autoAuthorizedPermissionLevel)).withColor(Color.TITLE));
             }
             default -> {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
@@ -357,16 +356,21 @@ class CommandExecute {
 
         int newLevel = IntegerArgumentType.getInteger(context, "level");
 
-        boolean editable = ModConfig.SET_PLAYER_PERMISSION_EDITABLE.getAsBoolean();
+        if (newLevel > 10) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.exceedMaximumPermissionLevel));
+            return 0;
+        }
+
+        boolean editable = GeneralConfig.SET_PLAYER_PERMISSION_EDITABLE.getAsBoolean();
 
         if (!editable) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uneditablePlayerPermission));
             return 0;
         }
 
-        PermissionHolder.setPlayerPermissionLevel(player, newLevel);
+        PermissionHolder.Storage.setPlayerPermissionLevel(player, newLevel);
 
-        MessagePublisher.sendSystemMessage(context, Component.literal("✔ -> " + newLevel).withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.literal("✔ -> " + newLevel).withColor(Color.TITLE));
         return 1;
     }
 
@@ -377,31 +381,31 @@ class CommandExecute {
             return 0;
         }
 
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_introduction").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create_argument1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create-range_argument1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext4").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext5").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create_argument2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext6").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create-range_argument2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext7").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext8").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext9").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext10").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext11").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext12").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext13").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext14").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_modify_argument").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext15").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument2").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_introduction").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create_argument1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create-range_argument1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext3").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext4").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext5").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create_argument2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext6").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_create-range_argument2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext7").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext8").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext9").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext10").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext11").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext12").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext13").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext14").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_modify_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_innertext15").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_read_argument2").withColor(Color.CONTENT));
         return 1;
     }
 
@@ -449,7 +453,7 @@ class CommandExecute {
             timeUnit = "t";
         }
 
-        return CommandDisplay.displayCommandTimerRead(context, timerId, "", timeUnit, infoCategory, "template");
+        return displayCommandTimerRead(context, timerId, "", timeUnit, infoCategory, "template");
     }
 
     static int executeTimer_Template_Delete(CommandContext<CommandSourceStack> context) {
@@ -461,7 +465,7 @@ class CommandExecute {
             MessagePublisher.sendSystemMessage(context,
                     Component.translatable("commands.chx.timer_deleted")
                             .append(Component.literal(" (" + timerId + ")"))
-                            .withColor(0xFFD700)
+                            .withColor(Color.TITLE)
             );
         } else {
             MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
@@ -507,7 +511,7 @@ class CommandExecute {
     static int executeTimer_Template_List(CommandContext<CommandSourceStack> context) {
         String[] templateIds = TimeHolder.getAllTemplateIds();
 
-        return CommandDisplay.displayTimerIdList(context, templateIds);
+        return displayTimerIdList(context, templateIds);
     }
 
     static int executeTimer_Instance_Apply(CommandContext<CommandSourceStack> context) {
@@ -542,7 +546,7 @@ class CommandExecute {
             MessagePublisher.sendSystemMessage(context,
                     Component.translatable("commands.chx.timer_instantiated")
                             .append(Component.literal(" " + templateTimerId + " -> " + displayTarget))
-                            .withColor(0x66FF66)
+                            .withColor(Color.SUCCESS)
             );
         }
         else {
@@ -579,7 +583,7 @@ class CommandExecute {
         int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, timeAmount, endBehavior, behaviorContent);
 
         if (returnValue == 1) {
-            CommandDisplay.displayTimerCreateMessage(context, timerId, timeAmount, timeUnit, endBehavior, behaviorContent);
+            displayTimerCreateMessage(context, timerId, timeAmount, timeUnit, endBehavior, behaviorContent);
             return 1;
         }
         else {
@@ -616,7 +620,7 @@ class CommandExecute {
         int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, selectedTimeAmount, endBehavior, behaviorContent);
 
         if (returnValue == 1) {
-            CommandDisplay.displayTimerCreateMessage(context, timerId, selectedTimeAmount, timeUnit, endBehavior, behaviorContent);
+            displayTimerCreateMessage(context, timerId, selectedTimeAmount, timeUnit, endBehavior, behaviorContent);
             return 1;
         }
         else {
@@ -686,7 +690,7 @@ class CommandExecute {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.timer_success_modification")
                                     .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + category + " " + timeAmount + " " + timeUnit))
-                                    .withColor(0xFFD700)
+                                    .withColor(Color.TITLE)
                     );
                     return 1;
                 }
@@ -713,7 +717,7 @@ class CommandExecute {
             timeUnit = "t";
         }
 
-        return CommandDisplay.displayCommandTimerRead(context, timerId, masterString, timeUnit, infoCategory, "instance");
+        return displayCommandTimerRead(context, timerId, masterString, timeUnit, infoCategory, "instance");
     }
 
     static int executeTimer_Instance_List(CommandContext<CommandSourceStack> context) {
@@ -728,7 +732,7 @@ class CommandExecute {
 
         String[] instanceIds = TimeHolder.getAllInstanceIds(masterId);
 
-        return CommandDisplay.displayTimerIdList(context, instanceIds);
+        return displayTimerIdList(context, instanceIds);
     }
 
     static int executeTimer_Instance_Display(CommandContext<CommandSourceStack> context, boolean state) {
@@ -748,37 +752,31 @@ class CommandExecute {
                 Component.literal("[HX] " + timerId + " ")
                         .append(Component.translatable("commands.core_hanxu.has_changed_to"))
                         .append(Component.literal(" " + state))
-                        .withColor(0x66FF66)
+                        .withColor(Color.SUCCESS)
         );
 
         return 1;
     }
 
     static int executeScene(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene").withColor(0xFFD700));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene").withColor(Color.TITLE));
         return 1;
     }
 
     static int executeScene_Help(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_title").withColor(0xFFD700));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_introduction").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext1").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext2").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext3").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext4").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext5").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext6").withColor(0xFFFACD));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext7").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_introduction").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext3").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext4").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext5").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext6").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext7").withColor(Color.CONTENT));
         return 1;
     }
 
     static int executeScene_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
-        ServerPlayer player = context.getSource().getPlayer();
-        if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
-            return 0;
-        }
-
         String sceneName = StringArgumentType.getString(context, "scene_name");
 
         // Check and delete.
@@ -805,7 +803,7 @@ class CommandExecute {
                 if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_WORLD)) {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.scene_deleted")
-                                    .withColor(0xFFFACD));
+                                    .withColor(Color.CONTENT));
                     break;
                 }
                 MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToDelete));
@@ -814,7 +812,7 @@ class CommandExecute {
                 if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_GLOBAL)) {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.scene_deleted")
-                                    .withColor(0xFFFACD));
+                                    .withColor(Color.CONTENT));
                     break;
                 }
                 MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToDelete));
@@ -845,7 +843,7 @@ class CommandExecute {
             player.drop(book, false);
         }
 
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_get_template").withColor(0xFFFACD));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_get_template").withColor(Color.CONTENT));
         return 1;
     }
 
@@ -907,7 +905,7 @@ class CommandExecute {
             // Prase data to map for storage.
             Map<String, Object> yamlMap = YamlReader.stringToMap(yamlContent);
             YamlReader.save("scene", sceneId, yamlMap, targetPath);
-            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_created").withColor(0xFFFACD));
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_created").withColor(Color.CONTENT));
         }
         catch (Exception e) {
             MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToSave));
@@ -917,11 +915,40 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeAttribute(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute").withColor(Color.TITLE));
+        return 1;
+    }
+
+    static int executeAttribute_Help(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_introduction").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext3").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext4").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext5").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_create_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext6").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_define_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext7").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext8").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext9").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext10").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext11").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_modify_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext12").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_recovery_argument1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_recovery_argument2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext13").withColor(Color.CONTENT));
+        return 1;
+    }
+
     static int executeAttribute_List(CommandContext<CommandSourceStack> context) {
         Map<String, AttributeHolder.CustomAttribute> commandAttributes = AttributeHolder.getCommandAttributes();
         String[] commandAttributeList = commandAttributes.keySet().toArray(new String[0]);
 
-        return CommandDisplay.displayAttributeIdList(context, commandAttributeList, false);
+        return displayAttributeIdList(context, commandAttributeList, false);
     }
 
     static int executeAdvancedAttribute_List(CommandContext<CommandSourceStack> context) {
@@ -931,8 +958,8 @@ class CommandExecute {
         String[] commandAttributeList = commandAttributes.keySet().toArray(new String[0]);
         String[] apiAttributeList = apiAttributes.keySet().toArray(new String[0]);
 
-        int returnValue1 = CommandDisplay.displayAttributeIdList(context, commandAttributeList, false);
-        int returnValue2 = CommandDisplay.displayAttributeIdList(context, apiAttributeList, true);
+        int returnValue1 = displayAttributeIdList(context, commandAttributeList, false);
+        int returnValue2 = displayAttributeIdList(context, apiAttributeList, true);
 
         if (returnValue1 == 1 || returnValue2 == 1) {
             return 1;
@@ -964,7 +991,7 @@ class CommandExecute {
 
         boolean registered = AttributeHolder.register(attributeId, maximum, defaultValue, targetPath);
 
-        CommandDisplay.displayAttributeCreateMessage(context, attributeId, maximum, defaultValue, registered);
+        displayAttributeCreateMessage(context, attributeId, maximum, defaultValue, registered);
 
         if (registered) {
             AttributeHolder.registerAllYamlAttributes();
@@ -979,6 +1006,7 @@ class CommandExecute {
         String attributeId = StringArgumentType.getString(context, "attribute_id");
         float threshold = FloatArgumentType.getFloat(context, "threshold");
         String content = null, callbackId = null;
+        String finalCallbackId;
 
         if (category.equals("remind") || category.equals("execute")) {
             try {
@@ -998,7 +1026,7 @@ class CommandExecute {
 
         AttributeHolder.CustomAttribute attribute = AttributeHolder.getCommandAttributes().get(attributeId);
         if (attribute == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
             return 0;
         }
 
@@ -1016,9 +1044,22 @@ class CommandExecute {
                     category,
                     content
                 );
+
+                finalCallbackId = fullCallbackId;
             }
             case "api" -> {
                 attribute.onThreshold(threshold, callbackId);
+                Creator.registerCallback(callbackId, category, content);
+                AttributeHolder.saveYamlAttribute(
+                    attributeId,
+                    AttributeHolder.UpdateCategory.normalThreshold,
+                    threshold,
+                    callbackId,
+                    category,
+                    content
+                );
+
+                finalCallbackId = callbackId;
             }
             default -> {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
@@ -1029,8 +1070,506 @@ class CommandExecute {
         // Output message.
         MessagePublisher.sendSystemMessage(
                 context, Component.translatable("commands.chx.attribute_threshold_modified")
-                        .append(Component.literal(" " + threshold + " -> " + category))
-                        .withColor(0x66FF66)
+                        .append(Component.literal(" " + attributeId + " -> " + finalCallbackId + " (" + threshold + ") -> " + category))
+                        .withColor(Color.SUCCESS)
+        );
+
+        return 1;
+    }
+
+    static int executeAttribute_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
+        String attributeId = StringArgumentType.getString(context, "attribute_id");
+
+        if (AttributeHolder.getApiAttributes().containsKey(attributeId)) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.tryToModifyApiTarget));
+            return 0;
+        }
+
+        if (!AttributeHolder.doesYamlAttributeExist(attributeId)) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+        if (!AttributeHolder.doesAttributeExist(attributeId, "command")) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+
+        if (specifiedPath.equals("try")) {
+            boolean worldAttributeExist = AttributeHolder.doesYamlAttributeExist(attributeId, YamlReader.TargetPath.TO_WORLD);
+            boolean globalAttributeExist = AttributeHolder.doesYamlAttributeExist(attributeId, YamlReader.TargetPath.TO_GLOBAL);
+
+            if (worldAttributeExist && globalAttributeExist) {
+                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.sameNameFound));
+                return 0;
+            }
+            else if (worldAttributeExist) {
+                specifiedPath = "world";
+            }
+            else if (globalAttributeExist) {
+                specifiedPath = "global";
+            }
+        }
+
+        switch (specifiedPath) {
+            case "world":
+                if (AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_WORLD)) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.attribute_deleted")
+                                    .withColor(Color.CONTENT)
+                    );
+                    break;
+                }
+                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.failedToDelete));
+                return 0;
+            case "global":
+                if (AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_GLOBAL)) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.attribute_deleted")
+                                    .withColor(Color.CONTENT)
+                    );
+                    break;
+                }
+                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.failedToDelete));
+                return 0;
+        }
+
+        return 1;
+    }
+
+    static int executeAttribute_Read(CommandContext<CommandSourceStack> context, String category) {
+        String attributeId = StringArgumentType.getString(context, "attribute_id");
+
+        if (!AttributeHolder.doesAttributeExist(attributeId)) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+
+        boolean fromApi;
+        AttributeHolder.CustomAttribute attribute;
+
+        if (AttributeHolder.doesAttributeExist(attributeId, "command")) {
+            fromApi = false;
+        }
+        else if (AttributeHolder.doesAttributeExist(attributeId, "yaml")) {
+            fromApi = false;
+        }
+        else if (AttributeHolder.doesAttributeExist(attributeId, "api")) {
+            fromApi = true;
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+            return 0;
+        }
+
+        if (fromApi) {
+            attribute = AttributeHolder.getApiAttributes().get(attributeId);
+        }
+        else {
+            attribute = AttributeHolder.getCommandAttributes().get(attributeId);
+        }
+
+        switch (category) {
+            case "threshold_all" -> {
+                Map<Float, String> thresholds = attribute.getThresholdCallbacks();
+
+                if (thresholds.isEmpty()) {
+                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noThreshold));
+                    return 0;
+                }
+
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_threshold_found").withColor(Color.CONTENT));
+                for (Map.Entry<Float, String> threshold : thresholds.entrySet()) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.literal(threshold.getKey().toString() + " -> " + threshold.getValue())
+                                .withColor(Color.CONTENT)
+                    );
+                }
+            }
+            case "threshold_specific" -> {
+                Map<Float, String> thresholds = attribute.getThresholdCallbacks();
+
+                if (thresholds.isEmpty()) {
+                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noThreshold));
+                    return 0;
+                }
+
+                float value = FloatArgumentType.getFloat(context, "threshold_value");
+
+                if (!thresholds.containsKey(value)) {
+                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noSpecificThreshold));
+                    return 0;
+                }
+
+                MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_threshold_found").withColor(Color.CONTENT));
+                MessagePublisher.sendSystemMessage(context, Component.literal(value + " -> " + thresholds.get(value)));
+            }
+            case "zero" -> {
+                String zeroId = attribute.getZeroCallbackId();
+                if (zeroId == null) {
+                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noZero));
+                    return 0;
+                }
+
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.attribute_zero")
+                                .append(Component.literal(" " + zeroId))
+                                .withColor(Color.CONTENT)
+                );
+            }
+            case "recovery" -> {
+                String recoveryId = attribute.getRecoveryCurveId();
+                if (recoveryId == null) {
+                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noRecovery));
+                    return 0;
+                }
+
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.attribute_recovery")
+                                .append(Component.literal(" " + recoveryId))
+                                .withColor(Color.CONTENT)
+                );
+            }
+            case "maximum" -> {
+                float maximum = attribute.getMaximum();
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.attribute_maximum")
+                                .append(Component.literal(" " + maximum))
+                                .withColor(Color.CONTENT)
+                );
+            }
+            case "recovery_interval" -> {
+                int interval = attribute.getRecoveryIntervalTicks();
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.attribute_recovery_interval")
+                                .append(Component.literal(" " + interval))
+                                .withColor(Color.CONTENT)
+                );
+            }
+            case "value" -> {
+                String playerId;
+                try {
+                    playerId = StringArgumentType.getString(context, "player_id");
+                }
+                catch (IllegalArgumentException e) {
+                    if (context.getSource().getPlayer() != null) {
+                        playerId = context.getSource().getPlayer().getName().toString();
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noIdFieldProvidedByNonPlayer));
+                        return 0;
+                    }
+                }
+
+                if (playerId.equals("-me") && context.getSource().getPlayer() == null) {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
+                    return 0;
+                }
+
+                UUID masterId = Resolver.resolveTargetUUID(context, playerId);
+
+                float value = AttributeHolder.getValue(masterId, attributeId, fromApi);
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.attribute_value")
+                                .append(" " + value + " (" + playerId + ")")
+                                .withColor(Color.CONTENT)
+                );
+            }
+            case "group" -> {
+                if (fromApi) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.attribute_read_group")
+                                    .append(" " + attributeId + " -> api")
+                                    .withColor(Color.CONTENT)
+                    );
+                }
+                else {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.attribute_read_group")
+                                    .append(" " + attributeId + " -> command (yaml)")
+                                    .withColor(Color.CONTENT)
+                    );
+                }
+            }
+            default -> {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+                return 0;
+            }
+        }
+
+        return 1;
+    }
+
+    static int executeAttribute_Modify(CommandContext<CommandSourceStack> context, String category) {
+        String attributeId = StringArgumentType.getString(context, "attribute_id");
+        String playerId = StringArgumentType.getString(context, "player_id");
+        float value = FloatArgumentType.getFloat(context, "value");
+        String direction;
+
+        try {
+            direction = StringArgumentType.getString(context, "direction");
+        }
+        catch (IllegalArgumentException e) {
+            direction = "point";
+        }
+
+        UUID masterId = Resolver.resolveTargetUUID(context, playerId);
+
+        if (masterId == null && !playerId.equals("-all")) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            return 0;
+        }
+
+        ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayer(masterId);
+
+        if (player == null && !playerId.equals("-all")) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            return 0;
+        }
+
+        if (!AttributeHolder.doesAttributeExist(attributeId)) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+
+        boolean fromApi = AttributeHolder.doesAttributeExist(attributeId, "api");
+
+        AttributeHolder.ThresholdDirection thresholdDirection;
+        boolean success = false;
+
+        switch (direction) {
+            case "point" -> thresholdDirection = AttributeHolder.ThresholdDirection.POINT;
+            case "up" -> thresholdDirection = AttributeHolder.ThresholdDirection.UP;
+            case "down" -> thresholdDirection = AttributeHolder.ThresholdDirection.DOWN;
+            case "flex" -> thresholdDirection = AttributeHolder.ThresholdDirection.FLEX;
+            default -> {
+                MessagePublisher.sendFailureMessage(context,
+                        Component.translatable("commands.chx.attribute_default_direction")
+                );
+                thresholdDirection = AttributeHolder.ThresholdDirection.POINT;
+                direction = "point";
+            }
+        }
+
+        switch (category) {
+            case "set" -> {
+                if (playerId.equals("-all")) {
+                    for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
+                        success = AttributeHolder.setValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                        if (!success) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    success = AttributeHolder.setValue(masterId, attributeId, value, fromApi, thresholdDirection);
+                }
+            }
+            case "add" -> {
+                if (value == 0) {
+                    break;
+                }
+
+                if (playerId.equals("-all")) {
+                    for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
+                        success = AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                        if (!success) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    success = AttributeHolder.addValue(masterId, attributeId, value, fromApi, thresholdDirection);
+                }
+            }
+            case "reduce" -> {
+                if (value == 0) {
+                    break;
+                }
+                else if (value < 0) {
+                    value = -value;
+                }
+
+                if (playerId.equals("-all")) {
+                    for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
+                        success = AttributeHolder.reduceValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                        if (!success) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    success = AttributeHolder.reduceValue(masterId, attributeId, value, fromApi, thresholdDirection);
+                }
+            }
+        }
+
+        if (value == 0) {
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.attribute_no_changes")
+                            .withColor(Color.CONTENT)
+            );
+            return 1;
+        }
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.attribute_modify")
+                            .withColor(Color.CONTENT)
+            );
+            MessagePublisher.sendSystemMessage(context,
+                    Component.literal("(" + attributeId + " -> " + playerId + "): " + category + " " + value + " (" + direction + ")")
+                            .withColor(Color.CONTENT)
+            );
+            return 1;
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+    }
+
+    static int executeAttribute_Recovery(CommandContext<CommandSourceStack> context, String category) {
+        String attributeId = StringArgumentType.getString(context, "attribute_id");
+        String finalCallbackId;
+
+        if (!AttributeHolder.doesAttributeExist(attributeId)) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+
+        boolean fromApi = AttributeHolder.doesAttributeExist(attributeId, "api");
+
+        AttributeHolder.CustomAttribute attribute = AttributeHolder.getAttributeDefinition(attributeId, fromApi);
+
+        if (attribute == null) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+
+        if (category.equals("simple")) {
+            if (attribute.doesRecoveryRegistered() && fromApi) {
+                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.tryToOverrideApiRecovery));
+                return 0;
+            }
+
+            int interval = IntegerArgumentType.getInteger(context, "interval");
+            String intervalUnit = StringArgumentType.getString(context, "interval_unit");
+            float value = FloatArgumentType.getFloat(context, "value");
+            String direction;
+            try {
+                direction = StringArgumentType.getString(context, "direction");
+            }
+            catch (IllegalArgumentException e) {
+                direction = "point";
+            }
+
+            AttributeHolder.ThresholdDirection thresholdDirection;
+            switch (direction) {
+                case "up" -> thresholdDirection = AttributeHolder.ThresholdDirection.UP;
+                case "down" -> thresholdDirection = AttributeHolder.ThresholdDirection.DOWN;
+                case "flex" -> thresholdDirection = AttributeHolder.ThresholdDirection.FLEX;
+                default -> thresholdDirection = AttributeHolder.ThresholdDirection.POINT;
+            }
+
+            String callbackId = "attribute:core_hanxu-command:" + attributeId + "-recovery";
+
+            BehaviorRegistry.register(callbackId, (player, parameters) -> {
+                MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+                if (server != null) {
+                    for (ServerPlayer serverPlayer : server.getPlayerList().getPlayers()) {
+                        if (serverPlayer != null) {
+                            AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                        }
+                    }
+                }
+            });
+
+            switch (intervalUnit) {
+                case "t", "tick" -> {}
+                case "s", "second" -> interval *= 20;
+                case "m", "minute" -> interval *= (20 * 60);
+                case "h", "hour" -> interval *= (20 * 3600);
+                default -> {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidUnitArgument));
+                    return 0;
+                }
+            }
+
+            attribute.setRecovery(callbackId).setRecoveryIntervalTicks(interval);
+
+            if (!fromApi) {
+                AttributeHolder.saveYamlAttribute(
+                    attributeId,
+                    AttributeHolder.UpdateCategory.recovery,
+                    0f,
+                    callbackId,
+                    "simple",
+                    interval + ":" + value + ":" + direction
+                );
+            }
+
+            finalCallbackId = callbackId;
+        }
+        else if (category.equals("api")) {
+            String callbackId = StringArgumentType.getString(context, "callback_id");
+
+            if (!BehaviorRegistry.isRegistered(callbackId)) {
+                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.tryToRegisterUnExistApiRecovery));
+                return 0;
+            }
+
+            attribute.setRecovery(callbackId);
+
+            if (!fromApi) {
+                AttributeHolder.saveYamlAttribute(
+                    attributeId,
+                    AttributeHolder.UpdateCategory.recovery,
+                    0f,
+                    callbackId,
+                    "api",
+                    null
+                );
+            }
+
+            finalCallbackId = callbackId;
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+            return 0;
+        }
+
+        // Output message.
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.attribute_recovery_registered")
+                        .append(Component.literal(" " + attributeId + " <<- " + finalCallbackId))
+                        .withColor(Color.CONTENT)
+        );
+
+        return 1;
+    }
+
+    static int executeAttribute_Display(CommandContext<CommandSourceStack> context, boolean state) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        String attributeId = StringArgumentType.getString(context, "attribute_id");
+
+        if (!AttributeHolder.doesAttributeExist(attributeId)) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
+        }
+
+        boolean fromApi = AttributeHolder.doesAttributeExist(attributeId, "api");
+
+        AttributeHolder.displayToInfoPage(player, player.getUUID(), attributeId, fromApi, state);
+        MessagePublisher.sendSystemMessage(context,
+            Component.literal("[HX] " + attributeId + " ")
+                    .append(Component.translatable("commands.core_hanxu.has_changed_to"))
+                    .append(Component.literal(" " + state))
+                    .withColor(Color.SUCCESS)
         );
 
         return 1;
@@ -1059,6 +1598,12 @@ class CommandExecute {
                                                   String timerId, String masterString,
                                                   String timeUnit, int timeAmount,
                                                   String endBehavior, String behaviorContent) {
+        // Reject invalid "-me" field used by non player source.
+        if (masterString.equals("-me") && context.getSource().getPlayer() == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
+            return 0;
+        }
+
         // Analysis UUID.
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
@@ -1112,11 +1657,11 @@ class CommandExecute {
                 int startingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                 String endBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx.timer_started").withColor(0x66FF66)
+                        Component.translatable("commands.chx.timer_started").withColor(Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + startingTime + " tick(s) ->> " + endBehavior)
-                                .withColor(0x66FF66)
+                                .withColor(Color.SUCCESS)
                 );
 
                 break;
@@ -1130,11 +1675,11 @@ class CommandExecute {
                 // Send success message.
                 int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx.timer_stopped").withColor(0x66FF66)
+                        Component.translatable("commands.chx.timer_stopped").withColor(Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " tick(s)")
-                                .withColor(0x66FF66)
+                                .withColor(Color.SUCCESS)
                 );
 
                 break;
@@ -1148,11 +1693,11 @@ class CommandExecute {
                 // Send success message.
                 int initialTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx.timer_reset").withColor(0x66FF66)
+                        Component.translatable("commands.chx.timer_reset").withColor(Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + initialTime + " tick(s)")
-                                .withColor(0x66FF66)
+                                .withColor(Color.SUCCESS)
                 );
 
                 break;
@@ -1166,11 +1711,11 @@ class CommandExecute {
                 int restartTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
                 String restartEndBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
                 MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx.timer_restart").withColor(0x66FF66)
+                        Component.translatable("commands.chx.timer_restart").withColor(Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal("(" + timerId + " -> " + masterString + "): " + restartTime + " tick(s) ->> " + restartEndBehavior)
-                        .withColor(0x66FF66)
+                        .withColor(Color.SUCCESS)
                 );
 
                 break;
@@ -1183,11 +1728,11 @@ class CommandExecute {
                 // Send success message.
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_deleted")
-                                .withColor(0x66FF66)
+                                .withColor(Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal(" (" + timerId + " -> " + masterString + ")")
-                                .withColor(0x66FF66)
+                                .withColor(Color.SUCCESS)
                 );
 
                 break;
@@ -1202,5 +1747,247 @@ class CommandExecute {
         }
 
         return 1;
+    }
+
+    private static int displayCommandTimerRead(CommandContext<CommandSourceStack> context,
+                                       String timerId, String masterString, String timeUnit,
+                                       String infoCategory, String timerCategory) {
+        if (timerCategory.equals("template")) {
+            switch (infoCategory) {
+                case "remaining_time":
+                    int remainingTime = TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit);
+                    if (remainingTime != -1) {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.timer_read_remaining_time")
+                                        .append(Component.literal(" (" + timerId + "): " + remainingTime + " " + timeUnit))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                case "initial_time":
+                    int initialTime = TimeHolder.getInitialTimeFromTemplate(timerId, timeUnit);
+                    if (initialTime != -1) {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.timer_read_initial_time")
+                                        .append(Component.literal(" (" + timerId + "): " + initialTime + " " + timeUnit))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                case "state":
+                    boolean isCounting = TimeHolder.isTemplateTimerCounting(timerId);
+
+                    if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.timer_state")
+                                        .append(Component.literal(" (" + timerId + "): " + (isCounting? "Counting" : "Stopping")))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                case "end_behavior":
+                    String endBehavior = TimeHolder.getTemplateEndBehavior(timerId);
+                    String behaviorContent = TimeHolder.getTemplateBehaviorContent(timerId);
+
+                    if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
+                        if (endBehavior == null) {
+                            endBehavior = "null";
+                        }
+
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.literal("(" + timerId + ") <<- ")
+                                        .append(endBehavior)
+                                        .append(Component.literal(behaviorContent == null? "" : (" : " + behaviorContent)))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                default:
+                    return 0;
+            }
+            return 1;
+        }
+        else if (timerCategory.equals("instance")) {
+            UUID masterId = Resolver.resolveTargetUUID(context, masterString);
+
+            switch (infoCategory) {
+                case "remaining_time":
+                    int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit);
+                    if (remainingTime != -1) {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.timer_read_remaining_time")
+                                        .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " " + timeUnit))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                case "initial_time":
+                    int initialTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, timeUnit);
+                    if (initialTime != -1) {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.timer_read_initial_time")
+                                        .append(Component.literal(" (" + timerId + "->" + masterString + "): " + initialTime + " " + timeUnit))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                case "state":
+                    boolean isCounting = TimeHolder.isInstanceTimerCounting(masterId, timerId);
+                    if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit) != -1) {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.timer_state")
+                                        .append(Component.literal(" (" + timerId + "): " + (isCounting? "Counting" : "Stopping")))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                case "end_behavior":
+                    String endBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
+                    String behaviorContent = TimeHolder.getInstanceBehaviorContent(masterId, timerId);
+
+                    if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit) != -1) {
+                        if (endBehavior == null) {
+                            endBehavior = "null";
+                        }
+
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.literal("(" + timerId + " -> " + masterString + ") <<- ")
+                                        .append(endBehavior)
+                                        .append(Component.literal(behaviorContent == null? "" : (" : " + behaviorContent)))
+                                        .withColor(Color.TITLE)
+                        );
+                    }
+                    else {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
+                    break;
+                default:
+                    return 0;
+            }
+            return 1;
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+            return 0;
+        }
+    }
+
+    private static int displayTimerIdList(CommandContext<CommandSourceStack> context, String[] idList) {
+        if (idList.length == 0) {
+            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.fixed.empty"));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.timer_list_title").withColor(Color.TITLE)
+        );
+        for (String id : idList) {
+            MessagePublisher.sendSystemMessage(context, Component.literal(id).withColor(Color.CONTENT));
+        }
+
+        return 1;
+    }
+
+    private static void displayTimerCreateMessage(CommandContext<CommandSourceStack> context, String timerId, int timeAmount, String timeUnit, String endBehavior, String behaviorContent) {
+        // Output message.
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.timer_created")
+                        .append(Component.literal(" " + timerId + " -> " + timeAmount + " " + timeUnit))
+                        .withColor(Color.SUCCESS)
+        );
+        switch (endBehavior) {
+            case "e", "execute":
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.timer_with_execute_behavior")
+                                .append(Component.literal(": " + behaviorContent))
+                                .withColor(Color.SUCCESS)
+                );
+                break;
+            case "r", "remind":
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.timer_with_remind_behavior")
+                                .append(Component.literal(": " + behaviorContent))
+                                .withColor(Color.SUCCESS)
+                );
+                break;
+            default:
+                break;
+        }
+    }
+
+    static void displaySceneIdList(CommandContext<CommandSourceStack> context, List<Component> displayList) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_list_title").withColor(Color.TITLE));
+        for (Component line : displayList) {
+            MessagePublisher.sendSystemMessage(context, line);
+        }
+    }
+
+    private static int displayAttributeIdList(CommandContext<CommandSourceStack> context, String[] attributeArrayList, boolean fromApi) {
+        MessagePublisher.sendSystemMessage(
+            context,
+            fromApi?
+                Component.translatable("commands.chx.attribute_api_list_title").withColor(Color.TITLE) :
+                Component.translatable("commands.chx.attribute_yaml_list_title").withColor(Color.TITLE)
+            );
+
+        if (attributeArrayList.length == 0) {
+            MessagePublisher.sendFailureMessage(
+                context, Component.translatable("commands.chx.fixed.empty")
+            );
+            return 0;
+        }
+
+        for (String attribute : attributeArrayList) {
+            MessagePublisher.sendSystemMessage(context, Component.literal(attribute).withColor(Color.CONTENT));
+        }
+
+        return 1;
+    }
+
+    private static void displayAttributeCreateMessage(CommandContext<CommandSourceStack> context, String attributeId, float maximum, float defaultValue, boolean registered) {
+        if (registered) {
+            MessagePublisher.sendSystemMessage(
+                context,
+                Component.translatable("commands.chx.attribute_created")
+                        .append(Component.literal(" " + attributeId + " -> " + maximum + " _ " + defaultValue))
+                        .withColor(Color.SUCCESS)
+            );
+        }
+        else {
+            MessagePublisher.sendFailureMessage(
+                    context,
+                    Component.translatable("commands.chx.attribute_not_created")
+                            .withColor(Color.SUCCESS)
+            );
+        }
     }
 }

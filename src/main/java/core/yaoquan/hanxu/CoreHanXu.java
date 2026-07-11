@@ -2,6 +2,7 @@ package core.yaoquan.hanxu;
 
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.api.VariableHolder;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.ModDataGenerator;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
@@ -87,6 +88,9 @@ public class CoreHanXu {
 
         AttributeHolder.registerAllYamlAttributes();
         LOGGER.info("[HX] Rebuild Procedure: Attribute - Yaml Attribute Callbacks");
+
+        VariableHolder.loadAllVariables(overworld);
+        LOGGER.info("[HX] Rebuild Procedure: Variable - Variables");
     }
 
     @SubscribeEvent
@@ -147,6 +151,10 @@ public class CoreHanXu {
         LOGGER.info("[HX] Save Procedure: Timer - Global");
 
         AttributeHolder.saveAttributeToGlobal(overworld);
+        LOGGER.info("[HX] Save Procedure: Attribute - Global");
+
+        VariableHolder.saveAllVariables(overworld);
+        LOGGER.info("[HX] Save Procedure: Variables");
     }
 
     public static void gatherData(GatherDataEvent.Client event) {

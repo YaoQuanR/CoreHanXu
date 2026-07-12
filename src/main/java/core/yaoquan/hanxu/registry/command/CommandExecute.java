@@ -4,14 +4,10 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import core.yaoquan.hanxu.api.AttributeHolder;
-import core.yaoquan.hanxu.api.PermissionHolder;
-import core.yaoquan.hanxu.api.SceneHolder;
-import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.Color;
 import core.yaoquan.hanxu.api.define.FilePath;
-import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.api.define.Version;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.util.*;
@@ -19,12 +15,15 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WritableBookContent;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.ScoreHolder;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.io.IOException;
@@ -1260,7 +1259,7 @@ class CommandExecute {
                     }
                 }
 
-                if (playerId.equals("-me") && context.getSource().getPlayer() == null) {
+                if ((playerId.equals("-me") || playerId.equals("-m")) && context.getSource().getPlayer() == null) {
                     MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
                     return 0;
                 }
@@ -1314,14 +1313,17 @@ class CommandExecute {
 
         UUID masterId = Resolver.resolveTargetUUID(context, playerId);
 
-        if (masterId == null && !playerId.equals("-all")) {
+        if (masterId == null && !(playerId.equals("-all") || playerId.equals("-a"))) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
             return 0;
         }
 
-        ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayer(masterId);
+        ServerPlayer player = null;
+        if (masterId != null) {
+            player = context.getSource().getServer().getPlayerList().getPlayer(masterId);
+        }
 
-        if (player == null && !playerId.equals("-all")) {
+        if (player == null && !(playerId.equals("-all") || playerId.equals("-a"))) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
             return 0;
         }
@@ -1352,7 +1354,7 @@ class CommandExecute {
 
         switch (category) {
             case "set" -> {
-                if (playerId.equals("-all")) {
+                if (playerId.equals("-all") || playerId.equals("-a")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
                         success = AttributeHolder.setValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
                         if (!success) {
@@ -1369,7 +1371,7 @@ class CommandExecute {
                     break;
                 }
 
-                if (playerId.equals("-all")) {
+                if (playerId.equals("-all") || playerId.equals("-a")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
                         success = AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
                         if (!success) {
@@ -1413,7 +1415,7 @@ class CommandExecute {
 
         if (success) {
             MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.attribute_modify")
+                    Component.translatable("commands.chx.attribute_modified")
                             .withColor(Color.CONTENT)
             );
             MessagePublisher.sendSystemMessage(context,
@@ -1575,6 +1577,419 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeVariable_List(CommandContext<CommandSourceStack> context, String category) {
+        if (category.equals("variables")) {
+            Set<String> variableNames = VariableHolder.getAllRegisteredVariables();
+
+            if (variableNames.isEmpty()) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.emptyVariable));
+                return 0;
+            }
+
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_list_title").withColor(Color.TITLE));
+            for (String variableName : variableNames) {
+                MessagePublisher.sendSystemMessage(context, Component.literal(variableName).withColor(Color.CONTENT));
+            }
+        }
+        else if (category.equals("values")) {
+            Map<String, String> allVariables = VariableHolder.getAllVariableAsString();
+            if (allVariables.isEmpty()) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.emptyVariable));
+                return 0;
+            }
+
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_list_title").withColor(Color.TITLE));
+            for (String variableName : allVariables.keySet()) {
+                MessagePublisher.sendSystemMessage(context, Component.literal(variableName + " -> " + allVariables.get(variableName)).withColor(Color.CONTENT));
+            }
+        }
+
+        return 1;
+    }
+
+    static int executeVariable_Read(CommandContext<CommandSourceStack> context) {
+        String variableName = StringArgumentType.getString(context, "variable_name");
+
+        if (!VariableHolder.doesExists(variableName)) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+
+        String variableType = VariableHolder.getType(variableName);
+        String variableValue = VariableHolder.getStringFrom(variableName);
+
+        MessagePublisher.sendSystemMessage(context,
+            Component.translatable("commands.chx.variable_read")
+                .append(" " + variableType + " " + variableName + ": " + variableValue)
+                .withColor(Color.CONTENT)
+        );
+
+        return 1;
+    }
+
+    static int executeVariable_Create(CommandContext<CommandSourceStack> context, boolean override) {
+        String variableType = StringArgumentType.getString(context, "variable_type");
+        String variableName = StringArgumentType.getString(context, "variable_name");
+        String variableValue = StringArgumentType.getString(context, "variable_value");
+
+        if (VariableHolder.doesExists(variableName) && !override) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.alreadyExist));
+            return 0;
+        }
+
+        if (override) {
+            String actualType = VariableHolder.getType(variableName);
+            if (actualType != null && !actualType.equals(variableType)) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                return 0;
+            }
+        }
+
+        if (variableName.startsWith("-") || variableName.startsWith("@")) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidFieldForName));
+            return 0;
+        }
+
+        if (VariableHolder.createVariable(variableName, variableType, variableValue, override)) {
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.variable_created")
+                            .append(" " + variableType + " " + variableName + " <<- " + variableValue)
+                            .withColor(Color.SUCCESS)
+            );
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            return 0;
+        }
+
+        return 1;
+    }
+
+    static int executeVariable_Delete(CommandContext<CommandSourceStack> context) {
+        String variableName = StringArgumentType.getString(context, "variable_name");
+
+        if (variableName.equals("-all") || variableName.equals("-a")) {
+            VariableHolder.deleteAllVariables();
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_all_deleted").withColor(Color.SUCCESS));
+        }
+        else {
+            String variableType = VariableHolder.getType(variableName);
+            if (VariableHolder.deleteVariable(variableName)) {
+                MessagePublisher.sendSystemMessage(context,
+                        Component.translatable("commands.chx.variable_deleted")
+                                .append(" " + variableName + " (" +  variableType + ")")
+                                .withColor(Color.SUCCESS)
+                );
+            }
+            else {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+                return 0;
+            }
+        }
+
+        return 1;
+    }
+
+    static int executeVariable_Copy(CommandContext<CommandSourceStack> context, boolean copyFromScore) {
+        String variableName = StringArgumentType.getString(context, "variable_name");
+        String playerId = StringArgumentType.getString(context, "player_id");
+        String scoreName = StringArgumentType.getString(context, "score_name");
+
+        if (!VariableHolder.doesExists(variableName)) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+
+        ServerPlayer player;
+
+        if (playerId.equals("-me") || playerId.equals("-m")) {
+            player = context.getSource().getPlayer();
+        }
+        else {
+            player = context.getSource().getServer().getPlayerList().getPlayerByName(playerId);
+        }
+
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            return 0;
+        }
+
+        if (copyFromScore) {
+            try {
+                VariableHolder.copyVariableFromScore(variableName, player.getScoreboardName(), scoreName);
+            }
+            catch (NumberFormatException e) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                return 0;
+            }
+            catch (NullPointerException | IllegalArgumentException e) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                return 0;
+            }
+            catch (IllegalStateException e) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+                return 0;
+            }
+
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.variable_copy_from_score")
+                            .append(" " + variableName + " <- " + scoreName)
+                            .withColor(Color.SUCCESS)
+            );
+        }
+        else {
+            try {
+                VariableHolder.copyScoreFromVariable(variableName, player.getScoreboardName(), scoreName);
+            }
+            catch (NumberFormatException e) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                return 0;
+            }
+            catch (NullPointerException | IllegalArgumentException e) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                return 0;
+            }
+            catch (IllegalStateException e) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+                return 0;
+            }
+
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.variable_copy_to_score")
+                            .append(" " + variableName + " -> " + scoreName)
+                            .withColor(Color.SUCCESS)
+            );
+        }
+
+        return 1;
+    }
+
+    static int executeVariable_If(CommandContext<CommandSourceStack> context, String category) {
+        String variableName = StringArgumentType.getString(context, "variable_name");
+        String compareSign = StringArgumentType.getString(context, "compare_sign");
+        String compareValue = StringArgumentType.getString(context, "compare_value");
+
+        if (!VariableHolder.doesExists(variableName)) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+
+        boolean success;
+        try {
+            switch (compareSign) {
+                // [Existing value (Variable)] {Sign} [Compare value] but method opposites: [Compare value] {Sign} [Existing value].
+                case "=", "==" -> success = VariableHolder.doesEquals(variableName, compareValue);
+                case "!=", "≠" -> success = VariableHolder.doesNotEquals(variableName, compareValue);
+                case ">" -> success = VariableHolder.doesSmallerThanExisting(variableName, compareValue, false);
+                case ">=", "≥" -> success = VariableHolder.doesSmallerOrEqualThanExisting(variableName, compareValue);
+                case "<" -> success = VariableHolder.doesGreaterThanExisting(variableName, compareValue, false);
+                case "<=", "≤" -> success = VariableHolder.doesGreaterOrEqualThanExisting(variableName, compareValue);
+                case "instanceof" -> success = VariableHolder.doesInstanceof(variableName, compareValue);
+                case "contains" -> success = VariableHolder.doesContains(variableName, compareValue);
+                case "length" -> {
+                    int length = Integer.parseInt(compareValue);
+                    success = VariableHolder.doesLengthEquals(variableName, length);
+                }
+                case "starts_with" -> success = VariableHolder.doesStartsWith(variableName, compareValue);
+                case "ends_with" -> success = VariableHolder.doesEndsWith(variableName, compareValue);
+                default -> {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    return 0;
+                }
+            }
+        }
+        catch (NullPointerException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        } catch (NumberFormatException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            return 0;
+        }
+
+        if (!success) {
+            // Failed to pass comparison.
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_failed_comparison").withColor(Color.CONTENT));
+            return 1;
+        }
+
+        return commandVariableExecution(context, variableName, category);
+    }
+
+    static int executeVariable_ScoreIf(CommandContext<CommandSourceStack> context, String category) {
+        String playerId = StringArgumentType.getString(context, "player_id");
+        String scoreName = StringArgumentType.getString(context, "score_name");
+        String compareSign = StringArgumentType.getString(context, "compare_sign");
+        int compareValue = IntegerArgumentType.getInteger(context, "compare_value");
+
+        MinecraftServer server = context.getSource().getServer();
+        ServerScoreboard scoreboard = server.getScoreboard();
+        Objective objective = scoreboard.getObjective(scoreName);
+        if (objective == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+            return 0;
+        }
+
+        if (playerId.equals("-me") || playerId.equals("-m")) {
+            if (context.getSource().getPlayer() == null) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
+                return 0;
+            }
+            playerId = context.getSource().getPlayer().getName().getString();
+        }
+
+        int scoreValue;
+
+        ScoreHolder scoreHolder = ScoreHolder.forNameOnly(playerId);
+        scoreValue = scoreboard.getOrCreatePlayerScore(scoreHolder, objective).get();
+
+        boolean success;
+        try {
+            switch (compareSign) {
+                case "=", "==" -> success = scoreValue == compareValue;
+                case "!=", "≠" -> success = scoreValue != compareValue;
+                case ">" -> success = scoreValue > compareValue;
+                case ">=", "≥" -> success = scoreValue >= compareValue;
+                case "<" -> success = scoreValue < compareValue;
+                case "<=", "≤" -> success = scoreValue <= compareValue;
+                case "instanceof" -> success = false;
+                case "contains" -> success = String.valueOf(scoreValue).contains(String.valueOf(compareValue));
+                case "length" -> success = String.valueOf(scoreValue).length() == compareValue;
+                case "starts_with" -> success = String.valueOf(scoreValue).startsWith(String.valueOf(compareValue));
+                case "ends_with" -> success = String.valueOf(scoreValue).endsWith(String.valueOf(compareValue));
+                default -> {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    return 0;
+                }
+            }
+        }
+        catch (NullPointerException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        } catch (NumberFormatException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            return 0;
+        }
+
+        if (!success) {
+            // Failed to pass comparison.
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_failed_comparison").withColor(Color.CONTENT));
+            return 1;
+        }
+
+        return commandVariableExecution(context, null, category);
+    }
+
+    static int executeVariable_MarginEquals(CommandContext<CommandSourceStack> context, String category) {
+        String variableName = StringArgumentType.getString(context, "variable_name");
+        String marginValue = StringArgumentType.getString(context, "margin_value");
+        String compareValue = StringArgumentType.getString(context, "compare_value");
+
+        if (!VariableHolder.doesExists(variableName)) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+
+        // This method only accept format: /chx variable margin_equals [variable_name] % [margin_value] {=/==} [compare_value] ...
+        boolean success;
+        try {
+            success = VariableHolder.doesMarginEquals(variableName, marginValue, compareValue);
+        }
+        catch (NullPointerException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+        catch (NumberFormatException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            return 0;
+        }
+
+        if (!success) {
+            // Failed to pass comparison.
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_failed_comparison").withColor(Color.CONTENT));
+            return 1;
+        }
+
+        return commandVariableExecution(context, variableName, category);
+    }
+
+    static int executeVariable_String(CommandContext<CommandSourceStack> context, String category) {
+        String variableName = StringArgumentType.getString(context, "variable_name");
+
+        try {
+            switch (category) {
+                case "to_lower" -> VariableHolder.stringToLowerCase(variableName);
+                case "to_upper" -> VariableHolder.stringToUpperCase(variableName);
+                default -> {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    return 0;
+                }
+            }
+        }
+        catch (NullPointerException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.variable_case")
+                        .append(Component.literal(" " + VariableHolder.getStringFrom(variableName)))
+                        .withColor(Color.CONTENT)
+        );
+
+        return 1;
+    }
+
+    static int executeVariable_Modify(CommandContext<CommandSourceStack> context) {
+        String variableName = StringArgumentType.getString(context, "variable_name");
+        String category = StringArgumentType.getString(context, "category");
+        String newValue = StringArgumentType.getString(context, "new_value");
+
+        if (!VariableHolder.doesExists(variableName)) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+
+        String variableType = VariableHolder.getType(variableName);
+        if (variableType == null) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            return 0;
+        }
+
+        try {
+            switch (category) {
+                case "set" -> VariableHolder.modifyVariable(variableName, newValue);
+                case "add" -> VariableHolder.addNumber(variableName, newValue);
+                case "reduce" -> VariableHolder.reduceNumber(variableName, newValue);
+                case "same" -> {
+                    if (newValue.equals("-self") || newValue.equals("-s")) {
+                        newValue = variableName;
+                    }
+                    VariableHolder.toSameValue(variableName, newValue);
+                }
+                default -> {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    return 0;
+                }
+            }
+        }
+        catch (NullPointerException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            return 0;
+        }
+        catch (NumberFormatException e) {
+            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.variable_modified")
+                        .append(" " + variableName + " " + category + " " + newValue + " = " + VariableHolder.getStringFrom(variableName))
+                        .withColor(Color.CONTENT)
+        );
+
+        return 1;
+    }
+
     private static int commandCreateTemplateTimer(CommandContext<CommandSourceStack> context,
                                                   String timerId, String timeUnit, int timeAmount,
                                                   String endBehavior, String behaviorContent) {
@@ -1599,7 +2014,7 @@ class CommandExecute {
                                                   String timeUnit, int timeAmount,
                                                   String endBehavior, String behaviorContent) {
         // Reject invalid "-me" field used by non player source.
-        if (masterString.equals("-me") && context.getSource().getPlayer() == null) {
+        if ((masterString.equals("-me") || masterString.equals("-m")) && context.getSource().getPlayer() == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
             return 0;
         }
@@ -1744,6 +2159,97 @@ class CommandExecute {
         // Refresh state of F4 display.
         if (context.getSource().getPlayer() != null) {
             TimeHolder.checkAndRefreshDisplay(context.getSource().getPlayer(), masterId, timerId);
+        }
+
+        return 1;
+    }
+
+    private static int commandVariableExecution(CommandContext<CommandSourceStack> context, String variableName, String category) {
+        // If passed.
+        if (category.equals("execute")) {
+            String command = StringArgumentType.getString(context, "command");
+            if (!command.startsWith("/")) {
+                command = "/" + command;
+            }
+            context.getSource().getServer().getCommands().performPrefixedCommand(context.getSource(), command);
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_executed").withColor(Color.CONTENT));
+        }
+        else if (category.equals("then")) {
+            String targetVariableName = StringArgumentType.getString(context, "target_variable");
+            String action = StringArgumentType.getString(context, "action");
+            String target = StringArgumentType.getString(context, "target");
+            String targetPlayerId = null;
+            boolean getPlayerByContext = false;
+            try {
+                targetPlayerId = StringArgumentType.getString(context, "optional_player_id");
+                if (targetPlayerId.equals("-me") || targetPlayerId.equals("-m")) {
+                    getPlayerByContext = true;
+                }
+            }
+            catch (Exception e) {
+                getPlayerByContext = true;
+            }
+
+            if (getPlayerByContext) {
+                if (context.getSource().getPlayer() == null) {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                    return 0;
+                }
+                targetPlayerId = context.getSource().getPlayer().getName().getString();
+            }
+
+            // For special case.
+            if (targetVariableName.equals("-self") || targetVariableName.equals("-s")) {
+                if (variableName == null) {
+                    MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.selfFieldInScoreIf));
+                    return 0;
+                }
+                targetVariableName = variableName;
+            }
+
+            if (!VariableHolder.doesExists(targetVariableName)) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                return 0;
+            }
+
+            try {
+                switch (action) {
+                    case "set" -> VariableHolder.modifyVariable(targetVariableName, target);
+                    case "add" -> VariableHolder.addNumber(targetVariableName, target);
+                    case "reduce" -> VariableHolder.reduceNumber(targetVariableName, target);
+                    case "copy_from" -> {
+                        ServerPlayer player = context.getSource().getPlayer();
+                        if (player != null) {
+                            VariableHolder.copyVariableFromScore(targetVariableName, targetPlayerId, target);
+                        }
+                    }
+                    case "copy_to" -> {
+                        ServerPlayer player = context.getSource().getPlayer();
+                        if (player != null) {
+                            VariableHolder.copyScoreFromVariable(targetVariableName, targetPlayerId, target);
+                        }
+                    }
+                    case "same" -> VariableHolder.toSameValue(targetVariableName, target);
+                }
+            }
+            catch (NullPointerException e) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+                return 0;
+            }
+            catch (NumberFormatException e) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                return 0;
+            }
+            catch (IllegalStateException e) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+                return 0;
+            }
+            catch (IllegalArgumentException e) {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                return 0;
+            }
+
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_target_finished").withColor(Color.CONTENT));
         }
 
         return 1;

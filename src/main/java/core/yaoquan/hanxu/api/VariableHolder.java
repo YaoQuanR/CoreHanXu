@@ -60,11 +60,13 @@ public class VariableHolder {
         return longVariables;
     }
 
-    public static boolean createVariable(String variableName, String variableType, String variableValue) {
-        if (registeredVariables.contains(variableName)) {
+    public static boolean createVariable(String variableName, String variableType, String variableValue, boolean override) {
+        if (registeredVariables.contains(variableName) && !override) {
             CoreHanXu.LOGGER.warn("[HX] Rejected override variable: {}", variableName);
             return false;
         }
+
+        CoreHanXu.LOGGER.info("[HX] Creating variable: {} in type: {}", variableName, variableType);
 
         switch (variableType) {
             case "string", "str", "String" -> {
@@ -84,7 +86,17 @@ public class VariableHolder {
             }
             case "boolean", "bool", "Boolean" -> {
                 try {
-                    boolean value = Boolean.parseBoolean(variableValue);
+                    boolean value;
+                    if (variableValue.equalsIgnoreCase("true") || variableValue.equalsIgnoreCase("false")) {
+                        value = variableValue.equalsIgnoreCase("true");
+                    }
+                    else if (variableValue.equals("1") || variableValue.equals("0")) {
+                        value = variableValue.equalsIgnoreCase("1");
+                    }
+                    else {
+                        return false;
+                    }
+
                     registeredVariables.add(variableName);
                     booleanVariables.put(variableName, value);
                 }
@@ -125,6 +137,9 @@ public class VariableHolder {
                     CoreHanXu.LOGGER.warn("[HX] Invalid long variable value: {}", variableValue);
                     return false;
                 }
+            }
+            default -> {
+                return false;
             }
         }
 
@@ -256,7 +271,7 @@ public class VariableHolder {
         return registeredVariables.contains(variableName);
     }
 
-    public static boolean doesInstanceof(String variableName, String compareType) {
+    public static boolean doesInstanceof(String variableName, String compareType) throws NumberFormatException {
         switch (compareType) {
             case "string", "str", "String" -> {
                 return stringVariables.containsKey(variableName);
@@ -277,23 +292,32 @@ public class VariableHolder {
                 return longVariables.containsKey(variableName);
             }
             default -> {
-                return false;
+                throw new NumberFormatException();
             }
         }
     }
 
-    public static boolean doesContains(String variableName, String compareValue) {
-        if (!stringVariables.containsKey(variableName)) {
-            return false;
+    public static boolean doesContains(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
+        if (!registeredVariables.contains(variableName)) {
+            throw new NullPointerException();
         }
 
-        String value = stringVariables.get(variableName);
+        String variableType = getType(variableName);
+        if (variableType == null) {
+            throw new NumberFormatException();
+        }
+
+        String value = getStringFrom(variableName);
+        if (value == null) {
+            throw new NullPointerException();
+        }
 
         return value.contains(compareValue);
     }
 
     public static boolean doesLengthEquals(String variableName, int length) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to compare 'length' for unexist variable: {}", variableName);
             throw new NullPointerException();
         }
 
@@ -323,6 +347,7 @@ public class VariableHolder {
 
     public static boolean doesEquals(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'equals' unexist variable: {}", variableName);
             throw new NullPointerException();
         }
 
@@ -353,6 +378,7 @@ public class VariableHolder {
 
     public static boolean doesFloatApproximateEquals(String variableName, float compareValue, float bias) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'approximate equals' unexist float variable: {}", variableName);
             throw new NullPointerException();
         }
 
@@ -371,6 +397,7 @@ public class VariableHolder {
 
     public static boolean doesDoubleApproximateEquals(String variableName, double compareValue, double bias) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'approximate equals' unexist double variable: {}", variableName);
             throw new NullPointerException();
         }
 
@@ -389,6 +416,7 @@ public class VariableHolder {
 
     public static boolean doesGreaterThanExisting(String variableName, String compareValue, boolean includedEqual) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to compare 'greater than' unexist variable: {}", variableName);
             throw new NullPointerException();
         }
 
@@ -397,42 +425,43 @@ public class VariableHolder {
         switch (variableType) {
             case "integer" -> {
                 if (includedEqual) {
-                    return Integer.parseInt(compareValue) >= Integer.parseInt(stringVariables.get(variableName));
+                    return Integer.parseInt(compareValue) >= integerVariables.get(variableName);
                 }
                 else {
-                    return Integer.parseInt(compareValue) > Integer.parseInt(stringVariables.get(variableName));
+                    return Integer.parseInt(compareValue) > integerVariables.get(variableName);
                 }
             }
             case "float" -> {
                 if (includedEqual) {
-                    return Float.parseFloat(compareValue) >= Float.parseFloat(stringVariables.get(variableName));
+                    return Float.parseFloat(compareValue) >= floatVariables.get(variableName);
                 }
                 else {
-                    return Float.parseFloat(compareValue) > Float.parseFloat(stringVariables.get(variableName));
+                    return Float.parseFloat(compareValue) > floatVariables.get(variableName);
                 }
             }
             case "double" -> {
                 if (includedEqual) {
-                    return Double.parseDouble(compareValue) >= Double.parseDouble(stringVariables.get(variableName));
+                    return Double.parseDouble(compareValue) >= doubleVariables.get(variableName);
                 }
                 else {
-                    return Double.parseDouble(compareValue) > Double.parseDouble(stringVariables.get(variableName));
+                    return Double.parseDouble(compareValue) > doubleVariables.get(variableName);
                 }
             }
             case "long" -> {
                 if (includedEqual) {
-                    return Long.parseLong(compareValue) >= Long.parseLong(stringVariables.get(variableName));
+                    return Long.parseLong(compareValue) >= longVariables.get(variableName);
                 }
                 else {
-                    return Long.parseLong(compareValue) > Long.parseLong(stringVariables.get(variableName));
+                    return Long.parseLong(compareValue) > longVariables.get(variableName);
                 }
             }
             case null, default -> throw new NumberFormatException();
         }
     }
 
-    public static boolean doesLesserThanExisting(String variableName, String compareValue, boolean includedEqual) throws NullPointerException, NumberFormatException {
+    public static boolean doesSmallerThanExisting(String variableName, String compareValue, boolean includedEqual) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to compare 'smaller than' unexist variable: {}", variableName);
             throw new NullPointerException();
         }
 
@@ -441,34 +470,34 @@ public class VariableHolder {
         switch (variableType) {
             case "integer" -> {
                 if (includedEqual) {
-                    return Integer.parseInt(compareValue) <= Integer.parseInt(stringVariables.get(variableName));
+                    return Integer.parseInt(compareValue) <= integerVariables.get(variableName);
                 }
                 else {
-                    return Integer.parseInt(compareValue) < Integer.parseInt(stringVariables.get(variableName));
+                    return Integer.parseInt(compareValue) < integerVariables.get(variableName);
                 }
             }
             case "float" -> {
                 if (includedEqual) {
-                    return Float.parseFloat(compareValue) <= Float.parseFloat(stringVariables.get(variableName));
+                    return Float.parseFloat(compareValue) <= floatVariables.get(variableName);
                 }
                 else {
-                    return Float.parseFloat(compareValue) < Float.parseFloat(stringVariables.get(variableName));
+                    return Float.parseFloat(compareValue) < floatVariables.get(variableName);
                 }
             }
             case "double" -> {
                 if (includedEqual) {
-                    return Double.parseDouble(compareValue) <= Double.parseDouble(stringVariables.get(variableName));
+                    return Double.parseDouble(compareValue) <= doubleVariables.get(variableName);
                 }
                 else {
-                    return Double.parseDouble(compareValue) < Double.parseDouble(stringVariables.get(variableName));
+                    return Double.parseDouble(compareValue) < doubleVariables.get(variableName);
                 }
             }
             case "long" -> {
                 if (includedEqual) {
-                    return Long.parseLong(compareValue) <= Long.parseLong(stringVariables.get(variableName));
+                    return Long.parseLong(compareValue) <= longVariables.get(variableName);
                 }
                 else {
-                    return Long.parseLong(compareValue) < Long.parseLong(stringVariables.get(variableName));
+                    return Long.parseLong(compareValue) < longVariables.get(variableName);
                 }
             }
             case null, default -> throw new NumberFormatException();
@@ -479,8 +508,8 @@ public class VariableHolder {
         return doesGreaterThanExisting(variableName, compareValue, true);
     }
 
-    public static boolean doesLesserOrEqualThanExisting(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
-        return doesGreaterThanExisting(variableName, compareValue, true);
+    public static boolean doesSmallerOrEqualThanExisting(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
+        return doesSmallerThanExisting(variableName, compareValue, true);
     }
 
     public static boolean doesNotEquals(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
@@ -489,6 +518,7 @@ public class VariableHolder {
 
     public static boolean doesMarginEquals(String variableName, String marginValue, String compareValue) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'margin equals' unexist variable: {}", variableName);
             throw new NullPointerException();
         }
 
@@ -499,10 +529,12 @@ public class VariableHolder {
                 return integerVariables.get(variableName) % Integer.parseInt(marginValue) == Integer.parseInt(compareValue);
             }
             case "float" -> {
-                return floatVariables.get(variableName) % Float.parseFloat(marginValue) == Float.parseFloat(compareValue);
+                float biasMargin = floatVariables.get(variableName) % Float.parseFloat(marginValue);
+                return Math.max(biasMargin, Float.parseFloat(compareValue)) - Math.min(biasMargin, Float.parseFloat(compareValue)) < 0.0001f;
             }
             case "double" -> {
-                return doubleVariables.get(variableName) % Double.parseDouble(marginValue) == Double.parseDouble(compareValue);
+                double biasMargin = doubleVariables.get(variableName) % Double.parseDouble(marginValue);
+                return Math.max(biasMargin, Double.parseDouble(compareValue)) - Math.min(biasMargin, Double.parseDouble(compareValue)) < 0.0001d;
             }
             case "long" -> {
                 return longVariables.get(variableName) % Long.parseLong(marginValue) == Long.parseLong(compareValue);
@@ -511,36 +543,104 @@ public class VariableHolder {
         }
     }
 
-    public static boolean modifyVariable(String variableName, String newValue) {
+    public static boolean doesStartsWith(String variableName, String startsWithValue) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
-            return false;
+            CoreHanXu.LOGGER.warn("[HX] Trying to compare 'starts with' unexist variable: {}", variableName);
+            throw new NullPointerException();
+        }
+
+        String variableType = getType(variableName);
+
+        switch (variableType) {
+            case "string" -> {
+                return stringVariables.get(variableName) != null && stringVariables.get(variableName).startsWith(startsWithValue);
+            }
+            case "integer" -> {
+                return integerVariables.get(variableName) != null && String.valueOf(integerVariables.get(variableName)).startsWith(startsWithValue);
+            }
+            case "float" -> {
+                return floatVariables.get(variableName) != null && String.valueOf(floatVariables.get(variableName)).startsWith(startsWithValue);
+            }
+            case "double" -> {
+                return doubleVariables.get(variableName) != null && String.valueOf(doubleVariables.get(variableName)).startsWith(startsWithValue);
+            }
+            case "long" -> {
+                return longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).startsWith(startsWithValue);
+            }
+            case null, default -> throw new NumberFormatException();
+        }
+    }
+
+    public static boolean doesEndsWith(String variableName, String endsWithValue) throws NullPointerException, NumberFormatException {
+        if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to compare 'ends with' unexist variable: {}", variableName);
+            throw new NullPointerException();
+        }
+
+        String variableType = getType(variableName);
+        switch (variableType) {
+            case "string" -> {
+                return stringVariables.get(variableName) != null && stringVariables.get(variableName).endsWith(endsWithValue);
+            }
+            case "integer" -> {
+                return integerVariables.get(variableName) != null && String.valueOf(integerVariables.get(variableName)).endsWith(endsWithValue);
+            }
+            case "float" -> {
+                return floatVariables.get(variableName) != null && String.valueOf(floatVariables.get(variableName)).endsWith(endsWithValue);
+            }
+            case "double" -> {
+                return doubleVariables.get(variableName) != null && String.valueOf(doubleVariables.get(variableName)).endsWith(endsWithValue);
+            }
+            case "long" -> {
+                return longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).endsWith(endsWithValue);
+            }
+            case null, default -> throw new NumberFormatException();
+        }
+    }
+
+    public static void modifyVariable(String variableName, String newValue) throws NullPointerException, NumberFormatException {
+        if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'modify' unexist variable: {}", variableName);
+            throw new NullPointerException();
         }
 
         String variableType = getType(variableName);
         if (variableType == null) {
-            return false;
+            throw new NumberFormatException();
         }
 
         switch (variableType) {
             case "string" -> stringVariables.put(variableName, newValue);
             case "integer" -> integerVariables.put(variableName, Integer.parseInt(newValue));
-            case "boolean" -> booleanVariables.put(variableName, Boolean.parseBoolean(newValue));
+            case "boolean" -> {
+                boolean value;
+                if (newValue.equals("true") || newValue.equals("false")) {
+                    value = newValue.equals("true");
+                }
+                else if (newValue.equals("1") || newValue.equals("0")) {
+                    value = newValue.equals("1");
+                }
+                else {
+                    throw new NumberFormatException();
+                }
+
+                booleanVariables.put(variableName, value);
+            }
             case "float" -> floatVariables.put(variableName, Float.parseFloat(newValue));
             case "double" -> doubleVariables.put(variableName, Double.parseDouble(newValue));
             case "long" -> longVariables.put(variableName, Long.parseLong(newValue));
         }
-
-        return true;
     }
 
-    public static boolean addNumber(String variableName, String value) {
+    public static void addNumber(String variableName, String value) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
-            return false;
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'increase' unexist variable: {}", variableName);
+            throw new NullPointerException();
         }
 
         String variableType = getType(variableName);
         if (variableType == null || variableType.equals("string") || variableType.equals("boolean")) {
-            return false;
+            throw new NumberFormatException();
         }
 
         switch (variableType) {
@@ -561,18 +661,17 @@ public class VariableHolder {
                 longVariables.put(variableName, newValue);
             }
         }
-
-        return true;
     }
 
-    public static boolean reduceNumber(String variableName, String value) {
+    public static void reduceNumber(String variableName, String value) throws NullPointerException, NumberFormatException {
         if (!registeredVariables.contains(variableName)) {
-            return false;
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'decrease' unexist variable: {}", variableName);
+            throw new NullPointerException();
         }
 
         String variableType = getType(variableName);
         if (variableType == null || variableType.equals("string") || variableType.equals("boolean")) {
-            return false;
+            throw new NumberFormatException();
         }
 
         switch (variableType) {
@@ -593,24 +692,23 @@ public class VariableHolder {
                 longVariables.put(variableName, newValue);
             }
         }
-
-        return true;
     }
 
-    public static boolean copyVariableFromScore(String variableName, String playerName, String scoreName) throws NullPointerException, NumberFormatException {
+    public static void copyVariableFromScore(String variableName, String playerName, String scoreName) throws NullPointerException, NumberFormatException, IllegalStateException, IllegalArgumentException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'copy to' unexist variable: {}", variableName);
             throw new NullPointerException();
         }
 
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
-            return false;
+            throw new IllegalStateException();
         }
 
         ServerScoreboard scoreboard = server.getScoreboard();
         Objective objective = scoreboard.getObjective(scoreName);
         if (objective == null) {
-            return false;
+            throw new IllegalArgumentException();
         }
 
         ScoreHolder scoreHolder = ScoreHolder.forNameOnly(playerName);
@@ -619,7 +717,7 @@ public class VariableHolder {
 
         String variableType = getType(variableName);
         if (variableType == null) {
-            return false;
+            throw new NumberFormatException();
         }
 
         switch (variableType) {
@@ -654,24 +752,23 @@ public class VariableHolder {
             }
             default -> throw new NumberFormatException();
         }
-
-        return true;
     }
 
-    public static boolean copyScoreFromVariable(String variableName, String playerName, String scoreName) throws NullPointerException, NumberFormatException {
+    public static void copyScoreFromVariable(String variableName, String playerName, String scoreName) throws NullPointerException, NumberFormatException, IllegalStateException, IllegalArgumentException {
         if (!registeredVariables.contains(variableName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'copy from' unexist variable: {}", variableName);
             throw new NullPointerException();
         }
 
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
-            return false;
+            throw new IllegalStateException();
         }
 
         ServerScoreboard scoreboard = server.getScoreboard();
         Objective objective = scoreboard.getObjective(scoreName);
         if (objective == null) {
-            return false;
+            throw new IllegalArgumentException();
         }
 
         String variableType = getType(variableName);
@@ -691,8 +788,58 @@ public class VariableHolder {
 
         ScoreHolder scoreHolder = ScoreHolder.forNameOnly(playerName);
         scoreboard.getOrCreatePlayerScore(scoreHolder, objective).set(scoreValue);
+    }
 
-        return true;
+    public static void toSameValue(String variableName, String referenceName) throws NullPointerException, NumberFormatException {
+        if (!registeredVariables.contains(variableName) || !registeredVariables.contains(referenceName)) {
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'same' unexist variable: {}", variableName);
+            throw new NullPointerException();
+        }
+
+        String variableType = getType(variableName);
+        String referenceType = getType(referenceName);
+
+        if (variableType == null || referenceType == null) {
+            throw new NumberFormatException();
+        }
+        else if (!variableType.equals(referenceType)) {
+            throw new NumberFormatException();
+        }
+
+        String referenceValue = getStringFrom(referenceName);
+        if (referenceValue == null) {
+            throw new NumberFormatException();
+        }
+
+        switch (variableType) {
+            case "string" -> stringVariables.put(variableName, referenceValue);
+            case "integer" -> integerVariables.put(variableName, Integer.parseInt(referenceValue));
+            case "boolean" -> booleanVariables.put(variableName, Boolean.parseBoolean(referenceValue));
+            case "float" -> floatVariables.put(variableName, Float.parseFloat(referenceValue));
+            case "double" -> doubleVariables.put(variableName, Double.parseDouble(referenceValue));
+            case "long" -> longVariables.put(variableName, Long.parseLong(referenceValue));
+            default -> throw new NumberFormatException();
+        }
+    }
+
+    public static void stringToLowerCase(String variableName) throws NullPointerException {
+        if (!stringVariables.containsKey(variableName)) {
+            throw new NullPointerException();
+        }
+
+        String newString = stringVariables.get(variableName).toLowerCase();
+
+        stringVariables.put(variableName, newString);
+    }
+
+    public static void stringToUpperCase(String variableName) throws NullPointerException {
+        if (!stringVariables.containsKey(variableName)) {
+            throw new NullPointerException();
+        }
+
+        String newString = stringVariables.get(variableName).toUpperCase();
+
+        stringVariables.put(variableName, newString);
     }
 
     public static void saveAllVariables(ServerLevel level) {
@@ -751,11 +898,14 @@ public class VariableHolder {
 
         CompoundTag variableTag = root.getCompound(headKey).orElse(new CompoundTag());
 
-        deleteAllVariables();
-
         for (String variableName : variableTag.keySet()) {
             CompoundTag variable = variableTag.getCompound(variableName).orElse(new CompoundTag());
-            String variableType = getType(variableName);
+            String variableType = variable.getString("type").orElse(null);
+
+            if (variableType == null) {
+                CoreHanXu.LOGGER.warn("[HX] Missing variable type for variable: {}", variableName);
+                continue;
+            }
 
             switch (variableType) {
                 case "string" -> {

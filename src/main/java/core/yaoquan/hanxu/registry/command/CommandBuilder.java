@@ -792,6 +792,281 @@ public class CommandBuilder {
                         .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_OTHERS.getAsInt()))
                         .executes(CommandExecute::executeAttribute)
                 )
+                .then(
+                    Commands.literal("variable")
+                        .then(
+                            Commands.literal("help")
+                        )
+                        .then(
+                            Commands.literal("list")
+                                .then(
+                                    Commands.literal("variables")
+                                        .executes(cs -> CommandExecute.executeVariable_List(cs, "variables"))
+                                )
+                                .then(
+                                    Commands.literal("values")
+                                        .executes(cs -> CommandExecute.executeVariable_List(cs, "values"))
+                                )
+                        )
+                        .then(
+                            Commands.literal("read")
+                                .then(
+                                    Commands.argument("variable_name", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestAllVariable)
+                                        .executes(CommandExecute::executeVariable_Read)
+                                )
+                        )
+                        .then(
+                            Commands.literal("create")
+                                .then(
+                                    Commands.argument("variable_type", StringArgumentType.word())
+                                        .then(
+                                            Commands.argument("variable_name", StringArgumentType.string())
+                                                .then(
+                                                    Commands.argument("variable_value", StringArgumentType.string())
+                                                        .then(
+                                                            Commands.literal("-override")
+                                                                .executes(cs -> CommandExecute.executeVariable_Create(cs, true))
+                                                        )
+                                                        .executes(cs -> CommandExecute.executeVariable_Create(cs, false))
+                                                )
+                                                .suggests(CommandSuggest::suggestAllVariable)
+                                        )
+                                        .suggests(CommandSuggest::suggestVariableType)
+                                )
+                        )
+                        .then(
+                            Commands.literal("delete")
+                                .then(
+                                    Commands.argument("variable_name", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestAllVariableWithAll)
+                                        .executes(CommandExecute::executeVariable_Delete)
+                                )
+                        )
+                        .then(
+                            Commands.literal("copy")
+                                .then(
+                                    Commands.argument("variable_name", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("from")
+                                                .then(
+                                                    Commands.argument("player_id", StringArgumentType.word())
+                                                        .then(
+                                                            Commands.argument("score_name", StringArgumentType.string())
+                                                                .suggests(CommandSuggest::suggestAllScoreboardName)
+                                                                .executes(cs -> CommandExecute.executeVariable_Copy(cs, true))
+                                                        )
+                                                        .suggests(CommandSuggest::suggestPlayer)
+                                                )
+                                        )
+                                        .then(
+                                            Commands.literal("to")
+                                                .then(
+                                                    Commands.argument("player_id", StringArgumentType.word())
+                                                        .then(
+                                                            Commands.argument("score_name", StringArgumentType.string())
+                                                                .suggests(CommandSuggest::suggestAllScoreboardName)
+                                                                .executes(cs -> CommandExecute.executeVariable_Copy(cs, false))
+                                                        )
+                                                        .suggests(CommandSuggest::suggestPlayer)
+                                                )
+                                        )
+                                        .suggests(CommandSuggest::suggestAllVariable)
+                                )
+                        )
+                        .then(
+                            Commands.literal("if")
+                                .then(
+                                    Commands.argument("variable_name", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("compare_sign", StringArgumentType.string())
+                                                .then(
+                                                    Commands.argument("compare_value", StringArgumentType.string())
+                                                        .then(
+                                                            Commands.literal("execute")
+                                                                .then(
+                                                                    Commands.argument("command", StringArgumentType.greedyString())
+                                                                        .executes(cs -> CommandExecute.executeVariable_If(cs, "execute"))
+                                                                )
+                                                        )
+                                                        .then(
+                                                            Commands.literal("then")
+                                                                .then(
+                                                                    Commands.argument("target_variable", StringArgumentType.string())
+                                                                        .then(
+                                                                            Commands.argument("action", StringArgumentType.string())
+                                                                                .then(
+                                                                                    Commands.argument("target", StringArgumentType.string())
+                                                                                        .then(
+                                                                                            Commands.argument("optional_player_id", StringArgumentType.word())
+                                                                                                .suggests(CommandSuggest::suggestPlayer)
+                                                                                        )
+                                                                                        .executes(cs -> CommandExecute.executeVariable_If(cs, "then"))
+                                                                                )
+                                                                                .suggests(CommandSuggest::suggestVariableIfThenAction)
+                                                                        )
+                                                                        .suggests(CommandSuggest::suggestAllVariableWithSelf)
+                                                                )
+                                                        )
+                                                )
+                                                .suggests(CommandSuggest::suggestVariableCompareSign)
+                                        )
+                                        .suggests(CommandSuggest::suggestAllVariable)
+                                )
+                        )
+                        .then(
+                            Commands.literal("scoreif")
+                                .then(
+                                    Commands.argument("player_id", StringArgumentType.word())
+                                        .then(
+                                            Commands.argument("score_name", StringArgumentType.string())
+                                                .then(
+                                                    Commands.argument("compare_sign", StringArgumentType.string())
+                                                        .then(
+                                                            Commands.argument("compare_value", IntegerArgumentType.integer())
+                                                                .then(
+                                                                    Commands.literal("execute")
+                                                                        .then(
+                                                                            Commands.argument("command", StringArgumentType.greedyString())
+                                                                                .executes(cs -> CommandExecute.executeVariable_ScoreIf(cs, "execute"))
+                                                                        )
+                                                                )
+                                                                .then(
+                                                                    Commands.literal("then")
+                                                                        .then(
+                                                                            Commands.argument("target_variable", StringArgumentType.string())
+                                                                                .then(
+                                                                                    Commands.argument("action", StringArgumentType.string())
+                                                                                        .then(
+                                                                                            Commands.argument("target", StringArgumentType.string())
+                                                                                                .then(
+                                                                                                    Commands.argument("optional_player_id", StringArgumentType.word())
+                                                                                                        .suggests(CommandSuggest::suggestPlayer)
+                                                                                                )
+                                                                                                .executes(cs -> CommandExecute.executeVariable_ScoreIf(cs, "then"))
+                                                                                        )
+                                                                                        .suggests(CommandSuggest::suggestVariableIfThenAction)
+                                                                                )
+                                                                                .suggests(CommandSuggest::suggestAllVariable)
+                                                                        )
+                                                                )
+                                                        )
+                                                        .suggests(CommandSuggest::suggestVariableCompareSign)
+                                                )
+                                                .suggests(CommandSuggest::suggestAllScoreboardName)
+                                        )
+                                        .suggests(CommandSuggest::suggestPlayer)
+                                )
+                        )
+                        .then(
+                            Commands.literal("margin_equals")
+                                .then(
+                                    Commands.argument("variable_name", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("%")
+                                                .then(
+                                                    Commands.argument("margin_value", StringArgumentType.word())
+                                                        .then(
+                                                            Commands.literal("=")
+                                                                .then(
+                                                                    Commands.argument("compare_value", StringArgumentType.string())
+                                                                        .then(
+                                                                            Commands.literal("execute")
+                                                                                .then(
+                                                                                    Commands.argument("command", StringArgumentType.greedyString())
+                                                                                        .executes(cs -> CommandExecute.executeVariable_MarginEquals(cs, "execute"))
+                                                                                )
+                                                                        )
+                                                                        .then(
+                                                                            Commands.literal("then")
+                                                                                .then(
+                                                                                    Commands.argument("target_variable", StringArgumentType.string())
+                                                                                        .then(
+                                                                                            Commands.argument("action", StringArgumentType.string())
+                                                                                                .then(
+                                                                                                    Commands.argument("target", StringArgumentType.string())
+                                                                                                        .then(
+                                                                                                            Commands.argument("optional_player_id", StringArgumentType.word())
+                                                                                                                .suggests(CommandSuggest::suggestPlayer)
+                                                                                                        )
+                                                                                                        .executes(cs -> CommandExecute.executeVariable_MarginEquals(cs, "then"))
+                                                                                                )
+                                                                                                .suggests(CommandSuggest::suggestVariableIfThenAction)
+                                                                                        )
+                                                                                        .suggests(CommandSuggest::suggestAllVariableWithSelf)
+                                                                                )
+                                                                        )
+                                                                )
+                                                        )
+                                                        .then(
+                                                            Commands.literal("==")
+                                                                .then(
+                                                                    Commands.argument("compare_value", StringArgumentType.string())
+                                                                        .then(
+                                                                            Commands.literal("execute")
+                                                                                .then(
+                                                                                    Commands.argument("command", StringArgumentType.greedyString())
+                                                                                        .executes(cs -> CommandExecute.executeVariable_MarginEquals(cs, "execute"))
+                                                                                )
+                                                                        )
+                                                                        .then(
+                                                                            Commands.literal("then")
+                                                                                .then(
+                                                                                    Commands.argument("target_variable", StringArgumentType.string())
+                                                                                        .then(
+                                                                                            Commands.argument("action", StringArgumentType.string())
+                                                                                                .then(
+                                                                                                    Commands.argument("target", StringArgumentType.string())
+                                                                                                        .then(
+                                                                                                            Commands.argument("optional_player_id", StringArgumentType.word())
+                                                                                                                .suggests(CommandSuggest::suggestPlayer)
+                                                                                                        )
+                                                                                                        .executes(cs -> CommandExecute.executeVariable_MarginEquals(cs, "then"))
+                                                                                                )
+                                                                                                .suggests(CommandSuggest::suggestVariableIfThenAction)
+                                                                                        )
+                                                                                        .suggests(CommandSuggest::suggestAllVariableWithSelf)
+                                                                                )
+                                                                        )
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                        .suggests(CommandSuggest::suggestAllVariable)
+                                )
+                        )
+                        .then(
+                            Commands.literal("string")
+                                .then(
+                                    Commands.argument("variable_name", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("to_lower")
+                                                .executes(cs -> CommandExecute.executeVariable_String(cs, "to_lower"))
+                                        )
+                                        .then(
+                                            Commands.literal("to_upper")
+                                                .executes(cs -> CommandExecute.executeVariable_String(cs, "to_upper"))
+                                        )
+                                        .suggests(CommandSuggest::suggestAllVariable)
+                                )
+                        )
+                        .then(
+                            Commands.literal("modify")
+                                .then(
+                                    Commands.argument("variable_name", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("category", StringArgumentType.word())
+                                                .then(
+                                                    Commands.argument("new_value", StringArgumentType.string())
+                                                        .executes(CommandExecute::executeVariable_Modify)
+                                                )
+                                                .suggests(CommandSuggest::suggestVariableModifyAction)
+                                        )
+                                        .suggests(CommandSuggest::suggestAllVariable)
+                                )
+                        )
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_VARIABLE_OPERATIONS.getAsInt()))
+                )
                 .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
                 .executes(CommandExecute::executeBare)
         );

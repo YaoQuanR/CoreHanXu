@@ -37,6 +37,14 @@ public class Error {
         tryToRegisterUnExistApiRecovery,
     }
 
+    public enum VariableError {
+        alreadyExist,
+        invalidType,
+        emptyVariable,
+        notExist,
+        selfFieldInScoreIf,
+    }
+
     public enum GeneralError {
         licenseAlreadyAgreed,
         uneditablePlayerPermission,
@@ -55,6 +63,8 @@ public class Error {
         missingIdField,
         uncompletedContent,
         invalidMeFieldUsed,
+        invalidFieldForName,
+        unexpected,
     }
 
     public enum CodeError {
@@ -107,6 +117,17 @@ public class Error {
         };
     }
 
+    public static Component returnVariableError(VariableError variableError) {
+        return switch (variableError) {
+            case alreadyExist -> Component.translatable("commands.chx.variable_already_exist");
+            case invalidType -> Component.translatable("commands.chx.variable_invalid_type");
+            case emptyVariable -> Component.translatable("commands.chx.variable_empty_variable");
+            case notExist -> Component.translatable("commands.chx.variable_not_exist");
+            case selfFieldInScoreIf -> Component.translatable("commands.chx.variable_self_field_in_score_if");
+            default -> Component.translatable("commands.core_hanxu.undefined_error_type");
+        };
+    }
+
     public static Component returnGeneralError(GeneralError generalError) {
         return switch (generalError) {
             case licenseAlreadyAgreed -> Component.translatable("commands.core_hanxu.license_already_agreed");
@@ -126,6 +147,8 @@ public class Error {
             case missingIdField -> Component.translatable("commands.core_hanxu.missing_id_field");
             case uncompletedContent -> Component.translatable("commands.core_hanxu.uncompleted_content");
             case invalidMeFieldUsed -> Component.translatable("commands.core_hanxu.invalid_me_field_used");
+            case invalidFieldForName -> Component.translatable("commands.core_hanxu.invalid_field_for_name");
+            case unexpected -> Component.translatable("commands.core_hanxu.unexpected");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

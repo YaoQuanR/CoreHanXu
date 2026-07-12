@@ -210,7 +210,7 @@ public class YamlReader {
      *                          Storage as file_name.yaml.
      * @param data              Required map data that storage YAML information.
      * @param targetPath        Specific subpath from enum: TO_WORLD / TO_GLOBAL.
-     * @throws IOException      Throw exception when using unexcepted target path,
+     * @throws IOException      Throw exception when using unexpected target path,
      *                          OR unavailable target path,
      *                          OR failed to save by YAML.
      */

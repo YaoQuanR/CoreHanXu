@@ -22,6 +22,7 @@ public class PermissionConfig {
     private static final String PERMISSION_SET_COMMENT_AC = " Permission define '/chx attribute' at create/define requirement.";
     private static final String PERMISSION_SET_COMMENT_AO = " Permission define '/chx attribute' at other modification requirement.";
     private static final String PERMISSION_SET_COMMENT_AD = " Permission define '/chx attribute display' requirement.";
+    private static final String PERMISSION_SET_COMMENT_V = " Permission define '/chx variable' entire system requirement.";
 
     // Permission set list config:
     public static final ModConfigSpec.IntValue SET_PERMISSION_HELP = CONFIG
@@ -91,6 +92,10 @@ public class PermissionConfig {
     public static final ModConfigSpec.IntValue SET_PERMISSION_ATTRIBUTE_F4 = CONFIG
             .comment(PERMISSION_SET_COMMENT_AD)
             .defineInRange("permission_attribute_f4", 3, 0, 10);
+
+    public static final ModConfigSpec.IntValue SET_PERMISSION_VARIABLE_OPERATIONS = CONFIG
+            .comment(PERMISSION_SET_COMMENT_V)
+            .defineInRange("permission_variable_operations", 1, 0, 10);
 
     public static final ModConfigSpec SPEC_PERMISSION = CONFIG.build();
 }

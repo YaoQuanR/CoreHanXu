@@ -6,10 +6,14 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.api.VariableHolder;
 import core.yaoquan.hanxu.util.Resolver;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.scores.Objective;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -161,4 +165,103 @@ class CommandSuggest {
 
         return builder.buildFuture();
     }
+
+    // For variable suggestion.
+    static <S> CompletableFuture<Suggestions> suggestAllVariable(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        for (String name : VariableHolder.getAllRegisteredVariables()) {
+            builder.suggest(name);
+        }
+
+        return builder.buildFuture();
+    }
+
+    // For variable suggestion with "-all" operation.
+    static <S> CompletableFuture<Suggestions> suggestAllVariableWithAll(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        for (String name : VariableHolder.getAllRegisteredVariables()) {
+            builder.suggest(name);
+        }
+
+        builder.suggest("-all");
+
+        return builder.buildFuture();
+    }
+
+    // For variable suggestion with "-self" operation.
+    static <S> CompletableFuture<Suggestions> suggestAllVariableWithSelf(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        for (String name : VariableHolder.getAllRegisteredVariables()) {
+            builder.suggest(name);
+        }
+
+        builder.suggest("-self");
+
+        return builder.buildFuture();
+    }
+
+    // For variable type suggestion.
+    static <S> CompletableFuture<Suggestions> suggestVariableType(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("string");
+        builder.suggest("integer");
+        builder.suggest("boolean");
+        builder.suggest("float");
+        builder.suggest("double");
+        builder.suggest("long");
+
+        return builder.buildFuture();
+    }
+
+    // For variable compare sign suggestion.
+    static <S> CompletableFuture<Suggestions> suggestVariableCompareSign(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("\"=\"");
+        builder.suggest("\"==\"");
+        builder.suggest("\"!=\"");
+        builder.suggest("\"≠\"");
+        builder.suggest("\"<\"");
+        builder.suggest("\"<=\"");
+        builder.suggest("\"≤\"");
+        builder.suggest("\">\"");
+        builder.suggest("\">=\"");
+        builder.suggest("\"≥\"");
+        builder.suggest("instanceof");
+        builder.suggest("contains");
+        builder.suggest("length");
+        builder.suggest("starts_with");
+        builder.suggest("ends_with");
+
+        return builder.buildFuture();
+    }
+
+    // For variable if/scoreif/margin_equals action suggestion.
+    static <S> CompletableFuture<Suggestions> suggestVariableIfThenAction(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("set");
+        builder.suggest("add");
+        builder.suggest("reduce");
+        builder.suggest("copy_from");
+        builder.suggest("copy_to");
+        builder.suggest("same");
+
+        return builder.buildFuture();
+    }
+
+    // For variable modify suggestion.
+    static <S> CompletableFuture<Suggestions> suggestVariableModifyAction(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        builder.suggest("set");
+        builder.suggest("add");
+        builder.suggest("reduce");
+        builder.suggest("same");
+
+        return builder.buildFuture();
+    }
+
+    // For any scoreboard name suggestion.
+    static <S> CompletableFuture<Suggestions> suggestAllScoreboardName(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        MinecraftServer server = context.getSource().getServer();
+        ServerScoreboard scoreboard = server.getScoreboard();
+
+        for (Objective objective : scoreboard.getObjectives()) {
+            builder.suggest(objective.getName());
+        }
+
+        return builder.buildFuture();
+    }
+
 }

@@ -796,6 +796,7 @@ public class CommandBuilder {
                     Commands.literal("variable")
                         .then(
                             Commands.literal("help")
+                                .executes(CommandExecute::executeVariable_Help)
                         )
                         .then(
                             Commands.literal("list")
@@ -1066,6 +1067,7 @@ public class CommandBuilder {
                                 )
                         )
                         .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_VARIABLE_OPERATIONS.getAsInt()))
+                        .executes(CommandExecute::executeVariable)
                 )
                 .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
                 .executes(CommandExecute::executeBare)

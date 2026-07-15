@@ -1577,6 +1577,37 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeVariable(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable").withColor(Color.TITLE));
+
+        return 1;
+    }
+
+    static int executeVariable_Help(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_title").withColor(Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_introduction").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext3").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext4").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext5").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_create_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext6").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext7").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_copy_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext8").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_argument1").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_argument2").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext9").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_scoreif_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext10").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_margin_equals_argument").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext11").withColor(Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext12").withColor(Color.CONTENT));
+
+        return 1;
+    }
+
     static int executeVariable_List(CommandContext<CommandSourceStack> context, String category) {
         if (category.equals("variables")) {
             Set<String> variableNames = VariableHolder.getAllRegisteredVariables();

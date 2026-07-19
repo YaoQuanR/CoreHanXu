@@ -8,6 +8,7 @@ import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.JsonReader;
 import core.yaoquan.hanxu.util.YamlReader;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -18,7 +19,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
@@ -29,6 +32,8 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -267,7 +272,7 @@ public class LootHolder {
         return items;
     }
 
-    public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean sendFirstItem) {
+    public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem) {
         LootTableData data = getRegisterTable(tableId);
 
         if (data == null) {
@@ -289,7 +294,7 @@ public class LootHolder {
             return false;
         }
 
-        List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), true);
+        List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), ignoreCondition);
 
         if (sendFirstItem) {
             if (!player.addItem(items.getFirst())) {
@@ -305,6 +310,90 @@ public class LootHolder {
         }
 
         return true;
+    }
+
+    public static boolean forceSendItemToPlayer(ServerPlayer player, String tableId, boolean sendFirstItem) {
+        return sendItemToPlayer(player, tableId, false, sendFirstItem);
+    }
+
+    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoredCondition, boolean isSorted) {
+        BlockEntity blockEntity = level.getBlockEntity(blockPos);
+        if (!(blockEntity instanceof Container container)) {
+            return false;
+        }
+
+        LootTableData data = getRegisterTable(tableId);
+
+        if (data == null) {
+            ResourceLocation id = ResourceLocation.tryParse(tableId);
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+            if (id == null || server == null) {
+                return false;
+            }
+
+            ResourceKey<LootTable> tableKey = ResourceKey.create(Registries.LOOT_TABLE, id);
+            LootTable table = server.reloadableRegistries().getLootTable(tableKey);
+
+            if (table != LootTable.EMPTY) {
+                data = loadFromVanilla(id, table);
+            }
+        }
+
+        if (data == null) {
+            return false;
+        }
+
+        List<ItemStack> items = generateItemList(data, new Random(), 0, ignoredCondition);
+        if (items.isEmpty()) {
+            return true;
+        }
+
+        List<Integer> emptySlots = new ArrayList<>();
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            if (container.getItem(i).isEmpty()) {
+                emptySlots.add(i);
+            }
+        }
+
+        if (emptySlots.isEmpty()) {
+            return false;
+        }
+
+        if (!isSorted) {
+            Collections.shuffle(emptySlots, new Random());
+        }
+
+        int itemIndex = 0;
+        int slotIndex = 0;
+
+        for (; itemIndex < items.size() && slotIndex < emptySlots.size(); itemIndex++, slotIndex++) {
+            ItemStack item = items.get(itemIndex);
+            int slot = emptySlots.get(slotIndex);
+            container.setItem(slot, item);
+        }
+
+        return itemIndex >= items.size();
+    }
+
+    public static boolean forceSendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean isSorted) {
+        return sendItemToContainer(level, blockPos, tableId, true, isSorted);
+    }
+
+    public static boolean doesFileLootTableExists(String tableId) {
+        try {
+            YamlReader.read("loot", tableId);
+            return true;
+        }
+        catch (FileNotFoundException e) {
+            try {
+                JsonReader.read("loot", tableId);
+                return true;
+            }
+            catch (IOException ignored) {}
+        }
+        catch (IOException ignored) {}
+
+        return false;
     }
 
     @SuppressWarnings("unchecked")

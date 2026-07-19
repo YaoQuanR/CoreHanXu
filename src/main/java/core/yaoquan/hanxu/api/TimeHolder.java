@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 
 /**
  * Timer system API
- * @since 0.2.0
+ * @since 0.2.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
 public class TimeHolder {

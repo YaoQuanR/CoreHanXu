@@ -30,7 +30,7 @@ import static core.yaoquan.hanxu.api.define.Error.*;
 
 /**
  * Attribute system API
- * @since 0.5.0
+ * @since 0.5.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
 public class AttributeHolder {

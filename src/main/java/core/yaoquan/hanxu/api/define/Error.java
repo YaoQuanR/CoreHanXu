@@ -69,6 +69,7 @@ public class Error {
 
     public enum CodeError {
         yamlFileNotFound,
+        jsonFileNotFound,
         unexceptedTarget,
         unavailableTargetPath,
         mismatchFileElement,
@@ -156,10 +157,11 @@ public class Error {
     public static String returnCodeError(CodeError codeError) {
         return switch (codeError) {
             case yamlFileNotFound -> "[HX] Yaml file not found: ";
+            case jsonFileNotFound -> "[HX] Json file not found: ";
             case unexceptedTarget -> "[HX] Unexcepted target: ";
             case unavailableTargetPath ->  "[HX] Unavailable target path.";
             case mismatchFileElement ->  "[HX] Mismatch to the file element: ";
-            default -> "[HX] Undefined error type: " + codeError.toString();
+            default -> "[HX] Undefined error type: " + codeError;
         };
     }
 }

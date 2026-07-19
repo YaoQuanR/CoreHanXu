@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Permission system API
- * @since 0.1ea
+ * @since 0.1ea (Internal Development)
  */
 public class PermissionHolder {
     // Permission manager list:
@@ -80,8 +80,8 @@ public class PermissionHolder {
         /**
          * Check the agree state of the license.
          *
-         * @param player The target player that you want to know about the state.
-         * @return Does the specific player agreed the license: boolean.
+         * @param player            The target player that you want to know about the state.
+         * @return                  Does the specific player agreed the license: boolean.
          */
         public static boolean getLicenseState(Player player) {
             return player.getPersistentData()
@@ -99,8 +99,8 @@ public class PermissionHolder {
         /**
          * Use it when registering command.
          *
-         * @param source        CommandSourceStack from command builder {@link net.minecraft.commands.CommandSourceStack}.
-         * @param requiredLevel Set the level that required player to get that level for execution.
+         * @param source            CommandSourceStack from command builder {@link net.minecraft.commands.CommandSourceStack}.
+         * @param requiredLevel     Set the level that required player to get that level for execution.
          */
         public static boolean hasPermission(CommandSourceStack source, int requiredLevel) {
             // Skip if ignore permission level.

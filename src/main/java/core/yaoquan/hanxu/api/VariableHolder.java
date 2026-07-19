@@ -21,7 +21,7 @@ import java.util.Set;
 
 /**
  * Variable System API
- * @since 0.5.0
+ * @since 0.5.0 (Internal Development)
  */
 public class VariableHolder {
     private static final Set<String> registeredVariables = new HashSet<>();
@@ -60,6 +60,14 @@ public class VariableHolder {
         return longVariables;
     }
 
+    /**
+     * Create a new variable.
+     * @param variableName          Defined id of this variable.
+     * @param variableType          Valid type (Same as Java data class) for variable.
+     * @param variableValue         Defined value of this variable.
+     * @param override              Rewrite value when set to true.
+     * @return                      Does the creation success: Boolean.
+     */
     public static boolean createVariable(String variableName, String variableType, String variableValue, boolean override) {
         if (registeredVariables.contains(variableName) && !override) {
             CoreHanXu.LOGGER.warn("[HX] Rejected override variable: {}", variableName);
@@ -146,6 +154,11 @@ public class VariableHolder {
         return true;
     }
 
+    /**
+     * Delete variable from data.
+     * @param variableName          Defined id of this variable.
+     * @return                      Does the deletion success: Boolean.
+     */
     public static boolean deleteVariable(String variableName) {
         if (!registeredVariables.contains(variableName)) {
             return false;
@@ -161,6 +174,9 @@ public class VariableHolder {
         return true;
     }
 
+    /**
+     * Clean out all variables.
+     */
     public static void deleteAllVariables() {
         registeredVariables.clear();
         stringVariables.clear();

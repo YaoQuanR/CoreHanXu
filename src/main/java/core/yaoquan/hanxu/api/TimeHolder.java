@@ -187,7 +187,7 @@ public class TimeHolder {
             return false;
         }
         // Else start depend on master id.
-        if (masterId.equals(General.GLOBAL_UUID) || masterId.equals(General.TEMPORARY_UUID)) {
+        if (masterId.equals(General.TargetUUID.GLOBAL_UUID) || masterId.equals(General.TargetUUID.TEMPORARY_UUID)) {
             timerData.start(null);
         }
         else {
@@ -457,7 +457,7 @@ public class TimeHolder {
         CompoundTag dataRoot = new CompoundTag();
         CompoundTag allTimersTag = new CompoundTag();
 
-        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(General.GLOBAL_UUID);
+        Map<String, TimerData> globalInstanceTimers = instantiatedTimer.get(General.TargetUUID.GLOBAL_UUID);
         if (globalInstanceTimers != null) {
             for (var entry : globalInstanceTimers.entrySet()) {
                 // Put timer's data into NBT tag.
@@ -509,7 +509,7 @@ public class TimeHolder {
 
         CompoundTag allTimersTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
 
-        rebuildTimerData(allTimersTag, General.GLOBAL_UUID);
+        rebuildTimerData(allTimersTag, General.TargetUUID.GLOBAL_UUID);
     }
 
     private static int getRemainingTicks(String timeUnit, TimerData timerData) {

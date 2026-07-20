@@ -188,7 +188,7 @@ public class AttributeHolder {
      *                          If this player not set the value yet, return default value from definition: float.
      */
     public static float getGlobalValue(String attributeId, boolean fromApi) {
-        return getValue(General.GLOBAL_UUID, attributeId, fromApi);
+        return getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
     }
 
     /**
@@ -263,7 +263,7 @@ public class AttributeHolder {
      * @return                  Does the setter success: boolean.
      */
     public static boolean setGlobalValue(String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        return setValue(General.GLOBAL_UUID, attributeId, value, fromApi, direction);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, fromApi, direction);
     }
 
     /**
@@ -274,7 +274,7 @@ public class AttributeHolder {
      * @return                  Does the setter success: boolean.
      */
     public static boolean setGlobalValue(String attributeId, float value, boolean fromApi) {
-        return setValue(General.GLOBAL_UUID, attributeId, value, fromApi, ThresholdDirection.POINT);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, fromApi, ThresholdDirection.POINT);
     }
 
     public static boolean addValue(UUID masterId, String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
@@ -288,13 +288,13 @@ public class AttributeHolder {
     }
 
     public static boolean addGlobalValue(String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        float currentValue = getValue(General.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.GLOBAL_UUID, attributeId, currentValue + value, fromApi, direction);
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, fromApi, direction);
     }
 
     public static boolean addGlobalValue(String attributeId, float value, boolean fromApi) {
-        float currentValue = getValue(General.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.GLOBAL_UUID, attributeId, currentValue + value, fromApi, ThresholdDirection.POINT);
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, fromApi, ThresholdDirection.POINT);
     }
 
     public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
@@ -308,13 +308,13 @@ public class AttributeHolder {
     }
 
     public static boolean reduceGlobalValue(String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        float currentValue = getValue(General.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), fromApi, direction);
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), fromApi, direction);
     }
 
     public static boolean reduceGlobalValue(String attributeId, float value, boolean fromApi) {
-        float currentValue = getValue(General.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), fromApi, ThresholdDirection.POINT);
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), fromApi, ThresholdDirection.POINT);
     }
 
     // Load YAML data for import.
@@ -526,7 +526,7 @@ public class AttributeHolder {
         CompoundTag dataRoot = new CompoundTag();
         CompoundTag allAttributesTag = new CompoundTag();
 
-        Map<String, Float> globalValues = attributeValues.get(General.GLOBAL_UUID);
+        Map<String, Float> globalValues = attributeValues.get(General.TargetUUID.GLOBAL_UUID);
         if (globalValues != null) {
             for (var entry : globalValues.entrySet()) {
                 CompoundTag attributeDataTag = saveAttributeData(entry);
@@ -576,7 +576,7 @@ public class AttributeHolder {
 
         CompoundTag allAttributesTag = dataRoot.getCompound(headKey).orElse(new CompoundTag());
 
-        rebuildAttributeData(General.GLOBAL_UUID, allAttributesTag);
+        rebuildAttributeData(General.TargetUUID.GLOBAL_UUID, allAttributesTag);
     }
 
     public static void registerAllYamlAttributes() {

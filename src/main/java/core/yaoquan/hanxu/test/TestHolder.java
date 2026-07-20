@@ -6,7 +6,6 @@ import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
-import core.yaoquan.hanxu.api.define.Color;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.MessagePublisher;
@@ -56,7 +55,7 @@ public class TestHolder {
                 // If you did not finish API TimerCallback, callback will become null after restart the server.
                 Consumer<ServerPlayer> customCallback = player -> {
                     // Message.
-                    player.sendSystemMessage(Component.literal("[HX] From the emperor's madness!").withColor(Color.TEST));
+                    player.sendSystemMessage(Component.literal("[HX] From the emperor's madness!").withColor(General.Color.TEST));
 
                     // Get player's positions.
                     double x = player.getX();
@@ -87,9 +86,9 @@ public class TestHolder {
 
                 // Then create timer:
                 // Delete old timer for new (For test usage), normally advised to delete old and mask it, or else use "reset".
-                if (TimeHolder.getInstanceId(General.GLOBAL_UUID, "test1") != null) {
+                if (TimeHolder.getInstanceId(General.TargetUUID.GLOBAL_UUID, "test1") != null) {
                     TimeHolder.deleteInstanceTimer(
-                            General.GLOBAL_UUID,
+                            General.TargetUUID.GLOBAL_UUID,
                             "test1"
                     );
                 }
@@ -157,13 +156,13 @@ public class TestHolder {
 
                 if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test3") != null) {
                     TimeHolder.deleteInstanceTimer(
-                            General.GLOBAL_UUID,
+                            General.TargetUUID.GLOBAL_UUID,
                             "test3"
                     );
                 }
 
                 TimeHolder.createInstanceTimer(
-                        General.GLOBAL_UUID,
+                        General.TargetUUID.GLOBAL_UUID,
                         "test3",
                         8,
                         "second",
@@ -174,7 +173,7 @@ public class TestHolder {
                 );
                 TimeHolder.displayToInfoPage(
                         serverPlayer,
-                        General.GLOBAL_UUID,
+                        General.TargetUUID.GLOBAL_UUID,
                         "test3",
                         true
                 );
@@ -220,7 +219,7 @@ public class TestHolder {
                                 "test5"
                     );
                     TimeHolder.deleteInstanceTimer(
-                            General.GLOBAL_UUID,
+                            General.TargetUUID.GLOBAL_UUID,
                                 "test5"
                     );
                 }
@@ -245,7 +244,7 @@ public class TestHolder {
                         "test5"
                 );
                 TimeHolder.createInstanceFromTemplate(
-                        General.GLOBAL_UUID,
+                        General.TargetUUID.GLOBAL_UUID,
                         "test5"
                 );
 
@@ -258,7 +257,7 @@ public class TestHolder {
                 );
                 TimeHolder.displayToInfoPage(
                         serverPlayer,
-                        General.GLOBAL_UUID,
+                        General.TargetUUID.GLOBAL_UUID,
                         "test5",
                         true
                 );
@@ -346,7 +345,7 @@ public class TestHolder {
                     }
 
                     player.getInventory().add(new ItemStack(Items.DIAMOND_SWORD));
-                    player.sendSystemMessage(Component.literal("[HX] Received reward sword!").withColor(Color.TEST));
+                    player.sendSystemMessage(Component.literal("[HX] Received reward sword!").withColor(General.Color.TEST));
                 });
 
                 BehaviorRegistry.register("attribute:core_hanxu-test:give_speed", (player, parameters) -> {
@@ -360,7 +359,7 @@ public class TestHolder {
                     }
 
                     player.addEffect(new MobEffectInstance(MobEffects.SPEED, 160, 1, true, false));
-                    player.sendSystemMessage(Component.literal("[HX] Received reward speed!").withColor(Color.TEST));
+                    player.sendSystemMessage(Component.literal("[HX] Received reward speed!").withColor(General.Color.TEST));
 
                     triggered.add("core_hanxu-test:give_speed");
                 });
@@ -374,7 +373,7 @@ public class TestHolder {
                     player.getInventory().clearOrCountMatchingItems(
                         item -> item.is(Items.DIAMOND_SWORD), 64, player.inventoryMenu.getCraftSlots()
                     );
-                    player.sendSystemMessage(Component.literal("[HX] Clear all rewards!").withColor(Color.TEST));
+                    player.sendSystemMessage(Component.literal("[HX] Clear all rewards!").withColor(General.Color.TEST));
                 });
 
                 // Register recovery curve behavior as same method.
@@ -410,7 +409,7 @@ public class TestHolder {
                     true
                 );
 
-                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Registered attribute 1!").withColor(Color.TEST));
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Registered attribute 1!").withColor(General.Color.TEST));
 
                 break;
             case 2:
@@ -420,10 +419,10 @@ public class TestHolder {
                         return;
                     }
 
-                    player.sendSystemMessage(Component.literal("[HX] This 'from_api' threshold was successfully triggered.").withColor(Color.TEST));
+                    player.sendSystemMessage(Component.literal("[HX] This 'from_api' threshold was successfully triggered.").withColor(General.Color.TEST));
                 });
 
-                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] This 'from_api' threshold was registered.").withColor(Color.TEST));
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] This 'from_api' threshold was registered.").withColor(General.Color.TEST));
 
                 break;
             case 3:
@@ -457,7 +456,7 @@ public class TestHolder {
                     }
                 });
 
-                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Execute attribute test 3 and build recovery.").withColor(Color.TEST));
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Execute attribute test 3 and build recovery.").withColor(General.Color.TEST));
                 break;
             default:
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
@@ -471,7 +470,7 @@ public class TestHolder {
         if (context.getSource().getPlayer() == null) {
             return 0;
         }
-        MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Now display all attributes to F4 debugging page.").withColor(Color.TEST));
+        MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Now display all attributes to F4 debugging page.").withColor(General.Color.TEST));
         if (AttributeHolder.getCommandAttributes().isEmpty()) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
         }

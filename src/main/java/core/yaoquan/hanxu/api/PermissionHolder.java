@@ -1,7 +1,9 @@
 package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
+import core.yaoquan.hanxu.util.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 
@@ -97,8 +99,7 @@ public class PermissionHolder {
     public static class Verify {
         // Permission check.
         /**
-         * Use it when registering command.
-         *
+         * Use it when registering command. Reject if player is not admin & not agreed license.
          * @param source            CommandSourceStack from command builder {@link net.minecraft.commands.CommandSourceStack}.
          * @param requiredLevel     Set the level that required player to get that level for execution.
          */

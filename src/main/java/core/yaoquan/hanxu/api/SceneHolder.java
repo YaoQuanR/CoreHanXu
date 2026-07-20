@@ -1,6 +1,6 @@
 package core.yaoquan.hanxu.api;
 
-import core.yaoquan.hanxu.api.define.Color;
+import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.network.chat.Component;
@@ -152,7 +152,7 @@ public class SceneHolder {
         // Read default settings.
         Map<String, Object> defaults = (Map<String, Object>) sceneData.get("default");
         if (defaults != null) {
-            scene.defaultColor = (Integer) defaults.getOrDefault("color", Color.WHITE);
+            scene.defaultColor = (Integer) defaults.getOrDefault("color", General.Color.WHITE);
             scene.defaultInterval = (Integer) defaults.getOrDefault("interval", 1);
             scene.defaultBold = (Boolean) defaults.getOrDefault("bold", false);
             scene.defaultItalic = (Boolean) defaults.getOrDefault("italic", false);
@@ -163,7 +163,7 @@ public class SceneHolder {
             scene.enabledJsonText = (Boolean) defaults.getOrDefault("json", false);
         }
         else {
-            scene.defaultColor = Color.WHITE;
+            scene.defaultColor = General.Color.WHITE;
             scene.defaultInterval = 1;
             scene.defaultBold = false;
             scene.defaultItalic = false;

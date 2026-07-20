@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import core.yaoquan.hanxu.api.define.Error;
+import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.JsonReader;
 import core.yaoquan.hanxu.util.YamlReader;
@@ -33,7 +34,6 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -44,6 +44,7 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static core.yaoquan.hanxu.api.define.Error.returnCodeError;
@@ -90,7 +91,7 @@ public class LootHolder {
 
     public static class LootEntry {
         public String type;                         // Vanilla feature: Define "item", "loot_table" or "empty"(Nothing).
-        public String id;                         // Vanilla feature: Item id or loot table id.
+        public String id;                           // Vanilla feature: Item id or loot table id.
         public int weight = 1;                      // Vanilla feature: Affects possibilities of choose.
         public List<LootFunction> lootFunctions;    // Vanilla feature: Post-processing of selected entry.
         public List<LootCondition> lootConditions;  // Vanilla feature: Conditions.
@@ -220,6 +221,10 @@ public class LootHolder {
         return registeredTables.get(id);
     }
 
+    public static Set<String> getRegisteredTableIds() {
+        return registeredTables.keySet();
+    }
+
     public static boolean doesTableRegistered(String id) {
         return registeredTables.containsKey(id);
     }
@@ -273,22 +278,7 @@ public class LootHolder {
     }
 
     public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem) {
-        LootTableData data = getRegisterTable(tableId);
-
-        if (data == null) {
-            ResourceLocation id = ResourceLocation.tryParse(tableId);
-            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-            if (id == null || server == null) {
-                return false;
-            }
-
-            ResourceKey<LootTable> tableKey = ResourceKey.create(Registries.LOOT_TABLE, id);
-            LootTable table = server.reloadableRegistries().getLootTable(tableKey);
-
-            if (table != LootTable.EMPTY) {
-                data = loadFromVanilla(id, table);
-            }
-        }
+        LootTableData data = returnLootTableData(tableId);
 
         if (data == null) {
             return false;
@@ -313,7 +303,7 @@ public class LootHolder {
     }
 
     public static boolean forceSendItemToPlayer(ServerPlayer player, String tableId, boolean sendFirstItem) {
-        return sendItemToPlayer(player, tableId, false, sendFirstItem);
+        return sendItemToPlayer(player, tableId, true, sendFirstItem);
     }
 
     public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoredCondition, boolean isSorted) {
@@ -322,22 +312,7 @@ public class LootHolder {
             return false;
         }
 
-        LootTableData data = getRegisterTable(tableId);
-
-        if (data == null) {
-            ResourceLocation id = ResourceLocation.tryParse(tableId);
-            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-            if (id == null || server == null) {
-                return false;
-            }
-
-            ResourceKey<LootTable> tableKey = ResourceKey.create(Registries.LOOT_TABLE, id);
-            LootTable table = server.reloadableRegistries().getLootTable(tableKey);
-
-            if (table != LootTable.EMPTY) {
-                data = loadFromVanilla(id, table);
-            }
-        }
+        LootTableData data = returnLootTableData(tableId);
 
         if (data == null) {
             return false;
@@ -394,6 +369,170 @@ public class LootHolder {
         catch (IOException ignored) {}
 
         return false;
+    }
+
+    public static List<Component> readLootTable(String tableId) {
+        List<Component> lines = new ArrayList<>();
+
+        LootTableData data = returnLootTableData(tableId);
+
+        if (data == null) {
+            lines.add(Component.translatable("api.core_hanxu.loot.empty_table")
+                    .append(Component.literal(" " + tableId))
+                    .withColor(General.Color.FAILURE)
+            );
+            return lines;
+        }
+
+        // Else readable.
+        lines.add(Component.translatable("api.core_hanxu.loot.table_title")
+                .append(Component.literal(" " + tableId))
+                .withColor(General.Color.TITLE)
+        );
+
+        // Pool.
+        int poolSize = data.pools != null? data.pools.size(): 0;
+        lines.add(Component.translatable("api.core_hanxu.loot.pool_size")
+                .append(Component.literal(" " + poolSize))
+                .withColor(General.Color.TITLE)
+        );
+
+        // Nothing inside pool.
+        if (data.pools == null || data.pools.isEmpty()) {
+            lines.add(Component.translatable("api.core_hanxu.loot.empty_pool")
+                    .withColor(General.Color.CONTENT)
+            );
+            return lines;
+        }
+
+        // Else inside pool and add lines.
+        for (int i = 0; i < data.pools.size(); i++) {
+            Pool pool = data.pools.get(i);
+
+            // Roll information.
+            String rollInformation;
+            if (pool.roll == null) {
+                rollInformation = "?";
+            }
+            else {
+                rollInformation = pool.roll.rangeMode? (pool.roll.minimum + " ~ " + pool.roll.maximum) : String.valueOf(pool.roll.minimum);
+            }
+            String bonusRollInformation = pool.bonusRoll != null && pool.bonusRoll > 0? (" (+" + pool.bonusRoll + ")") : "";
+
+            lines.add(Component.translatable("api.core_hanxu.loot.pool")
+                    .append(Component.literal(" " + (i + 1) + " "))
+                    .append(Component.translatable("api.core_hanxu.loot.roll"))
+                    .append(Component.literal(" " + rollInformation + bonusRollInformation))
+                    .withColor(General.Color.CONTENT)
+            );
+
+            // Entry information.
+            if (pool.lootEntries != null && !pool.lootEntries.isEmpty()) {
+                lines.add(Component.translatable("api.core_hanxu.loot.entry_size")
+                        .append(Component.literal(" " + pool.lootEntries.size()))
+                        .withColor(General.Color.TITLE)
+                );
+
+                for (LootEntry entry : pool.lootEntries) {
+                    lines.add(Component.translatable("api.core_hanxu.loot.entry")
+                            .append(Component.literal(" " + entry.id + " (" + entry.type + ") "))
+                            .append(Component.translatable("api.core_hanxu.loot.weight"))
+                            .append(Component.literal(" " + entry.weight))
+                            .withColor(General.Color.CONTENT)
+                    );
+                }
+            }
+
+            // Condition information.
+            if (pool.lootConditions != null && !pool.lootConditions.isEmpty()) {
+                lines.add(Component.translatable("api.core_hanxu.loot.condition_size")
+                        .append(Component.literal(" " + pool.lootConditions.size()))
+                        .withColor(General.Color.TITLE)
+                );
+
+                for (LootCondition condition : pool.lootConditions) {
+                    lines.add(Component.translatable("api.core_hanxu.loot.condition")
+                            .append(Component.literal(" " + condition.condition + " : " + condition.parameters))
+                            .withColor(General.Color.CONTENT)
+                    );
+                }
+            }
+        }
+
+        return lines;
+    }
+
+    public static String readLootTableAsTranslatedString(String tableId) {
+        List<Component> lines = readLootTable(tableId);
+        StringBuilder stringPackage = new StringBuilder();
+
+        for (Component line : lines) {
+            String thisLine = (line.getString() + "\n");
+            stringPackage.append(thisLine);
+        }
+
+        return stringPackage.toString();
+    }
+
+    public static String readLootTableAsString(String tableId) {
+        StringBuilder stringPackage = new StringBuilder();
+
+        LootTableData data = returnLootTableData(tableId);
+
+        if (data == null) {
+            stringPackage.append("[HX] Empty table: ").append(tableId);
+            return stringPackage.toString();
+        }
+
+        // Else readable.
+        stringPackage.append("[HX] Loot table found: ").append(tableId).append("\n");
+
+        // Pool.
+        int poolSize = data.pools != null? data.pools.size(): 0;
+        stringPackage.append("  Pools: ").append(poolSize).append("\n");
+
+        // Nothing inside pool.
+        if (data.pools == null || data.pools.isEmpty()) {
+            stringPackage.append("  -> Nothing...");
+            return stringPackage.toString();
+        }
+
+        // Else inside pool and add lines.
+        for (int i = 0; i < data.pools.size(); i++) {
+            Pool pool = data.pools.get(i);
+
+            // Roll information.
+            String rollInformation;
+            if (pool.roll == null) {
+                rollInformation = "?";
+            }
+            else {
+                rollInformation = pool.roll.rangeMode? (pool.roll.minimum + " ~ " + pool.roll.maximum) : String.valueOf(pool.roll.minimum);
+            }
+            String bonusRollInformation = pool.bonusRoll != null && pool.bonusRoll > 0? (" (+" + pool.bonusRoll + ")") : "";
+
+            stringPackage.append("  -> Pool:").append(" ").append(i + 1).append(" , with roll: ").append(rollInformation).append(bonusRollInformation).append("\n");
+
+            // Entry information.
+            if (pool.lootEntries != null && !pool.lootEntries.isEmpty()) {
+                stringPackage.append("    Entries: ").append(pool.lootEntries.size()).append("\n");
+
+                for (LootEntry entry : pool.lootEntries) {
+                    stringPackage.append("    -> Entry: ").append(entry.id).append(" (").append(entry.type).append(") , with weight: ").append(entry.weight).append("\n");
+                }
+            }
+
+            // Condition information.
+            if (pool.lootConditions != null && !pool.lootConditions.isEmpty()) {
+                stringPackage.append("    Conditions: ").append(pool.lootConditions.size()).append("\n");
+
+                for (LootCondition condition : pool.lootConditions) {
+                    stringPackage.append("    => Condition: ").append(condition.condition).append(" : ").append(condition.parameters).append("\n");
+                }
+            }
+        }
+
+        return stringPackage.toString();
     }
 
     @SuppressWarnings("unchecked")
@@ -825,5 +964,32 @@ public class LootHolder {
         }
 
         return referenceEnchantment;
+    }
+
+    private static LootTableData returnLootTableData(String tableId) {
+        // Read from storage.
+        LootTableData data = getRegisterTable(tableId);
+
+        // Read from vanilla.
+        if (data == null) {
+            ResourceLocation idLocation = ResourceLocation.tryParse(tableId);
+            if (idLocation == null) {
+                return null;
+            }
+
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+            if (server == null) {
+                return null;
+            }
+
+            ResourceKey<LootTable> tableKey = ResourceKey.create(Registries.LOOT_TABLE, idLocation);
+            LootTable table = server.reloadableRegistries().getLootTable(tableKey);
+
+            if (table != LootTable.EMPTY) {
+                data = loadFromVanilla(idLocation, table);
+            }
+        }
+
+        return data;
     }
 }

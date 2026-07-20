@@ -7,14 +7,17 @@
 
   "item_tab.core_hanxu.main": "Core HanXu",
 
-  "button.gui.load": "Load",
-  "button.gui.file": "File",
-  "button.gui.registered_list": "Registered List",
-  "button.gui.deploy": "Deploy",
-
-  "editbox.gui.write_loot_source": "Enter the source path of loot...",
-  "editbox.gui.write_container_source": "Enter the container ID...",
-  "editbox.gui.write_object_name": "Enter the object name (bare text or JSON)...",
+  "api.core_hanxu.loot.empty_table": "[HX] Empty table:",
+  "api.core_hanxu.loot.table_title": "[HX] Loot table found:",
+  "api.core_hanxu.loot.pool_size": "  Pools:",
+  "api.core_hanxu.loot.empty_pool": "  -> Nothing...",
+  "api.core_hanxu.loot.pool": "  -> Pool:",
+  "api.core_hanxu.loot.roll": ", with roll:",
+  "api.core_hanxu.loot.entry_size": "    Entries:",
+  "api.core_hanxu.loot.entry": "    -> Entry:",
+  "api.core_hanxu.loot.weight": ", with weight:",
+  "api.core_hanxu.loot.condition_size": "    Conditions:",
+  "api.core_hanxu.loot.condition": "    => Condition:",
 
   "commands.chx.fixed.available_commands": "Available commands:",
   "commands.chx.fixed.admin_reminder": "Other available commands for admin...",

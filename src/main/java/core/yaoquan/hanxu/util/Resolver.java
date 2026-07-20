@@ -12,10 +12,10 @@ import java.util.UUID;
 public class Resolver {
     public static UUID resolveTargetUUID(CommandContext<CommandSourceStack> context, String targetString) {
         if ("-global".equals(targetString) || "-g".equals(targetString)) {
-            return General.GLOBAL_UUID;
+            return General.TargetUUID.GLOBAL_UUID;
         }
         else if ("-temporary".equals(targetString) || "-t".equals(targetString)) {
-            return General.TEMPORARY_UUID;
+            return General.TargetUUID.TEMPORARY_UUID;
         }
         else if ("-me".equals(targetString) || "-m".equals(targetString)) {
             if (context.getSource().getEntity() instanceof ServerPlayer player) {
@@ -37,7 +37,7 @@ public class Resolver {
     }
 
     public static ServerPlayer resolveTargetPlayer(UUID targetUUID) {
-        if (General.GLOBAL_UUID.equals(targetUUID) || General.TEMPORARY_UUID.equals(targetUUID)) {
+        if (General.TargetUUID.GLOBAL_UUID.equals(targetUUID) || General.TargetUUID.TEMPORARY_UUID.equals(targetUUID)) {
             return null;
         }
         else {
@@ -52,10 +52,10 @@ public class Resolver {
     }
 
     public static String resolveTargetMasterName(UUID masterId) {
-        if (General.GLOBAL_UUID.equals(masterId)) {
+        if (General.TargetUUID.GLOBAL_UUID.equals(masterId)) {
             return "-global";
         }
-        else if (General.TEMPORARY_UUID.equals(masterId)) {
+        else if (General.TargetUUID.TEMPORARY_UUID.equals(masterId)) {
             return "-temporary";
         }
 

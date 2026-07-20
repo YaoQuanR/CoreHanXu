@@ -2020,6 +2020,75 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeLoot_List(CommandContext<CommandSourceStack> context) {
+        Set<String> tableIds = LootHolder.getRegisteredTableIds();
+
+        if (tableIds.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.emptyTable));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_list_title").withColor(General.Color.TITLE));
+
+        for (String tableId : tableIds) {
+            MessagePublisher.sendSystemMessage(context, Component.literal(tableId).withColor(General.Color.CONTENT));
+        }
+
+        return 1;
+    }
+
+    static int executeLoot_Read(CommandContext<CommandSourceStack> context) {
+        String tableId = StringArgumentType.getString(context, "table_id");
+
+        List<Component> lines = LootHolder.readLootTable(tableId);
+
+        if (lines.size() < 2) {
+            MessagePublisher.sendSystemMessage(context, lines.getFirst());
+            return 0;
+        }
+
+        for (Component line : lines) {
+            MessagePublisher.sendSystemMessage(context, line);
+        }
+
+        return 1;
+    }
+
+    static int executeLoot_Give(CommandContext<CommandSourceStack> context, String category) {
+        String playerId = StringArgumentType.getString(context, "player_id");
+        String tableId = StringArgumentType.getString(context, "table_id");
+
+        if (playerId.equals("-me") || playerId.equals("-m")) {
+            if (context.getSource().getPlayer() != null) {
+                playerId = context.getSource().getPlayer().getName().getString();
+            }
+            else {
+                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
+                return 0;
+            }
+        }
+
+        ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayerByName(playerId);
+
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            return 0;
+        }
+
+        boolean success = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("send_first"));
+
+        if (!success) {
+            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.loot_give")
+                        .append(Component.literal(" " + tableId + " -> " + playerId))
+                        .withColor(General.Color.SUCCESS));
+        return 1;
+    }
+
     private static int commandCreateTemplateTimer(CommandContext<CommandSourceStack> context,
                                                   String timerId, String timeUnit, int timeAmount,
                                                   String endBehavior, String behaviorContent) {

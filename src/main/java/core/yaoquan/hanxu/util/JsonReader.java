@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
@@ -93,5 +96,31 @@ public class JsonReader {
         }
 
         return false;
+    }
+
+    /// List out all JSON files.
+    public static List<Path> listOut(String subPath) {
+        List<Path> returnList = new ArrayList<>();
+
+        Path worldRootPath = FilePath.getWorldPath();
+        if (worldRootPath != null) {
+            Path worldDirectory = worldRootPath.resolve(subPath);
+            if (Files.isDirectory(worldDirectory)) {
+                try (Stream<Path> stream = Files.list(worldDirectory)) {
+                    stream.filter(p -> p.toString().endsWith(".json")).forEach(returnList::add);
+                }
+                catch (IOException ignored) {}
+            }
+        }
+
+        Path globalDirectory = FilePath.getGlobalPath().resolve(subPath);
+        if (Files.isDirectory(globalDirectory)) {
+            try (Stream<Path> stream = Files.list(globalDirectory)) {
+                stream.filter(p -> p.toString().endsWith(".json")).forEach(returnList::add);
+            }
+            catch (IOException ignored) {}
+        }
+
+        return returnList;
     }
 }

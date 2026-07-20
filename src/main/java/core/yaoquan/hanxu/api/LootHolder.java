@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
+import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.CoreHanXuClient;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Converter;
@@ -134,8 +136,6 @@ public class LootHolder {
         public List<LootCondition> lootConditions;
     }
 
-    // Registered tables.
-    private static final Map<String, LootTableData> registeredTables = new ConcurrentHashMap<>();
     // Vanilla table cache.
     private static final Map<ResourceLocation, LootTableData> vanillaTableCache = new ConcurrentHashMap<>();
 
@@ -143,20 +143,45 @@ public class LootHolder {
         Map<String, Object> rawData = null;
         Exception lastException = null;
 
-        try {
-            rawData = YamlReader.read("loot", fileName);
+        if (fileName.contains(":")) {
+            return null;
         }
-        catch (FileNotFoundException e) {
-            lastException = e;
+
+        if (fileName.endsWith(".yaml")) {
+            fileName = fileName.replace(".yaml", "");
+            try {
+                rawData = YamlReader.read("loot", fileName);
+            }
+            catch (IOException e) {
+                lastException = e;
+            }
+        }
+        else if (fileName.endsWith(".json")) {
+            fileName = fileName.replace(".json", "");
             try {
                 rawData = JsonReader.read("loot", fileName);
             }
-            catch (FileNotFoundException e2) {
-                lastException = e2;
+            catch (IOException e) {
+                lastException = e;
             }
         }
-        catch (IOException e) {
-            lastException = e;
+        else {
+            fileName = fileName.split("\\.", 2)[0];
+            try {
+                rawData = YamlReader.read("loot", fileName);
+            }
+            catch (FileNotFoundException e) {
+                lastException = e;
+                try {
+                    rawData = JsonReader.read("loot", fileName);
+                }
+                catch (FileNotFoundException e2) {
+                    lastException = e2;
+                }
+            }
+            catch (IOException e) {
+                lastException = e;
+            }
         }
 
         if (rawData == null) {
@@ -169,7 +194,7 @@ public class LootHolder {
             throw new IOException(returnCodeError(Error.CodeError.mismatchFileElement) + fileName + " ≠ " + data.id);
         }
 
-        registeredTables.put(data.id, data);
+        CoreHanXu.LOGGER.info("[HX] Loot table loaded: {}", fileName);
 
         return data;
     }
@@ -186,9 +211,16 @@ public class LootHolder {
 
         // Translation.
         try {
-            DataResult<JsonElement> result = LootTable.DIRECT_CODEC.encodeStart(
-                    JsonOps.INSTANCE, vanillaTable
-            );
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+
+            if (server == null) {
+                throw new Exception();
+            }
+
+            RegistryAccess registryAccess = server.registryAccess();
+            var ops = registryAccess.createSerializationContext(JsonOps.INSTANCE);
+
+            DataResult<JsonElement> result = LootTable.DIRECT_CODEC.encodeStart(ops, vanillaTable);
 
             JsonElement jsonElement = result.getOrThrow();
 
@@ -206,27 +238,28 @@ public class LootHolder {
         }
 
         vanillaTableCache.put(id, data);
+
         return data;
     }
 
-    public static void registerTable(String id, LootTableData data) {
-        registeredTables.put(id, data);
-    }
-
-    public static void unregisterTable(String id) {
-        registeredTables.remove(id);
-    }
-
-    public static LootTableData getRegisterTable(String id) {
-        return registeredTables.get(id);
-    }
-
     public static Set<String> getRegisteredTableIds() {
-        return registeredTables.keySet();
-    }
+        Set<String> tableIds = new HashSet<>();
 
-    public static boolean doesTableRegistered(String id) {
-        return registeredTables.containsKey(id);
+        for (var path : YamlReader.listOut("loot")) {
+            String fileName = path.getFileName().toString();
+            if (fileName.endsWith(".yaml")) {
+                tableIds.add(path.getFileName().toString());
+            }
+        }
+
+        for (var path : JsonReader.listOut("loot")) {
+            String fileName = path.getFileName().toString();
+            if (fileName.endsWith(".json")) {
+                tableIds.add(path.getFileName().toString());
+            }
+        }
+
+        return tableIds;
     }
 
     public static List<ItemStack> generateItemList(LootTableData data, Random random, float luck, boolean ignoreCondition) {
@@ -252,7 +285,7 @@ public class LootHolder {
             }
 
             if (pool.bonusRoll != null && pool.bonusRoll > 0) {
-                int bonus = (int) (pool.bonusRoll * (1.0 + luck));
+                int bonus = ((Number) (pool.bonusRoll * (1.0 + luck))).intValue();
                 roll += Math.max(0, bonus);
             }
 
@@ -267,10 +300,17 @@ public class LootHolder {
                 }
 
                 ItemStack item = generateItemStack(entry, random, luck, ignoreCondition);
-                if (item != null && !item.isEmpty()) {
-                    applyFunction(item, entry.lootFunctions, random, luck, ignoreCondition);
-                    items.add(item);
+                if (item == null || item.isEmpty()) {
+                    continue;
                 }
+
+                item = applyFunction(item, entry.lootFunctions, random, luck, ignoreCondition);
+
+                if (item == null || item.isEmpty()) {
+                    continue;
+                }
+
+                items.add(item);
             }
         }
 
@@ -423,7 +463,7 @@ public class LootHolder {
                     .append(Component.literal(" " + (i + 1) + " "))
                     .append(Component.translatable("api.core_hanxu.loot.roll"))
                     .append(Component.literal(" " + rollInformation + bonusRollInformation))
-                    .withColor(General.Color.CONTENT)
+                    .withColor(General.Color.TITLE)
             );
 
             // Entry information.
@@ -556,13 +596,13 @@ public class LootHolder {
                 }
                 // Roll: Range.
                 else if (rollObject instanceof Map) {
-                    Map<String, Integer> range = (Map<String, Integer>) rollObject;
-                    pool.roll = Roll.range(range.getOrDefault("min", 1), range.getOrDefault("max", 1));
+                    Map<String, Number> range = (Map<String, Number>) rollObject;
+                    pool.roll = Roll.range(range.getOrDefault("min", 1).intValue(), range.getOrDefault("max", 1).intValue());
                 }
 
                 // Roll bonus.
                 if (rawPool.containsKey("bonus_roll")) {
-                    pool.bonusRoll = (Integer) rawPool.get("bonus_roll");
+                    pool.bonusRoll = ((Number) rawPool.get("bonus_roll")).intValue();
                 }
 
                 // Entries.
@@ -576,7 +616,10 @@ public class LootHolder {
 
                         entry.type = (String) rawEntry.getOrDefault("type", "item");
                         entry.id = (String) rawEntry.get("id");
-                        entry.weight = (int) rawEntry.getOrDefault("weight", 1);
+                        if (entry.id == null) {
+                            entry.id = (String) rawEntry.get("name");
+                        }
+                        entry.weight = ((Number) rawEntry.getOrDefault("weight", 1)).intValue();
 
                         entry.lootFunctions = parseFunctions(rawEntry);
                         entry.lootConditions = parseConditions(rawEntry);
@@ -647,15 +690,26 @@ public class LootHolder {
 
     private static ItemStack generateItemStack(LootEntry entry, Random random, float luck, boolean ignoreCondition) {
         switch (entry.type) {
-            case "item" -> {
+            case "minecraft:item", "item" -> {
                 ResourceLocation itemId = ResourceLocation.tryParse(entry.id);
                 if (itemId != null) {
-                    Item item = BuiltInRegistries.ITEM.getValue(itemId);
-                    return new ItemStack(item);
+                    Optional<Holder.Reference<Item>> optionalItemReference = BuiltInRegistries.ITEM.get(itemId);
+                    if (optionalItemReference.isPresent()) {
+                        Item item = optionalItemReference.get().value();
+
+                        return new ItemStack(item);
+                    }
                 }
             }
-            case "loot_table" -> {
-                LootTableData referenceTable = getRegisterTable(entry.id);
+            case "minecraft:loot_table", "loot_table" -> {
+                LootTableData referenceTable;
+                try {
+                    referenceTable = loadLootTable(entry.id);
+                }
+                catch (IOException e) {
+                    referenceTable = null;
+                }
+
                 if (referenceTable != null) {
                     List<ItemStack> subItems = generateItemList(referenceTable, random, luck, ignoreCondition);
                     if (!subItems.isEmpty()) {
@@ -717,9 +771,9 @@ public class LootHolder {
         return entries.getLast();
     }
 
-    private static void applyFunction(ItemStack item, List<LootFunction> functions, Random random, float luck, boolean ignoreCondition) {
+    private static ItemStack applyFunction(ItemStack item, List<LootFunction> functions, Random random, float luck, boolean ignoreCondition) {
         if (functions == null || functions.isEmpty()) {
-            return;
+            return null;
         }
 
         for (LootFunction function : functions) {
@@ -738,9 +792,9 @@ public class LootHolder {
                     }
                     else if (count instanceof Map) {
                         @SuppressWarnings("unchecked")
-                        Map<String, Integer> range = (Map<String, Integer>) count;
-                        int minimum = range.getOrDefault("min", 1);
-                        int maximum = range.getOrDefault("max", 1);
+                        Map<String, Number> range = (Map<String, Number>) count;
+                        int minimum = range.getOrDefault("min", 1).intValue();
+                        int maximum = range.getOrDefault("max", 1).intValue();
                         item.setCount(minimum + random.nextInt(maximum - minimum + 1));
                     }
                 }
@@ -755,7 +809,7 @@ public class LootHolder {
                     }
 
                     int maximumDamage = item.getMaxDamage();
-                    int newDamage = (int) (maximumDamage * damageValue);
+                    int newDamage = ((Number) (maximumDamage * damageValue)).intValue();
                     item.setDamageValue(Math.min(newDamage, maximumDamage - 1));
                 }
                 case "minecraft:set_name", "set_name" -> {
@@ -775,14 +829,19 @@ public class LootHolder {
                 }
                 case "minecraft:set_custom_model_data", "set_custom_model_data" -> {
                     @SuppressWarnings("unchecked")
-                    List<Float> floats = parameters != null? (List<Float>) parameters.get("floats") : List.of();
+                    List<Float> floats = parameters != null && parameters.get("floats") != null? (List<Float>) parameters.get("floats") : List.of();
                     @SuppressWarnings("unchecked")
-                    List<Boolean> flags = parameters != null? (List<Boolean>) parameters.get("flags") : List.of();
+                    List<Boolean> flags = parameters != null && parameters.get("flags") != null? (List<Boolean>) parameters.get("flags") : List.of();
                     @SuppressWarnings("unchecked")
-                    List<String> strings = parameters != null? (List<String>) parameters.get("strings") : List.of();
+                    List<String> strings = parameters != null && parameters.get("strings") != null? (List<String>) parameters.get("strings") : List.of();
                     @SuppressWarnings("unchecked")
-                    List<Integer> colors = parameters != null? (List<Integer>) parameters.get("colors") : List.of();
+                    List<Number> rawColors = parameters != null && parameters.get("colors") != null? (List<Number>) parameters.get("colors") : List.of();
 
+                    List<Integer> colors = new ArrayList<>();
+                    for (Number rawColor : rawColors) {
+                        colors.add(rawColor.intValue());
+                    }
+                    
                     if (!floats.isEmpty() || !flags.isEmpty() || !strings.isEmpty() || !colors.isEmpty()) {
                         item.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(floats, flags, strings, colors));
                     }
@@ -847,9 +906,11 @@ public class LootHolder {
                                 continue;
                             }
 
+                            int intLevel = ((Number) level).intValue();
+
                             ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, Objects.requireNonNull(ResourceLocation.tryParse(id)));
                             Optional<Holder.Reference<Enchantment>> reference = enchantments.get(key);
-                            reference.ifPresent(enchantmentReference -> mutableEnchantments.set(enchantmentReference, ((Number) level).intValue()));
+                            reference.ifPresent(enchantmentReference -> mutableEnchantments.set(enchantmentReference, intLevel));
                         }
                     }
 
@@ -871,9 +932,9 @@ public class LootHolder {
                     }
                     else if (level instanceof Map) {
                         @SuppressWarnings("unchecked")
-                        Map<String, Integer> range = (Map<String, Integer>) level;
-                        int minimum = range.getOrDefault("min", 1);
-                        int maximum = range.getOrDefault("max", 30);
+                        Map<String, Number> range = (Map<String, Number>) level;
+                        int minimum = range.getOrDefault("min", 1).intValue();
+                        int maximum = range.getOrDefault("max", 30).intValue();
 
                         if (maximum < minimum) {
                             int temp = minimum;
@@ -896,7 +957,7 @@ public class LootHolder {
                 }
                 case "minecraft:looting_enchant", "looting_enchant" -> {
                     if (luck > 0) {
-                        int extraCount = (int) (luck * 0.5);
+                        int extraCount = ((Number) (luck * 0.5)).intValue();
                         if (extraCount > 0) {
                             item.setCount(item.getCount() + extraCount);
                         }
@@ -941,6 +1002,8 @@ public class LootHolder {
                 // Default -> continue.
             }
         }
+
+        return item;
     }
 
     private static List<Holder.Reference<Enchantment>> returnApplicableEnchantments(ItemStack item) {
@@ -967,8 +1030,14 @@ public class LootHolder {
     }
 
     private static LootTableData returnLootTableData(String tableId) {
-        // Read from storage.
-        LootTableData data = getRegisterTable(tableId);
+        // Read from file.
+        LootTableData data;
+        try {
+            data = loadLootTable(tableId);
+        }
+        catch (IOException e) {
+            data = null;
+        }
 
         // Read from vanilla.
         if (data == null) {

@@ -45,6 +45,11 @@ public class Error {
         selfFieldInScoreIf,
     }
 
+    public enum LootError {
+        emptyTable,
+        tableNotExist,
+    }
+
     public enum GeneralError {
         licenseAlreadyAgreed,
         uneditablePlayerPermission,
@@ -125,6 +130,14 @@ public class Error {
             case emptyVariable -> Component.translatable("commands.chx.variable_empty_variable");
             case notExist -> Component.translatable("commands.chx.variable_not_exist");
             case selfFieldInScoreIf -> Component.translatable("commands.chx.variable_self_field_in_score_if");
+            default -> Component.translatable("commands.core_hanxu.undefined_error_type");
+        };
+    }
+
+    public static Component returnLootError(LootError lootError) {
+        return switch (lootError) {
+            case emptyTable -> Component.translatable("commands.chx.loot_empty_table");
+            case tableNotExist -> Component.translatable("commands.chx.loot_table_not_exist");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import core.yaoquan.hanxu.api.AttributeHolder;
+import core.yaoquan.hanxu.api.LootHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.VariableHolder;
 import core.yaoquan.hanxu.util.Resolver;
@@ -17,6 +18,7 @@ import net.minecraft.world.scores.Objective;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -264,4 +266,14 @@ class CommandSuggest {
         return builder.buildFuture();
     }
 
+    // For file loot table suggestion.
+    static <S> CompletableFuture<Suggestions> suggestAllFileLootTable(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        Set<String> tableIds = LootHolder.getRegisteredTableIds();
+
+        for (String tableId : tableIds) {
+            builder.suggest(tableId);
+        }
+
+        return builder.buildFuture();
+    }
 }

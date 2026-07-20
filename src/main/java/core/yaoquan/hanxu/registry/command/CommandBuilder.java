@@ -1069,6 +1069,57 @@ public class CommandBuilder {
                         .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_VARIABLE_OPERATIONS.getAsInt()))
                         .executes(CommandExecute::executeVariable)
                 )
+                .then(
+                    Commands.literal("loot")
+                        .then(
+                            Commands.literal("help")
+                        )
+                        .then(
+                            Commands.literal("list")
+                                .executes(CommandExecute::executeLoot_List)
+                        )
+                        .then(
+                            Commands.literal("read")
+                                .then(
+                                    Commands.argument("table_id", StringArgumentType.string())
+                                        .suggests(CommandSuggest::suggestAllFileLootTable)
+                                        .executes(CommandExecute::executeLoot_Read)
+                                )
+                        )
+                        .then(
+                            Commands.literal("give")
+                                .then(
+                                    Commands.argument("player_id", StringArgumentType.word())
+                                        .then(
+                                            Commands.argument("table_id", StringArgumentType.string())
+                                                .then(
+                                                    Commands.literal("-first_item")
+                                                        .executes(cs -> CommandExecute.executeLoot_Give(cs, "send_first"))
+                                                )
+                                                .then(
+                                                    Commands.literal("-with_condition")
+                                                        .executes(cs -> CommandExecute.executeLoot_Give(cs, "with_condition"))
+                                                )
+                                                .suggests(CommandSuggest::suggestAllFileLootTable)
+                                                .executes(cs -> CommandExecute.executeLoot_Give(cs, "default"))
+                                        )
+                                        .suggests(CommandSuggest::suggestPlayer)
+                                )
+                        )
+                        .then(
+                            Commands.literal("fill")
+                        )
+                        .then(
+                            Commands.literal("create")
+                        )
+                        .then(
+                            Commands.literal("delete")
+                        )
+                        .then(
+                            Commands.literal("template")
+                        )
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_LOOT_OPERATIONS.getAsInt()))
+                )
                 .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
                 .executes(CommandExecute::executeBare)
         );

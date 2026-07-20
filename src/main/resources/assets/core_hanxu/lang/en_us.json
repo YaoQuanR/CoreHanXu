@@ -252,6 +252,12 @@
   "commands.chx.variable_not_exist": "[HX] This variable does not exist!",
   "commands.chx.variable_self_field_in_score_if": "[HX] Function 'scoreif' cannot get 'self' to scoreboard name!",
 
+  "commands.chx.loot_list_title": "[HX] Loot file found:",
+  "commands.chx.loot_give": "[HX] Successfully gave loot to player:",
+
+  "commands.chx.loot_empty_table": "[HX] Not yet created any loot table in file!",
+  "commands.chx.loot_table_not_exist": "[HX] This loot table does not exist!",
+
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
   "commands.core_hanxu.uneditable_player_permission": "[HX] Uneditable player permission! Config:player_permission_editable is false.",
   "commands.core_hanxu.exceed_maximum_permission_level": "[HX] Permission level cannot exceed 10.",

@@ -19,7 +19,7 @@ public class General {
     }
 
     public static class Version {
-        private static final String CORE_VERSION = "0.6.id3";
+        private static final String CORE_VERSION = "0.6.id4";
 
         public static String getCoreVersion() {
             return CORE_VERSION;

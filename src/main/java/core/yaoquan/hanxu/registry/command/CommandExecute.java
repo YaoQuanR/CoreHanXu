@@ -335,7 +335,7 @@ class CommandExecute {
 
         MinecraftServer server = context.getSource().getServer();
         ServerPlayer player;
-        if (playerId.equals("-me") || playerId.equals("-m")) {
+        if (playerId.equals("-me") || playerId.equals("-m") || playerId.equals("-nearest") || playerId.equals("-n")) {
             if (context.getSource().getPlayer() != null) {
                 player = context.getSource().getPlayer();
             }
@@ -343,6 +343,9 @@ class CommandExecute {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
                 return 0;
             }
+        }
+        else if (playerId.equals("-random") || playerId.equals("-r")) {
+            player = server.getPlayerList().getPlayers().get(new Random().nextInt(server.getPlayerList().getPlayers().size()));
         }
         else {
             player = server.getPlayerList().getPlayerByName(playerId);
@@ -1595,12 +1598,12 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext7").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_copy_argument").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext8").withColor(General.Color.CONTENT));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_argument1").withColor(General.Color.CONTENT));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_argument2").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_value_argument1").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_value_argument2").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext9").withColor(General.Color.CONTENT));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_scoreif_argument").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_score_argument").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext10").withColor(General.Color.CONTENT));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_margin_equals_argument").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_if_margin_argument").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext11").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext12").withColor(General.Color.CONTENT));
 
@@ -1794,7 +1797,7 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeVariable_If(CommandContext<CommandSourceStack> context, String category) {
+    static int executeVariable_If_Value(CommandContext<CommandSourceStack> context, String category) {
         String variableName = StringArgumentType.getString(context, "variable_name");
         String compareSign = StringArgumentType.getString(context, "compare_sign");
         String compareValue = StringArgumentType.getString(context, "compare_value");
@@ -1845,7 +1848,7 @@ class CommandExecute {
         return commandVariableExecution(context, variableName, category);
     }
 
-    static int executeVariable_ScoreIf(CommandContext<CommandSourceStack> context, String category) {
+    static int executeVariable_If_Score(CommandContext<CommandSourceStack> context, String category) {
         String playerId = StringArgumentType.getString(context, "player_id");
         String scoreName = StringArgumentType.getString(context, "score_name");
         String compareSign = StringArgumentType.getString(context, "compare_sign");
@@ -1859,13 +1862,8 @@ class CommandExecute {
             return 0;
         }
 
-        if (playerId.equals("-me") || playerId.equals("-m")) {
-            if (context.getSource().getPlayer() == null) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
-                return 0;
-            }
-            playerId = context.getSource().getPlayer().getName().getString();
-        }
+        // Resolve special cases.
+        playerId = Resolver.resolveTargetPlayerName(context, playerId);
 
         int scoreValue;
 
@@ -1909,7 +1907,7 @@ class CommandExecute {
         return commandVariableExecution(context, null, category);
     }
 
-    static int executeVariable_MarginEquals(CommandContext<CommandSourceStack> context, String category) {
+    static int executeVariable_If_Margin(CommandContext<CommandSourceStack> context, String category) {
         String variableName = StringArgumentType.getString(context, "variable_name");
         String marginValue = StringArgumentType.getString(context, "margin_value");
         String compareValue = StringArgumentType.getString(context, "compare_value");
@@ -2058,15 +2056,8 @@ class CommandExecute {
         String playerId = StringArgumentType.getString(context, "player_id");
         String tableId = StringArgumentType.getString(context, "table_id");
 
-        if (playerId.equals("-me") || playerId.equals("-m")) {
-            if (context.getSource().getPlayer() != null) {
-                playerId = context.getSource().getPlayer().getName().getString();
-            }
-            else {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
-                return 0;
-            }
-        }
+        // Resolve special cases.
+        playerId = Resolver.resolveTargetPlayerName(context, playerId);
 
         ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayerByName(playerId);
 
@@ -2075,7 +2066,14 @@ class CommandExecute {
             return 0;
         }
 
-        boolean success = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("send_first"));
+        boolean success;
+        if (!category.equals("ignore")) {
+            success = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("first_item"));
+        }
+        else {
+            String ignoreItem = StringArgumentType.getString(context, "ignore_item");
+            success = LootHolder.sendItemToPlayerWithIgnoreItem(player, tableId, ignoreItem);
+        }
 
         if (!success) {
             MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
@@ -2279,9 +2277,11 @@ class CommandExecute {
             String target = StringArgumentType.getString(context, "target");
             String targetPlayerId = null;
             boolean getPlayerByContext = false;
+            List<String> specialCases = List.of("-me", "-m", "-random", "-r", "-nearest", "-n");
             try {
                 targetPlayerId = StringArgumentType.getString(context, "optional_player_id");
-                if (targetPlayerId.equals("-me") || targetPlayerId.equals("-m")) {
+
+                if (specialCases.contains(targetPlayerId)) {
                     getPlayerByContext = true;
                 }
             }
@@ -2290,11 +2290,15 @@ class CommandExecute {
             }
 
             if (getPlayerByContext) {
-                if (context.getSource().getPlayer() == null) {
+                if (targetPlayerId == null) {
+                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+                    return 0;
+                }
+                targetPlayerId = Resolver.resolveTargetPlayerName(context, targetPlayerId);
+                if (targetPlayerId == null) {
                     MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
                     return 0;
                 }
-                targetPlayerId = context.getSource().getPlayer().getName().getString();
             }
 
             // For special case.

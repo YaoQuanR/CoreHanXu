@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static core.yaoquan.hanxu.api.define.Error.returnCodeError;
 
@@ -342,8 +343,41 @@ public class LootHolder {
         return true;
     }
 
-    public static boolean forceSendItemToPlayer(ServerPlayer player, String tableId, boolean sendFirstItem) {
-        return sendItemToPlayer(player, tableId, true, sendFirstItem);
+    public static boolean sendItemToPlayerWithIgnoreItem(ServerPlayer player, String tableId, String ignoreItemString) {
+        LootTableData data = returnLootTableData(tableId);
+
+        if (data == null) {
+            return false;
+        }
+
+        List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), true);
+
+        List<String> ignoreItems = Arrays.stream((ignoreItemString.trim().replace("\"", "").split("\\s+")))
+                .map(string -> {
+                    if (string.contains(":")) {
+                        return string;
+                    }
+                    else {
+                        return "minecraft:" + string;
+                    }
+                })
+                .toList();
+
+        if (!ignoreItems.isEmpty()) {
+            CoreHanXu.LOGGER.info("[HX] Ignored item from this send item: {}", ignoreItems);
+        }
+
+        for (ItemStack item : items) {
+            if (ignoreItems.contains(item.getItem().toString())) {
+                continue;
+            }
+
+            if (!player.addItem(item)) {
+                player.drop(item, false);
+            }
+        }
+
+        return true;
     }
 
     public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoredCondition, boolean isSorted) {
@@ -388,10 +422,6 @@ public class LootHolder {
         }
 
         return itemIndex >= items.size();
-    }
-
-    public static boolean forceSendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean isSorted) {
-        return sendItemToContainer(level, blockPos, tableId, true, isSorted);
     }
 
     public static boolean doesFileLootTableExists(String tableId) {

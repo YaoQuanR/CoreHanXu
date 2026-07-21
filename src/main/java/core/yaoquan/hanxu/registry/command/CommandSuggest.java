@@ -53,6 +53,8 @@ class CommandSuggest {
     // Add bare player id suggestion.
     static <S> CompletableFuture<Suggestions> suggestPlayer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("-me");
+        builder.suggest("-random");
+        builder.suggest("-nearest");
 
         // Suggest player id.
         CommandSourceStack source = context.getSource();

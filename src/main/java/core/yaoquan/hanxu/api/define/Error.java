@@ -70,6 +70,7 @@ public class Error {
         invalidMeFieldUsed,
         invalidFieldForName,
         unexpected,
+        notContainer,
     }
 
     public enum CodeError {
@@ -163,6 +164,7 @@ public class Error {
             case invalidMeFieldUsed -> Component.translatable("commands.core_hanxu.invalid_me_field_used");
             case invalidFieldForName -> Component.translatable("commands.core_hanxu.invalid_field_for_name");
             case unexpected -> Component.translatable("commands.core_hanxu.unexpected");
+            case notContainer -> Component.translatable("commands.core_hanxu.not_container");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

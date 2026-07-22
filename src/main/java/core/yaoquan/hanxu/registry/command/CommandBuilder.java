@@ -1118,6 +1118,66 @@ public class CommandBuilder {
                         )
                         .then(
                             Commands.literal("fill")
+                                .then(
+                                    Commands.argument("container_x", IntegerArgumentType.integer())
+                                        .then(
+                                            Commands.argument("container_y", IntegerArgumentType.integer())
+                                                .then(
+                                                    Commands.argument("container_z", IntegerArgumentType.integer())
+                                                        .then(
+                                                            Commands.argument("table_id", StringArgumentType.string())
+                                                                .then(
+                                                                    Commands.literal("ignore_condition")
+                                                                        .then(
+                                                                            Commands.literal("-sorted")
+                                                                                .then(
+                                                                                    Commands.literal("-ignore")
+                                                                                        .then(
+                                                                                            Commands.argument("ignore_item", StringArgumentType.greedyString())
+                                                                                                .executes(cs -> CommandExecute.executeLoot_Fill(cs, true, "sorted-ignore"))
+                                                                                        )
+                                                                                )
+                                                                                .executes(cs -> CommandExecute.executeLoot_Fill(cs, true, "sorted"))
+                                                                        )
+                                                                        .then(
+                                                                            Commands.literal("-ignore")
+                                                                                .then(
+                                                                                    Commands.argument("ignore_item", StringArgumentType.greedyString())
+                                                                                        .executes(cs -> CommandExecute.executeLoot_Fill(cs, true, "ignore"))
+                                                                                )
+                                                                        )
+                                                                        .executes(cs -> CommandExecute.executeLoot_Fill(cs, true, "default"))
+                                                                )
+                                                                .then(
+                                                                    Commands.literal("with_condition")
+                                                                        .then(
+                                                                            Commands.literal("-sorted")
+                                                                                .then(
+                                                                                    Commands.literal("-ignore")
+                                                                                        .then(
+                                                                                            Commands.argument("ignore_item", StringArgumentType.greedyString())
+                                                                                                .executes(cs -> CommandExecute.executeLoot_Fill(cs, false, "sorted-ignore"))
+                                                                                        )
+                                                                                )
+                                                                                .executes(cs -> CommandExecute.executeLoot_Fill(cs, false, "sorted"))
+                                                                        )
+                                                                        .then(
+                                                                            Commands.literal("-ignore")
+                                                                                .then(
+                                                                                    Commands.argument("ignore_item", StringArgumentType.greedyString())
+                                                                                        .executes(cs -> CommandExecute.executeLoot_Fill(cs, false, "ignore"))
+                                                                                )
+                                                                        )
+                                                                        .executes(cs -> CommandExecute.executeLoot_Fill(cs, false, "default"))
+                                                                )
+                                                                .suggests(CommandSuggest::suggestAllFileLootTable)
+                                                        )
+                                                        .suggests(CommandSuggest::suggestHitBlockPositionInZ)
+                                                )
+                                                .suggests(CommandSuggest::suggestHitBlockPositionInYZ)
+                                        )
+                                        .suggests(CommandSuggest::suggestHitBlockPosition)
+                                )
                         )
                         .then(
                             Commands.literal("create")

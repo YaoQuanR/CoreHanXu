@@ -11,16 +11,20 @@ import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.Filterable;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WritableBookContent;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ScoreHolder;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
@@ -2084,6 +2088,55 @@ class CommandExecute {
                 Component.translatable("commands.chx.loot_give")
                         .append(Component.literal(" " + tableId + " -> " + playerId))
                         .withColor(General.Color.SUCCESS));
+        return 1;
+    }
+
+    static int executeLoot_Fill(CommandContext<CommandSourceStack> context, boolean ignoreCondition, String category) {
+        int containerX = IntegerArgumentType.getInteger(context, "container_x");
+        int containerY = IntegerArgumentType.getInteger(context, "container_y");
+        int containerZ = IntegerArgumentType.getInteger(context, "container_z");
+        String tableId = StringArgumentType.getString(context, "table_id");
+
+        String ignoreItem = null;
+
+        BlockPos position = new BlockPos(containerX, containerY, containerZ);
+        ServerLevel level = context.getSource().getLevel();
+
+        BlockEntity blockEntity = level.getBlockEntity(position);
+        if (!(blockEntity instanceof Container)) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notContainer));
+            return 0;
+        }
+
+        boolean success;
+        boolean isSorted = false;
+
+        switch (category) {
+            case "sorted":
+                isSorted = true;
+                break;
+            case "ignore":
+                ignoreItem = StringArgumentType.getString(context, "ignore_item");
+                break;
+            case "sorted-ignore":
+                isSorted = true;
+                ignoreItem = StringArgumentType.getString(context, "ignore_item");
+                break;
+        }
+
+        success = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem);
+
+        if (!success) {
+            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.loot_fill")
+                        .append(Component.literal(" " + tableId + " -> " + "[" + containerX + ", " + containerY + ", " + containerZ + "]"))
+                        .withColor(General.Color.SUCCESS)
+        );
+
         return 1;
     }
 

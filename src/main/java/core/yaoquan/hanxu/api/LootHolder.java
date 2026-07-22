@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import core.yaoquan.hanxu.CoreHanXu;
-import core.yaoquan.hanxu.CoreHanXuClient;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Converter;
@@ -48,7 +47,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import static core.yaoquan.hanxu.api.define.Error.returnCodeError;
 
@@ -380,7 +378,7 @@ public class LootHolder {
         return true;
     }
 
-    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoredCondition, boolean isSorted) {
+    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted, String ignoreItemString) {
         BlockEntity blockEntity = level.getBlockEntity(blockPos);
         if (!(blockEntity instanceof Container container)) {
             return false;
@@ -392,7 +390,7 @@ public class LootHolder {
             return false;
         }
 
-        List<ItemStack> items = generateItemList(data, new Random(), 0, ignoredCondition);
+        List<ItemStack> items = generateItemList(data, new Random(), 0, ignoreCondition);
         if (items.isEmpty()) {
             return true;
         }
@@ -405,11 +403,31 @@ public class LootHolder {
         }
 
         if (emptySlots.isEmpty()) {
-            return false;
+            CoreHanXu.LOGGER.info("[HX] Container is full, no item replaced: {}", blockPos);
+            return true;
         }
 
         if (!isSorted) {
             Collections.shuffle(emptySlots, new Random());
+        }
+
+        List<String> ignoreItems = null;
+
+        if (ignoreItemString != null) {
+            ignoreItems = Arrays.stream((ignoreItemString.trim().replace("\"", "").split("\\s+")))
+                .map(string -> {
+                    if (string.contains(":")) {
+                        return string;
+                    }
+                    else {
+                        return "minecraft:" + string;
+                    }
+                })
+                .toList();
+
+            if (!ignoreItems.isEmpty()) {
+                CoreHanXu.LOGGER.info("[HX] Ignored item from this send container: {}", ignoreItems);
+            }
         }
 
         int itemIndex = 0;
@@ -418,10 +436,24 @@ public class LootHolder {
         for (; itemIndex < items.size() && slotIndex < emptySlots.size(); itemIndex++, slotIndex++) {
             ItemStack item = items.get(itemIndex);
             int slot = emptySlots.get(slotIndex);
+
+            if (ignoreItems != null && ignoreItems.contains(item.getItem().toString())) {
+                slotIndex--;
+                continue;
+            }
+
             container.setItem(slot, item);
         }
 
         return itemIndex >= items.size();
+    }
+
+    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId) {
+        return sendItemToContainer(level, blockPos, tableId, false, false, null);
+    }
+
+    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted) {
+        return sendItemToContainer(level, blockPos, tableId, ignoreCondition, isSorted, null);
     }
 
     public static boolean doesFileLootTableExists(String tableId) {

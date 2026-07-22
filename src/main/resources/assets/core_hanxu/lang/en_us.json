@@ -254,6 +254,7 @@
 
   "commands.chx.loot_list_title": "[HX] Loot file found:",
   "commands.chx.loot_give": "[HX] Successfully gave loot to player:",
+  "commands.chx.loot_fill": "[HX] Successfully fill loot to container:",
 
   "commands.chx.loot_empty_table": "[HX] Not yet created any loot table in file!",
   "commands.chx.loot_table_not_exist": "[HX] This loot table does not exist!",
@@ -278,6 +279,7 @@
   "commands.core_hanxu.invalid_me_field_used": "[HX] Invalid -me field used!",
   "commands.core_hanxu.invalid_field_for_name": "[HX] Invalid field for name used: Start with '-'/'@'.",
   "commands.core_hanxu.unexpected": "[HX] Unexpected error!",
+  "commands.core_hanxu.not_container": "[HX] This position is not targeted to a container!",
 
   "commands.core_hanxu.has_changed_to": "has changed to"
 }

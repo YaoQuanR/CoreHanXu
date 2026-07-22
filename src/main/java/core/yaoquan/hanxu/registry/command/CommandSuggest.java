@@ -11,9 +11,14 @@ import core.yaoquan.hanxu.api.VariableHolder;
 import core.yaoquan.hanxu.util.Resolver;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.scores.Objective;
 
 import java.nio.file.Path;
@@ -274,6 +279,43 @@ class CommandSuggest {
 
         for (String tableId : tableIds) {
             builder.suggest(tableId);
+        }
+
+        return builder.buildFuture();
+    }
+
+    // For block position suggestion:
+    static <S> CompletableFuture<Suggestions> suggestHitBlockPosition(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return buildHitBlockPositionSuggestion(context, builder, "x");
+    }
+
+    static <S> CompletableFuture<Suggestions> suggestHitBlockPositionInYZ(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return buildHitBlockPositionSuggestion(context, builder, "y");
+    }
+
+    static <S> CompletableFuture<Suggestions> suggestHitBlockPositionInZ(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return buildHitBlockPositionSuggestion(context, builder, "z");
+    }
+
+    private static <S> CompletableFuture<Suggestions> buildHitBlockPositionSuggestion(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder, String currentStage) {
+        Player player = context.getSource().getPlayer();
+        if (player != null) {
+            HitResult hitResult = player.pick(30.0, 0f, false);
+            if (hitResult.getType() == HitResult.Type.BLOCK) {
+                BlockHitResult blockHitResult = (BlockHitResult) hitResult;
+                BlockPos position = blockHitResult.getBlockPos();
+                switch (currentStage) {
+                    case "x" -> {
+                        builder.suggest(position.getX());
+                        builder.suggest(position.getX() + " " + position.getY() + " " + position.getZ());
+                    }
+                    case "y" -> {
+                        builder.suggest(position.getY());
+                        builder.suggest(position.getY() + " " + position.getZ());
+                    }
+                    case "z" -> builder.suggest(position.getZ());
+                }
+            }
         }
 
         return builder.buildFuture();

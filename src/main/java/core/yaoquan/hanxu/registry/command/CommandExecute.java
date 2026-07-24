@@ -165,7 +165,6 @@ class CommandExecute {
 
     static int executeHelp(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_title").withColor(General.Color.TITLE));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_page").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext1").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext2").withColor(General.Color.CONTENT));
@@ -2027,6 +2026,17 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_title").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_introduction").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext1").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext2").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext3").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext4").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext5").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_give_argument").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext6").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_fill_argument").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext7").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext8").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_innertext9").withColor(General.Color.CONTENT));
         return 1;
     }
 

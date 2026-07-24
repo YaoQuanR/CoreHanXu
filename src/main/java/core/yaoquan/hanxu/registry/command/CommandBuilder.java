@@ -758,15 +758,19 @@ public class CommandBuilder {
                                 .then(
                                     Commands.argument("attribute_id", StringArgumentType.string())
                                         .then(
-                                            Commands.literal("true")
+                                            Commands.argument("master_id", StringArgumentType.string())
+                                                .then(
+                                                    Commands.literal("true")
+                                                        .executes(cs -> CommandExecute.executeAttribute_Display(cs, true))
+                                                )
+                                                .then(
+                                                    Commands.literal("false")
+                                                        .executes(cs -> CommandExecute.executeAttribute_Display(cs, false))
+                                                )
+                                                .suggests(CommandSuggest::suggestUUIDOwner)
                                                 .executes(cs -> CommandExecute.executeAttribute_Display(cs, true))
                                         )
-                                        .then(
-                                            Commands.literal("false")
-                                                .executes(cs -> CommandExecute.executeAttribute_Display(cs, false))
-                                        )
                                         .suggests(CommandSuggest::suggestAllAttribute)
-                                        .executes(cs -> CommandExecute.executeAttribute_Display(cs, true))
                                 )
                                 .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_F4.getAsInt()))
                         )

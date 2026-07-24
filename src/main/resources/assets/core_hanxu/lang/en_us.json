@@ -138,7 +138,7 @@
   "commands.chx.attribute_help_innertext12": "/chx attribute recovery: Define threshold's dynamic recovery behavior.",
   "commands.chx.attribute_help_recovery_argument1": "--> Argument: ... recovery !{simple} ![attribute_id] ![interval] ![interval_unit] #[direction(Define behavior when pass through exact threshold)]",
   "commands.chx.attribute_help_recovery_argument2": "--> Argument: ... recovery !{api} ![callback_id]",
-  "commands.chx.attribute_help_innertext13": "/chx attribute display ![attribute_id] #{true/false}: Display to F4 page.",
+  "commands.chx.attribute_help_innertext13": "/chx attribute display ![attribute_id] ![master_id] #{true/false}: Display to F4 page.",
   "commands.chx.variable": "[HX] Please execute '/chx variable help' for more information.",
   "commands.chx.variable_help_title": "[HX] Variable -> Help",
   "commands.chx.variable_help_introduction": "Variable system is a method to storage value for operations.",

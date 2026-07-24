@@ -42,6 +42,8 @@ class CommandSuggest {
         builder.suggest("-global");
         builder.suggest("-temporary");
         builder.suggest("-me");
+        builder.suggest("-random");
+        builder.suggest("-nearest");
 
         // Suggest player id.
         CommandSourceStack source = context.getSource();

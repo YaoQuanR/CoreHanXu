@@ -1558,6 +1558,7 @@ class CommandExecute {
         }
 
         String attributeId = StringArgumentType.getString(context, "attribute_id");
+        String masterId = StringArgumentType.getString(context, "master_id");
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
             MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
@@ -1566,7 +1567,9 @@ class CommandExecute {
 
         boolean fromApi = AttributeHolder.doesAttributeExist(attributeId, "api");
 
-        AttributeHolder.displayToInfoPage(player, player.getUUID(), attributeId, fromApi, state);
+        UUID masterUUID = Resolver.resolveTargetUUID(context, masterId);
+
+        AttributeHolder.displayToInfoPage(player, masterUUID, attributeId, fromApi, state);
         MessagePublisher.sendSystemMessage(context,
             Component.literal("[HX] " + attributeId + " ")
                     .append(Component.translatable("commands.core_hanxu.has_changed_to"))
@@ -2810,11 +2813,7 @@ class CommandExecute {
             );
         }
         else {
-            MessagePublisher.sendFailureMessage(
-                    context,
-                    Component.translatable("commands.chx.attribute_not_created")
-                            .withColor(General.Color.SUCCESS)
-            );
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.sameNameFound));
         }
     }
 

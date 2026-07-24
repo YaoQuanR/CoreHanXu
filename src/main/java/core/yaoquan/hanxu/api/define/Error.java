@@ -35,6 +35,7 @@ public class Error {
         noRecovery,
         tryToOverrideApiRecovery,
         tryToRegisterUnExistApiRecovery,
+        failedToCreate,
     }
 
     public enum VariableError {
@@ -124,6 +125,7 @@ public class Error {
             case noRecovery -> Component.translatable("commands.chx.attribute_no_recovery");
             case tryToOverrideApiRecovery -> Component.translatable("commands.chx.attribute_try_to_override_api_recovery");
             case tryToRegisterUnExistApiRecovery -> Component.translatable("commands.chx.attribute_try_to_register_un_exist_api_recovery");
+            case failedToCreate -> Component.translatable("commands.chx.attribute_failed_to_create");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

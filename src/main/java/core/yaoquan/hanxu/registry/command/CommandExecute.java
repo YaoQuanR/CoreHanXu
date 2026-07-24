@@ -123,7 +123,7 @@ class CommandExecute {
     static int executeLicense_State(CommandContext<CommandSourceStack> context) {
         if (context.getSource().getEntity() instanceof Player player) {
             boolean state = PermissionHolder.Storage.getLicenseState(player);
-            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(General.Color.TITLE));
+            MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + state).withColor(General.Color.TITLE));
             return 1;
         }
         return 0;
@@ -147,7 +147,7 @@ class CommandExecute {
                 return 0;
             }
             boolean state = PermissionHolder.Storage.getLicenseState(player);
-            MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(state)).withColor(General.Color.TITLE));
+            MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + state).withColor(General.Color.TITLE));
             return 1;
         }
     }
@@ -217,16 +217,16 @@ class CommandExecute {
                     }
 
                     int permissionLevel = PermissionHolder.Storage.getPlayerPermissionLevel(player);
-                    MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(permissionLevel)).withColor(General.Color.TITLE));
+                    MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + permissionLevel).withColor(General.Color.TITLE));
                 }
             }
             case "server" -> {
                 int commandblockPermissionLevel = context.getSource().getLevel().getGameRules().getInt(PermissionHolder.Storage.nonPlayerSourcePermissionLevel);
-                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(commandblockPermissionLevel)).withColor(General.Color.TITLE));
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + commandblockPermissionLevel).withColor(General.Color.TITLE));
             }
             case "player_first_grant" -> {
                 int autoAuthorizedPermissionLevel = GeneralConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
-                MessagePublisher.sendSystemMessage(context, Component.literal(String.valueOf(autoAuthorizedPermissionLevel)).withColor(General.Color.TITLE));
+                MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + autoAuthorizedPermissionLevel).withColor(General.Color.TITLE));
             }
             default -> {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
@@ -277,7 +277,7 @@ class CommandExecute {
 
         PermissionHolder.Storage.setPlayerPermissionLevel(player, newLevel);
 
-        MessagePublisher.sendSystemMessage(context, Component.literal("✔ -> " + newLevel).withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.literal("[HX] ✔ -> " + newLevel).withColor(General.Color.TITLE));
         return 1;
     }
 
@@ -2622,7 +2622,8 @@ class CommandExecute {
                         }
 
                         MessagePublisher.sendSystemMessage(context,
-                                Component.literal("(" + timerId + ") <<- ")
+                                Component.translatable("commands.chx.timer_end_behavior")
+                                        .append(Component.literal("[HX] (" + timerId + ") <<- "))
                                         .append(endBehavior)
                                         .append(Component.literal(behaviorContent == null? "" : (" : " + behaviorContent)))
                                         .withColor(General.Color.TITLE)
@@ -2694,7 +2695,8 @@ class CommandExecute {
                         }
 
                         MessagePublisher.sendSystemMessage(context,
-                                Component.literal("(" + timerId + " -> " + masterString + ") <<- ")
+                                Component.translatable("commands.chx.timer_end_behavior")
+                                        .append(Component.literal("[HX] (" + timerId + " -> " + masterString + ") <<- "))
                                         .append(endBehavior)
                                         .append(Component.literal(behaviorContent == null? "" : (" : " + behaviorContent)))
                                         .withColor(General.Color.TITLE)

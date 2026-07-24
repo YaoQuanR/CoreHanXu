@@ -129,99 +129,6 @@ class CommandExecute {
         return 0;
     }
 
-    static int executeScene_List(CommandContext<CommandSourceStack> context) {
-        List<Component> displayList = new ArrayList<>();
-
-        // Scan global path.
-        Path globalPath = FilePath.getGlobalPath().resolve("scene");
-        if (Files.isDirectory(globalPath)) {
-            try (Stream<Path> stream = Files.list(globalPath)) {
-                stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
-                    displayList.add(Component.literal("(global): " + p.getFileName().toString()).withColor(General.Color.CONTENT));
-                });
-            }
-            catch (IOException ignored) {}
-        }
-
-        // Scan world path.
-        Path worldPath = FilePath.getWorldPath();
-        if (worldPath != null) {
-            Path worldScenePath = worldPath.resolve("scene");
-            if (Files.isDirectory(worldScenePath)) {
-                try (Stream<Path> stream = Files.list(worldScenePath)) {
-                    stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
-                        displayList.add(Component.literal("(world): " + p.getFileName().toString()).withColor(General.Color.CONTENT));
-                    });
-                }
-                catch (IOException ignored) {}
-            }
-        }
-
-        // Then list out.
-        if (displayList.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
-        }
-        else {
-            displaySceneIdList(context, displayList);
-        }
-
-        return 1;
-    }
-
-    static int executeScene_Play(CommandContext<CommandSourceStack> context) {
-        ServerPlayer player = context.getSource().getPlayer();
-        if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
-            return 0;
-        }
-
-        String sceneName = StringArgumentType.getString(context, "scene_name");
-
-        // Check if existed.
-        if (!SceneHolder.doesSceneExist(sceneName)) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
-            return 0;
-        }
-
-        try {
-            MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx.scene_now_playing")
-                        .append(Component.literal(": " + sceneName))
-                        .withColor(General.Color.CONTENT));
-            SceneHolder.playScene(player, sceneName);
-        }
-        catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
-            return 0;
-        }
-
-        return 1;
-    }
-
-    static int executeScene_Broadcast(CommandContext<CommandSourceStack> context) {
-        String sceneName = StringArgumentType.getString(context, "scene_name");
-
-        // Check if existed.
-        if (!SceneHolder.doesSceneExist(sceneName)) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
-            return 0;
-        }
-
-        try {
-            MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.scene_now_playing_to_everyone")
-                            .append(Component.literal(": " + sceneName))
-                            .withColor(General.Color.CONTENT));
-            SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
-        }
-        catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
-            return 0;
-        }
-
-        return 1;
-    }
-
     static int executeAdvancedLicense_State(CommandContext<CommandSourceStack> context) {
         String playerId = StringArgumentType.getString(context, "player_id");
         UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
@@ -257,12 +164,6 @@ class CommandExecute {
     }
 
     static int executeHelp(CommandContext<CommandSourceStack> context) {
-        Player player = context.getSource().getPlayer();
-        if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
-            return 0;
-        }
-
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_title").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_page").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
@@ -279,6 +180,7 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext11").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext12").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext13").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.help_innertext14").withColor(General.Color.CONTENT));
         return 1;
     }
 
@@ -380,12 +282,6 @@ class CommandExecute {
     }
 
     static int executeTimer_Help(CommandContext<CommandSourceStack> context) {
-        Player player = context.getSource().getPlayer();
-        if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
-            return 0;
-        }
-
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_title").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.timer_help_introduction").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
@@ -770,7 +666,8 @@ class CommandExecute {
 
     static int executeScene_Help(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_title").withColor(General.Color.TITLE));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_introduction").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_introduction").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext1").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext2").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext3").withColor(General.Color.CONTENT));
@@ -778,6 +675,99 @@ class CommandExecute {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext5").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext6").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_help_innertext7").withColor(General.Color.CONTENT));
+        return 1;
+    }
+
+    static int executeScene_List(CommandContext<CommandSourceStack> context) {
+        List<Component> displayList = new ArrayList<>();
+
+        // Scan global path.
+        Path globalPath = FilePath.getGlobalPath().resolve("scene");
+        if (Files.isDirectory(globalPath)) {
+            try (Stream<Path> stream = Files.list(globalPath)) {
+                stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
+                    displayList.add(Component.literal("(global): " + p.getFileName().toString()).withColor(General.Color.CONTENT));
+                });
+            }
+            catch (IOException ignored) {}
+        }
+
+        // Scan world path.
+        Path worldPath = FilePath.getWorldPath();
+        if (worldPath != null) {
+            Path worldScenePath = worldPath.resolve("scene");
+            if (Files.isDirectory(worldScenePath)) {
+                try (Stream<Path> stream = Files.list(worldScenePath)) {
+                    stream.filter(p -> p.toString().endsWith(".yaml")).forEach(p -> {
+                        displayList.add(Component.literal("(world): " + p.getFileName().toString()).withColor(General.Color.CONTENT));
+                    });
+                }
+                catch (IOException ignored) {}
+            }
+        }
+
+        // Then list out.
+        if (displayList.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+        }
+        else {
+            displaySceneIdList(context, displayList);
+        }
+
+        return 1;
+    }
+
+    static int executeScene_Play(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        String sceneName = StringArgumentType.getString(context, "scene_name");
+
+        // Check if existed.
+        if (!SceneHolder.doesSceneExist(sceneName)) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+            return 0;
+        }
+
+        try {
+            MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.scene_now_playing")
+                    .append(Component.literal(": " + sceneName))
+                    .withColor(General.Color.CONTENT));
+            SceneHolder.playScene(player, sceneName);
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
+            return 0;
+        }
+
+        return 1;
+    }
+
+    static int executeScene_Broadcast(CommandContext<CommandSourceStack> context) {
+        String sceneName = StringArgumentType.getString(context, "scene_name");
+
+        // Check if existed.
+        if (!SceneHolder.doesSceneExist(sceneName)) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+            return 0;
+        }
+
+        try {
+            MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.scene_now_playing_to_everyone")
+                    .append(Component.literal(": " + sceneName))
+                    .withColor(General.Color.CONTENT));
+            SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
+            return 0;
+        }
+
         return 1;
     }
 
@@ -848,7 +838,7 @@ class CommandExecute {
             player.drop(book, false);
         }
 
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_get_template").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_get_template").withColor(General.Color.SUCCESS));
         return 1;
     }
 
@@ -910,7 +900,11 @@ class CommandExecute {
             // Prase data to map for storage.
             Map<String, Object> yamlMap = YamlReader.stringToMap(yamlContent);
             YamlReader.save("scene", sceneId, yamlMap, targetPath);
-            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_created").withColor(General.Color.CONTENT));
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.scene_created")
+                            .append(" " + sceneId + " -> " + targetPath)
+                            .withColor(General.Color.SUCCESS)
+            );
         }
         catch (Exception e) {
             MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToSave));
@@ -927,7 +921,8 @@ class CommandExecute {
 
     static int executeAttribute_Help(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_title").withColor(General.Color.TITLE));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_introduction").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_introduction").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext1").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext2").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.attribute_help_innertext3").withColor(General.Color.CONTENT));
@@ -1591,7 +1586,8 @@ class CommandExecute {
 
     static int executeVariable_Help(CommandContext<CommandSourceStack> context) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_title").withColor(General.Color.TITLE));
-        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_introduction").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_introduction").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext1").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext2").withColor(General.Color.CONTENT));
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_help_innertext3").withColor(General.Color.CONTENT));
@@ -2022,6 +2018,18 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeLoot(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot").withColor(General.Color.CONTENT));
+        return 1;
+    }
+
+    static int executeLoot_Help(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_title").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_introduction").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
+        return 1;
+    }
+
     static int executeLoot_List(CommandContext<CommandSourceStack> context) {
         Set<String> tableIds = LootHolder.getRegisteredTableIds();
 
@@ -2136,6 +2144,151 @@ class CommandExecute {
                         .append(Component.literal(" " + tableId + " -> " + "[" + containerX + ", " + containerY + ", " + containerZ + "]"))
                         .withColor(General.Color.SUCCESS)
         );
+
+        return 1;
+    }
+    
+    static int executeLoot_Template(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+        
+        ItemStack book = new ItemStack(Items.WRITABLE_BOOK);
+        
+        String bookTemplate = lootTemplate();
+        
+        WritableBookContent content = new WritableBookContent(List.of(Filterable.passThrough(bookTemplate)));
+        book.set(DataComponents.WRITABLE_BOOK_CONTENT, content);
+        
+        if (!player.getInventory().add(book)) {
+            player.drop(book, false);
+        }
+        
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_template").withColor(General.Color.SUCCESS));
+        
+        return 1;
+    }
+
+    static int executeLoot_Create(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            return 0;
+        }
+
+        String toPath = StringArgumentType.getString(context, "to_path");
+        if (!toPath.equals("world") && !toPath.equals("global")) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedSavePath));
+            return 0;
+        }
+
+        ItemStack book = player.getMainHandItem();
+        if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.mainHandItemNotTarget));
+            return 0;
+        }
+
+        String yamlContent = YamlReader.read(book);
+        if (yamlContent == null || yamlContent.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.noContentFound));
+            return 0;
+        }
+
+        String tableId = YamlReader.readSpecificField(yamlContent, "id");
+        if (tableId.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+            return 0;
+        }
+
+        YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
+
+        if (LootHolder.doesFileLootTableExists(tableId, targetPath)) {
+            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.alreadyExist));
+            return 0;
+        }
+
+        if (!yamlContent.contains("pools:")) {
+            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uncompletedContent));
+            return 0;
+        }
+
+        try {
+            Map<String, Object> yamlMap = YamlReader.stringToMap(yamlContent);
+            YamlReader.save("loot", tableId, yamlMap, targetPath);
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.loot_created")
+                            .append(" " + tableId + " -> " + targetPath)
+                            .withColor(General.Color.SUCCESS)
+            );
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.failedToSave));
+            return 0;
+        }
+
+        return 1;
+    }
+
+    static int executeLoot_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
+        String tableId = StringArgumentType.getString(context, "table_id");
+
+        boolean yamlFile = tableId.endsWith(".yaml");
+
+        tableId = tableId.replace(".yaml", "").replace(".json", "");
+
+        // Check and delete.
+        if (specifiedPath.equals("try")) {
+            boolean worldTableExist, globalTableExist;
+            if (yamlFile) {
+                worldTableExist = LootHolder.doesFileLootTableExists(tableId, YamlReader.TargetPath.TO_WORLD);
+                globalTableExist = LootHolder.doesFileLootTableExists(tableId, YamlReader.TargetPath.TO_GLOBAL);
+
+            }
+            else {
+                worldTableExist = LootHolder.doesFileLootTableExists(tableId, JsonReader.TargetPath.TO_WORLD);
+                globalTableExist = LootHolder.doesFileLootTableExists(tableId, JsonReader.TargetPath.TO_GLOBAL);
+            }
+
+            if (worldTableExist && globalTableExist) {
+                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.sameNameFound));
+                return 0;
+            }
+            else if (worldTableExist) {
+                specifiedPath = "world";
+            }
+            else if (globalTableExist) {
+                specifiedPath = "global";
+            }
+            else {
+                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
+                return 0;
+            }
+        }
+        switch (specifiedPath) {
+            case "world":
+                if (yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_WORLD) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_WORLD)) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.loot_deleted")
+                                    .withColor(General.Color.CONTENT)
+                    );
+                    break;
+                }
+
+                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.failedToDelete));
+                return 0;
+            case "global":
+                if (yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_GLOBAL) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_GLOBAL)) {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.loot_deleted")
+                                    .withColor(General.Color.CONTENT)
+                    );
+                    break;
+                }
+                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.failedToDelete));
+                return 0;
+        }
 
         return 1;
     }
@@ -2651,5 +2804,29 @@ class CommandExecute {
                             .withColor(General.Color.SUCCESS)
             );
         }
+    }
+
+    private static String lootTemplate() {
+        return """
+            id: "FILE NAME?"
+            
+            pools:
+              - rolls: 1
+                entries:
+                  - type: item
+                    id: "minecraft:iron_ingot"
+                    weight: 3
+                    functions:
+                      - function: set_count
+                        count:
+                          min: 1
+                          max: 4
+                  - type: item
+                    id: "minecraft:gold_ingot"
+                    weight: 1
+                conditions:
+                  - condition: random_chance
+                    chance: 0.5
+            """;
     }
 }

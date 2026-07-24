@@ -98,6 +98,24 @@ public class JsonReader {
         return false;
     }
 
+    /**
+     * Delete the specific file by the given arguments.
+     * @param subPath           Subpath is defined to two path under the folder of "core_hanxu".
+     * @param fileName          Define the JSON file name that required for delete.
+     *                          Storage as file_name.json.
+     * @param targetPath        Specific subpath from enum: TO_WORLD / TO_GLOBAL.
+     * @throws IOException      Throw exception when file not found.
+     */
+    public static void delete(String subPath, String fileName, TargetPath targetPath) throws IOException {
+        Path targetRootPath = targetPath == TargetPath.TO_WORLD? FilePath.getWorldPath() : FilePath.getGlobalPath();
+        if (targetRootPath == null) {
+            throw new FileNotFoundException(returnCodeError(CodeError.jsonFileNotFound) + subPath + "\\" + fileName);
+        }
+
+        Path file = targetRootPath.resolve(subPath).resolve(fileName + ".json");
+        Files.deleteIfExists(file);
+    }
+
     /// List out all JSON files.
     public static List<Path> listOut(String subPath) {
         List<Path> returnList = new ArrayList<>();

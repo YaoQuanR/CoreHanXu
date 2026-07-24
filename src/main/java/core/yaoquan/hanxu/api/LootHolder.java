@@ -473,6 +473,34 @@ public class LootHolder {
         return false;
     }
 
+    public static boolean doesFileLootTableExists(String tableId, YamlReader.TargetPath targetPath) {
+        return YamlReader.doesFileExist(targetPath, "loot", tableId);
+    }
+
+    public static boolean doesFileLootTableExists(String tableId, JsonReader.TargetPath targetPath) {
+        return JsonReader.doesFileExist(targetPath, "loot", tableId);
+    }
+
+    public static boolean deleteFileLootTable(String tableId, YamlReader.TargetPath targetPath) {
+        try {
+            YamlReader.delete("loot", tableId, targetPath);
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
+    }
+
+    public static boolean deleteFileLootTable(String tableId, JsonReader.TargetPath targetPath) {
+        try {
+            JsonReader.delete("loot", tableId, targetPath);
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
+    }
+
     public static List<Component> readLootTable(String tableId) {
         List<Component> lines = new ArrayList<>();
 

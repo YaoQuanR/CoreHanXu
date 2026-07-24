@@ -1076,6 +1076,7 @@ public class CommandBuilder {
                     Commands.literal("loot")
                         .then(
                             Commands.literal("help")
+                                .executes(CommandExecute::executeLoot_Help)
                         )
                         .then(
                             Commands.literal("list")
@@ -1181,14 +1182,34 @@ public class CommandBuilder {
                         )
                         .then(
                             Commands.literal("create")
+                                .then(
+                                    Commands.argument("to_path", StringArgumentType.word())
+                                        .suggests(CommandSuggest::suggestSavePath)
+                                        .executes(CommandExecute::executeLoot_Create)
+                                )
                         )
                         .then(
                             Commands.literal("delete")
+                                .then(
+                                    Commands.argument("table_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("world")
+                                                .executes(cs -> CommandExecute.executeLoot_Delete(cs, "world"))
+                                        )
+                                        .then(
+                                            Commands.literal("global")
+                                                .executes(cs -> CommandExecute.executeLoot_Delete(cs, "global"))
+                                        )
+                                        .suggests(CommandSuggest::suggestAllFileLootTable)
+                                        .executes(cs -> CommandExecute.executeLoot_Delete(cs, "try"))
+                                )
                         )
                         .then(
                             Commands.literal("template")
+                                .executes(CommandExecute::executeLoot_Template)
                         )
                         .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_LOOT_OPERATIONS.getAsInt()))
+                        .executes(CommandExecute::executeLoot)
                 )
                 .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
                 .executes(CommandExecute::executeBare)

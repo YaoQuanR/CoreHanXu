@@ -48,6 +48,10 @@ public class Error {
     public enum LootError {
         emptyTable,
         tableNotExist,
+        alreadyExist,
+        failedToSave,
+        sameNameFound,
+        failedToDelete,
     }
 
     public enum GeneralError {
@@ -139,6 +143,10 @@ public class Error {
         return switch (lootError) {
             case emptyTable -> Component.translatable("commands.chx.loot_empty_table");
             case tableNotExist -> Component.translatable("commands.chx.loot_table_not_exist");
+            case alreadyExist -> Component.translatable("commands.chx.loot_already_exist");
+            case failedToSave -> Component.translatable("commands.chx.loot_failed_to_save");
+            case sameNameFound -> Component.translatable("commands.chx.loot_same_name_found");
+            case failedToDelete -> Component.translatable("commands.chx.loot_failed_to_delete");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

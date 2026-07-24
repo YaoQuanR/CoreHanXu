@@ -138,7 +138,8 @@ public class LootHolder {
     // Vanilla table cache.
     private static final Map<ResourceLocation, LootTableData> vanillaTableCache = new ConcurrentHashMap<>();
 
-    public static LootTableData loadLootTable(String fileName) throws IOException {
+    /// Gain loot table data from YAML/JSON file.
+    public static LootTableData loadFromFile(String fileName) throws IOException {
         Map<String, Object> rawData = null;
         Exception lastException = null;
 
@@ -198,6 +199,7 @@ public class LootHolder {
         return data;
     }
 
+    /// Gain loot table data from vanilla.
     public static LootTableData loadFromVanilla(ResourceLocation id, LootTable vanillaTable) {
         if (vanillaTableCache.containsKey(id)) {
             return vanillaTableCache.get(id);
@@ -261,6 +263,14 @@ public class LootHolder {
         return tableIds;
     }
 
+    /**
+     * Generate a new item stack list from loot table data.
+     * @param data                  Loot table data from {@link #loadFromFile(String)} or {@link #loadFromVanilla(ResourceLocation, LootTable)}.
+     * @param random                Java random generator.
+     * @param luck                  Luck value that affect chance of item.
+     * @param ignoreCondition       Ignore "condition" fields or not.
+     * @return                      Result of generation: List<\ItemStack>.
+     */
     public static List<ItemStack> generateItemList(LootTableData data, Random random, float luck, boolean ignoreCondition) {
         if (data == null || data.pools == null || data.pools.isEmpty()) {
             return Collections.emptyList();
@@ -316,6 +326,14 @@ public class LootHolder {
         return items;
     }
 
+    /**
+     * Generate loot and send item to player.
+     * @param player                Player that from {@link ServerPlayer}.
+     * @param tableId               Loot table id from registered or file table.
+     * @param ignoreCondition       Ignore "condition" or not.
+     * @param sendFirstItem         Determine if first generated item will be sent.
+     * @return                      Does the data completed for send to player: boolean.
+     */
     public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem) {
         LootTableData data = returnLootTableData(tableId);
 
@@ -341,6 +359,15 @@ public class LootHolder {
         return true;
     }
 
+    /**
+     * Generate loot and send item to player. Extra string received for ignoring matched item.
+     * @param player                Player that from {@link ServerPlayer}.
+     * @param tableId               Loot table id from registered or file table.
+     * @param ignoreItemString      String that determine what item should be ignored to send for player.
+     *                              Receive item id as "[item_id_n] [item_id_n+1]" which space is split sign.
+     *                              If item id not contains "minecraft:", normally used "minecraft:" as prefix.
+     * @return                      Does the data completed for send to player: boolean.
+     */
     public static boolean sendItemToPlayerWithIgnoreItem(ServerPlayer player, String tableId, String ignoreItemString) {
         LootTableData data = returnLootTableData(tableId);
 
@@ -378,6 +405,18 @@ public class LootHolder {
         return true;
     }
 
+    /**
+     * Generate loot and send item to a container.
+     * @param level                 Level that from {@link ServerLevel}.
+     * @param blockPos              Block position that using format from {@link BlockPos}.
+     * @param tableId               Loot table id from registered or file table.
+     * @param ignoreCondition       Ignore "condition" or not.
+     * @param isSorted              Determine if list is sorted when push item.
+     * @param ignoreItemString      String that determine what item should be ignored to send for player.
+     *                              Receive item id as "[item_id_n] [item_id_n+1]" which space is split sign.
+     *                              If item id not contains "minecraft:", normally used "minecraft:" as prefix.
+     * @return                      Does the data completed for send to container: boolean.
+     */
     public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted, String ignoreItemString) {
         BlockEntity blockEntity = level.getBlockEntity(blockPos);
         if (!(blockEntity instanceof Container container)) {
@@ -448,14 +487,31 @@ public class LootHolder {
         return itemIndex >= items.size();
     }
 
+    /**
+     * Generate loot and send item to a container. Normally considered condition, disrupt item list, and nothing to ignore.
+     * @param level                 Level that from {@link ServerLevel}.
+     * @param blockPos              Block position that using format from {@link BlockPos}.
+     * @param tableId               Loot table id from registered or file table.
+     * @return                      Does the data completed for send to container: boolean.
+     */
     public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId) {
         return sendItemToContainer(level, blockPos, tableId, false, false, null);
     }
 
+    /**
+     * Generate loot and send item to a container. Ignored ignore item list.
+     * @param level                 Level that from {@link ServerLevel}.
+     * @param blockPos              Block position that using format from {@link BlockPos}.
+     * @param tableId               Loot table id from registered or file table.
+     * @param ignoreCondition       Ignore "condition" or not.
+     * @param isSorted              Determine if list is sorted when push item.
+     * @return                      Does the data completed for send to container: boolean.
+     */
     public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted) {
         return sendItemToContainer(level, blockPos, tableId, ignoreCondition, isSorted, null);
     }
 
+    /// Determine if this file exists in any possible location.
     public static boolean doesFileLootTableExists(String tableId) {
         try {
             YamlReader.read("loot", tableId);
@@ -473,14 +529,32 @@ public class LootHolder {
         return false;
     }
 
+    /**
+     * Determine if this YAML file exists in specified save path.
+     * @param tableId               Loot table id from registered or file table.
+     * @param targetPath            Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Does this file exists: boolean.
+     */
     public static boolean doesFileLootTableExists(String tableId, YamlReader.TargetPath targetPath) {
         return YamlReader.doesFileExist(targetPath, "loot", tableId);
     }
 
+    /**
+     * Determine if this JSON file exists in specified save path.
+     * @param tableId               Loot table id from registered or file table.
+     * @param targetPath            Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Does this file exists: boolean.
+     */
     public static boolean doesFileLootTableExists(String tableId, JsonReader.TargetPath targetPath) {
         return JsonReader.doesFileExist(targetPath, "loot", tableId);
     }
 
+    /**
+     * Delete this YAML table file.
+     * @param tableId               Loot table id from registered or file table.
+     * @param targetPath            Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Does the delete success: boolean.
+     */
     public static boolean deleteFileLootTable(String tableId, YamlReader.TargetPath targetPath) {
         try {
             YamlReader.delete("loot", tableId, targetPath);
@@ -491,6 +565,12 @@ public class LootHolder {
         }
     }
 
+    /**
+     * Delete this JSON table file.
+     * @param tableId               Loot table id from registered or file table.
+     * @param targetPath            Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Does the delete success: boolean.
+     */
     public static boolean deleteFileLootTable(String tableId, JsonReader.TargetPath targetPath) {
         try {
             JsonReader.delete("loot", tableId, targetPath);
@@ -501,6 +581,11 @@ public class LootHolder {
         }
     }
 
+    /**
+     * Generate component content list of table details from table data.
+     * @param tableId               Loot table id from registered or file table.
+     * @return                      The component list of details: List<\Component>.
+     */
     public static List<Component> readLootTable(String tableId) {
         List<Component> lines = new ArrayList<>();
 
@@ -592,6 +677,11 @@ public class LootHolder {
         return lines;
     }
 
+    /**
+     * Generate string of table details. It will translate description when {@link Component} change into string.
+     * @param tableId               Loot table id from registered or file table.
+     * @return                      The string of details: String.
+     */
     public static String readLootTableAsTranslatedString(String tableId) {
         List<Component> lines = readLootTable(tableId);
         StringBuilder stringPackage = new StringBuilder();
@@ -604,6 +694,11 @@ public class LootHolder {
         return stringPackage.toString();
     }
 
+    /**
+     * Generate string of table details. It will use fixed English description.
+     * @param tableId               Loot table id from registered or file table.
+     * @return                      The string of details: String.
+     */
     public static String readLootTableAsString(String tableId) {
         StringBuilder stringPackage = new StringBuilder();
 
@@ -794,7 +889,7 @@ public class LootHolder {
             case "minecraft:loot_table", "loot_table" -> {
                 LootTableData referenceTable;
                 try {
-                    referenceTable = loadLootTable(entry.id);
+                    referenceTable = loadFromFile(entry.id);
                 }
                 catch (IOException e) {
                     referenceTable = null;
@@ -1123,7 +1218,7 @@ public class LootHolder {
         // Read from file.
         LootTableData data;
         try {
-            data = loadLootTable(tableId);
+            data = loadFromFile(tableId);
         }
         catch (IOException e) {
             data = null;

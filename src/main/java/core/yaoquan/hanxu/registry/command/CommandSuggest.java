@@ -16,7 +16,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.scores.Objective;
@@ -29,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 class CommandSuggest {
     // Add unit suggestion.
-    static <S> CompletableFuture<Suggestions> suggestUnit(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestUnit(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("tick");
         builder.suggest("second");
         builder.suggest("minute");
@@ -39,7 +38,7 @@ class CommandSuggest {
     }
 
     // Add UUID suggestion.
-    static <S> CompletableFuture<Suggestions> suggestUUIDOwner(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestUUIDOwner(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("-global");
         builder.suggest("-temporary");
         builder.suggest("-me");
@@ -56,7 +55,7 @@ class CommandSuggest {
     }
 
     // Add bare player id suggestion.
-    static <S> CompletableFuture<Suggestions> suggestPlayer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestPlayer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("-me");
         builder.suggest("-random");
         builder.suggest("-nearest");
@@ -73,7 +72,7 @@ class CommandSuggest {
     }
 
     // Add read category suggestion.
-    static <S> CompletableFuture<Suggestions> suggestReadCategory(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestReadCategory(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("remaining_time");
         builder.suggest("initial_time");
         builder.suggest("state");
@@ -83,7 +82,7 @@ class CommandSuggest {
     }
 
     // Add template timer suggestion.
-    static <S> CompletableFuture<Suggestions> suggestTemplateTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestTemplateTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         for (String id : TimeHolder.getAllTemplateIds()) {
             builder.suggest(id);
         }
@@ -91,17 +90,8 @@ class CommandSuggest {
         return builder.buildFuture();
     }
 
-    // Add end behavior suggestion.
-    static <S> CompletableFuture<Suggestions> suggestEndBehaviorCategory(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        builder.suggest("remind");
-        builder.suggest("execute");
-        builder.suggest("null");
-
-        return builder.buildFuture();
-    }
-
     // Add instance timer suggestion.
-    static <S> CompletableFuture<Suggestions> suggestInstanceTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestInstanceTimer(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         String masterString;
         try {
             masterString = StringArgumentType.getString(context, "master_id");
@@ -123,7 +113,7 @@ class CommandSuggest {
     }
 
     // For scene suggestion.
-    static <S> CompletableFuture<Suggestions> suggestScene(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestScene(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         List<Path> sceneFiles = YamlReader.listOut("scene");
         for (Path path : sceneFiles) {
             String fileName = path.getFileName().toString().replace(".yaml", "");
@@ -134,7 +124,7 @@ class CommandSuggest {
     }
 
     // For scene create to save path suggestion.
-    static <S> CompletableFuture<Suggestions> suggestSavePath(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestSavePath(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("world");
         builder.suggest("global");
 
@@ -142,7 +132,7 @@ class CommandSuggest {
     }
 
     // For YAML attribute suggestion.
-    static <S> CompletableFuture<Suggestions> suggestYamlAttribute(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestYamlAttribute(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         List<Path> attributeFiles = YamlReader.listOut("attribute");
         for (Path path : attributeFiles) {
             String fileName = path.getFileName().toString().replace(".yaml", "");
@@ -153,7 +143,7 @@ class CommandSuggest {
     }
 
     // For all attribute suggestion.
-    static <S> CompletableFuture<Suggestions> suggestAllAttribute(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestAllAttribute(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         for (String id : AttributeHolder.getApiAttributes().keySet()) {
             builder.suggest("\"" + id + "\"");
         }
@@ -166,7 +156,7 @@ class CommandSuggest {
     }
 
     // For attribute direction detection suggestion.
-    static <S> CompletableFuture<Suggestions> suggestAttributeDirection(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestAttributeDirection(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("up");
         builder.suggest("down");
         builder.suggest("flex");
@@ -176,7 +166,7 @@ class CommandSuggest {
     }
 
     // For variable suggestion.
-    static <S> CompletableFuture<Suggestions> suggestAllVariable(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestAllVariable(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         for (String name : VariableHolder.getAllRegisteredVariables()) {
             builder.suggest(name);
         }
@@ -185,7 +175,7 @@ class CommandSuggest {
     }
 
     // For variable suggestion with "-all" operation.
-    static <S> CompletableFuture<Suggestions> suggestAllVariableWithAll(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestAllVariableWithAll(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         for (String name : VariableHolder.getAllRegisteredVariables()) {
             builder.suggest(name);
         }
@@ -196,7 +186,7 @@ class CommandSuggest {
     }
 
     // For variable suggestion with "-self" operation.
-    static <S> CompletableFuture<Suggestions> suggestAllVariableWithSelf(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestAllVariableWithSelf(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         for (String name : VariableHolder.getAllRegisteredVariables()) {
             builder.suggest(name);
         }
@@ -207,7 +197,7 @@ class CommandSuggest {
     }
 
     // For variable type suggestion.
-    static <S> CompletableFuture<Suggestions> suggestVariableType(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestVariableType(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("string");
         builder.suggest("integer");
         builder.suggest("boolean");
@@ -219,7 +209,7 @@ class CommandSuggest {
     }
 
     // For variable compare sign suggestion.
-    static <S> CompletableFuture<Suggestions> suggestVariableCompareSign(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestVariableCompareSign(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("\"=\"");
         builder.suggest("\"==\"");
         builder.suggest("\"!=\"");
@@ -240,7 +230,7 @@ class CommandSuggest {
     }
 
     // For variable if/scoreif/margin_equals action suggestion.
-    static <S> CompletableFuture<Suggestions> suggestVariableIfThenAction(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestVariableIfThenAction(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("set");
         builder.suggest("add");
         builder.suggest("reduce");
@@ -252,7 +242,7 @@ class CommandSuggest {
     }
 
     // For variable modify suggestion.
-    static <S> CompletableFuture<Suggestions> suggestVariableModifyAction(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestVariableModifyAction(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         builder.suggest("set");
         builder.suggest("add");
         builder.suggest("reduce");
@@ -262,7 +252,7 @@ class CommandSuggest {
     }
 
     // For any scoreboard name suggestion.
-    static <S> CompletableFuture<Suggestions> suggestAllScoreboardName(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestAllScoreboardName(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         MinecraftServer server = context.getSource().getServer();
         ServerScoreboard scoreboard = server.getScoreboard();
 
@@ -274,7 +264,7 @@ class CommandSuggest {
     }
 
     // For file loot table suggestion.
-    static <S> CompletableFuture<Suggestions> suggestAllFileLootTable(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestAllFileLootTable(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         Set<String> tableIds = LootHolder.getRegisteredTableIds();
 
         for (String tableId : tableIds) {
@@ -285,19 +275,19 @@ class CommandSuggest {
     }
 
     // For block position suggestion:
-    static <S> CompletableFuture<Suggestions> suggestHitBlockPosition(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestHitBlockPosition(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         return buildHitBlockPositionSuggestion(context, builder, "x");
     }
 
-    static <S> CompletableFuture<Suggestions> suggestHitBlockPositionInYZ(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestHitBlockPositionInYZ(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         return buildHitBlockPositionSuggestion(context, builder, "y");
     }
 
-    static <S> CompletableFuture<Suggestions> suggestHitBlockPositionInZ(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    static CompletableFuture<Suggestions> suggestHitBlockPositionInZ(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         return buildHitBlockPositionSuggestion(context, builder, "z");
     }
 
-    private static <S> CompletableFuture<Suggestions> buildHitBlockPositionSuggestion(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder, String currentStage) {
+    private static CompletableFuture<Suggestions> buildHitBlockPositionSuggestion(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder, String currentStage) {
         Player player = context.getSource().getPlayer();
         if (player != null) {
             HitResult hitResult = player.pick(30.0, 0f, false);

@@ -66,7 +66,7 @@ public class VariableHolder {
      * @param variableType          Valid type (Same as Java data class) for variable.
      * @param variableValue         Defined value of this variable.
      * @param override              Rewrite value when set to true.
-     * @return                      Does the creation success: Boolean.
+     * @return                      Does the creation success: boolean.
      */
     public static boolean createVariable(String variableName, String variableType, String variableValue, boolean override) {
         if (registeredVariables.contains(variableName) && !override) {
@@ -157,7 +157,7 @@ public class VariableHolder {
     /**
      * Delete variable from data.
      * @param variableName          Defined id of this variable.
-     * @return                      Does the deletion success: Boolean.
+     * @return                      Does the deletion success: boolean.
      */
     public static boolean deleteVariable(String variableName) {
         if (!registeredVariables.contains(variableName)) {
@@ -307,9 +307,7 @@ public class VariableHolder {
             case "long", "Long" -> {
                 return longVariables.containsKey(variableName);
             }
-            default -> {
-                throw new NumberFormatException();
-            }
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -355,9 +353,7 @@ public class VariableHolder {
             case "long" -> {
                 return Long.toString(longVariables.get(variableName)).length() == length;
             }
-            case null, default -> {
-                throw new NumberFormatException();
-            }
+            case null, default -> throw new NumberFormatException();
         }
     }
 

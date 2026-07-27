@@ -22,24 +22,24 @@ public class Creator {
      * Use this method to create callback behavior, it is same to command timer creation.
      * @param context           CommandSourceStack from command builder {@link com.mojang.brigadier.context}.
      * @param timerId           Unique title of timer.
-     * @param endBehavior       If you are using command callback generator,
+     * @param titleParameter    If you are using command callback generator,
      *                          remind/execute/null is required to fill in for recreate callback.
-     * @param behaviorContent   Also required when using command callback,
+     * @param contentParameter  Also required when using command callback,
      *                          remind: display information context; execute: command execution; null: nothing.
      * @return                  Generated callback: Consumer<\ServerPlayer>.
      */
-    public static Consumer<ServerPlayer> createCallback(CommandContext<CommandSourceStack> context, String timerId, String endBehavior, String behaviorContent) {
-        // Build callback according to endBehavior from command;
+    public static Consumer<ServerPlayer> createCallback(CommandContext<CommandSourceStack> context, String timerId, String titleParameter, String contentParameter) {
+        // Build callback according to titleParameter from command;
         // ?(You are advised to use API "createTemplateTimer"/"createInstanceTimer" to build advanced timer behavior).
         Consumer<ServerPlayer> callback;
-        switch (endBehavior) {
+        switch (titleParameter) {
             case "e", "execute":
                 // Pass create only if selector used @r/a/e, @p will replace by player id.
-                if (behaviorContent.contains("@s")) {
+                if (contentParameter.contains("@s")) {
                     MessagePublisher.sendFailureMessage(context, returnGeneralError(Error.GeneralError.invalidSelectorUsed));
                     return null;
                 }
-                else if (behaviorContent.contains("@p")) {
+                else if (contentParameter.contains("@p")) {
                     if (context != null) {
                         MessagePublisher.sendFailureMessage(context, returnGeneralError(Error.GeneralError.selectorToNearestUsed));
                     }
@@ -50,7 +50,7 @@ public class Creator {
                 callback = player -> {
                     MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
                     if (server != null) {
-                        String callbackCommand = behaviorContent.startsWith("/")? behaviorContent : ("/" + behaviorContent);
+                        String callbackCommand = contentParameter.startsWith("/")? contentParameter : ("/" + contentParameter);
                         if (callbackCommand.contains("@p") && player != null) {
                             List<ServerPlayer> players = server.getPlayerList().getPlayers();
                             ServerPlayer nearest = players.stream().min(Comparator.comparing(p -> p.distanceTo(player))).orElse(player);
@@ -67,17 +67,17 @@ public class Creator {
             case "r", "remind":
                 // Send message when time out:
                 // Modified information.
-                if (behaviorContent != null) {
+                if (contentParameter != null) {
                     callback = player -> {
                         if (player != null) {
-                            player.sendSystemMessage(Component.literal(behaviorContent));
+                            player.sendSystemMessage(Component.literal(contentParameter));
                         }
                         // Else broadcast to everyone.
                         else {
                             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
                             if (server != null) {
                                 server.getPlayerList().getPlayers().forEach(p -> {
-                                    p.sendSystemMessage(Component.literal(behaviorContent));
+                                    p.sendSystemMessage(Component.literal(contentParameter));
                                 });
                             }
                         }

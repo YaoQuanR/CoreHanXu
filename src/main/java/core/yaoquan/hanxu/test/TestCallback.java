@@ -21,7 +21,7 @@ public class TestCallback implements TimerCallback {
     }
 
     @Override
-    public Consumer<ServerPlayer> createCustomCallback(String timerId, String endBehaviorTitle, String behaviorContent) {
+    public Consumer<ServerPlayer> createCustomCallback(String timerId, String titleParameter, String contentParameter) {
         return switch (timerId) {
             case "test2" -> player -> {
                 if (player == null) {
@@ -93,9 +93,11 @@ public class TestCallback implements TimerCallback {
                     }
                 }
 
-                // Reset.
-                TimeHolder.resetInstanceTimer(player.getUUID(), "test4");
-                TimeHolder.startInstanceTimer(player.getUUID(), "test4");
+                // Restart.
+                TimeHolder.restartInstanceTimer(player.getUUID(), "test4");
+
+                // Display again.
+                TimeHolder.checkAndRefreshDisplay(player, player.getUUID(), "test4");
             };
             default -> player -> {};
         };

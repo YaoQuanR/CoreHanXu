@@ -9,7 +9,7 @@ import java.util.function.Consumer;
  */
 public interface TimerCallback {
     String getMasterGroupId();
-    Consumer<ServerPlayer> createCustomCallback(String timerId, String endBehaviorTitle, String behaviorContent);
+    Consumer<ServerPlayer> createCustomCallback(String timerId, String titleParameter, String contentParameter);
 
     /* You are required to override those methods to create your custom callback for timer's end behavior.
     *  Here is an example.

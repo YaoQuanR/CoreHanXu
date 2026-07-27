@@ -309,12 +309,12 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeTimer_Template_Create(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Template_Create(CommandContext<CommandSourceStack> context, String titleParameter) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         int timeAmount = IntegerArgumentType.getInteger(context, "time_amount");
         String timeUnit;
-        String behaviorContent;
+        String contentParameter;
 
         // If no unit, receive time data as ticks.
         try {
@@ -325,10 +325,10 @@ class CommandExecute {
         }
 
         try {
-            behaviorContent = StringArgumentType.getString(context, "behavior_content");
+            contentParameter = StringArgumentType.getString(context, "behavior_content");
         }
         catch (IllegalArgumentException e) {
-            behaviorContent = null;
+            contentParameter = null;
         }
 
         // Check if timer exist.
@@ -337,7 +337,7 @@ class CommandExecute {
             return 0;
         }
 
-        return commandCreateTemplateTimer(context, timerId, timeUnit, timeAmount, endBehavior, behaviorContent);
+        return commandCreateTemplateTimer(context, timerId, timeUnit, timeAmount, titleParameter, contentParameter);
     }
 
     static int executeTimer_Template_Read(CommandContext<CommandSourceStack> context) {
@@ -374,13 +374,13 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeTimer_Template_CreateRange(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Template_CreateRange(CommandContext<CommandSourceStack> context, String titleParameter) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         int timeFirstRange = IntegerArgumentType.getInteger(context, "time_first_range");
         int timeSecondRange = IntegerArgumentType.getInteger(context, "time_second_range");
         String timeUnit;
-        String behaviorContent;
+        String contentParameter;
 
         // If no unit, receive time data as ticks.
         try {
@@ -391,10 +391,10 @@ class CommandExecute {
         }
 
         try {
-            behaviorContent = StringArgumentType.getString(context, "behavior_content");
+            contentParameter = StringArgumentType.getString(context, "behavior_content");
         }
         catch (IllegalArgumentException e) {
-            behaviorContent = null;
+            contentParameter = null;
         }
 
         int selectedTimeAmount = Converter.convertFromRangeToRandom(timeFirstRange, timeSecondRange);
@@ -405,7 +405,7 @@ class CommandExecute {
             return 0;
         }
 
-        return commandCreateTemplateTimer(context, timerId, timeUnit, selectedTimeAmount, endBehavior, behaviorContent);
+        return commandCreateTemplateTimer(context, timerId, timeUnit, selectedTimeAmount, titleParameter, contentParameter);
     }
 
     static int executeTimer_Template_List(CommandContext<CommandSourceStack> context) {
@@ -457,13 +457,13 @@ class CommandExecute {
         return 1;
     }
 
-    static int executeTimer_Instance_Create(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Instance_Create(CommandContext<CommandSourceStack> context, String titleParameter) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         String masterString = StringArgumentType.getString(context, "master_id");
         int timeAmount = IntegerArgumentType.getInteger(context, "time_amount");
         String timeUnit;
-        String behaviorContent;
+        String contentParameter;
 
         // Receive optional arguments.
         try {
@@ -474,16 +474,16 @@ class CommandExecute {
         }
 
         try {
-            behaviorContent = StringArgumentType.getString(context, "behavior_content");
+            contentParameter = StringArgumentType.getString(context, "behavior_content");
         }
         catch (IllegalArgumentException e) {
-            behaviorContent = null;
+            contentParameter = null;
         }
 
-        int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, timeAmount, endBehavior, behaviorContent);
+        int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, timeAmount, titleParameter, contentParameter);
 
         if (returnValue == 1) {
-            displayTimerCreateMessage(context, timerId, timeAmount, timeUnit, endBehavior, behaviorContent);
+            displayTimerCreateMessage(context, timerId, timeAmount, timeUnit, titleParameter, contentParameter);
             return 1;
         }
         else {
@@ -491,14 +491,14 @@ class CommandExecute {
         }
     }
 
-    static int executeTimer_Instance_CreateRange(CommandContext<CommandSourceStack> context, String endBehavior) {
+    static int executeTimer_Instance_CreateRange(CommandContext<CommandSourceStack> context, String titleParameter) {
         // Receive arguments.
         String timerId = StringArgumentType.getString(context, "timer_id");
         String masterString = StringArgumentType.getString(context, "master_id");
         int timeFirstRange = IntegerArgumentType.getInteger(context, "time_first_range");
         int timeSecondRange = IntegerArgumentType.getInteger(context, "time_second_range");
         String timeUnit;
-        String behaviorContent;
+        String contentParameter;
 
         // If no unit, receive time data as ticks.
         try {
@@ -509,18 +509,18 @@ class CommandExecute {
         }
 
         try {
-            behaviorContent = StringArgumentType.getString(context, "behavior_content");
+            contentParameter = StringArgumentType.getString(context, "behavior_content");
         }
         catch (IllegalArgumentException e) {
-            behaviorContent = null;
+            contentParameter = null;
         }
 
         int selectedTimeAmount = Converter.convertFromRangeToRandom(timeFirstRange, timeSecondRange);
 
-        int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, selectedTimeAmount, endBehavior, behaviorContent);
+        int returnValue = commandCreateInstanceTimer(context, timerId, masterString, timeUnit, selectedTimeAmount, titleParameter, contentParameter);
 
         if (returnValue == 1) {
-            displayTimerCreateMessage(context, timerId, selectedTimeAmount, timeUnit, endBehavior, behaviorContent);
+            displayTimerCreateMessage(context, timerId, selectedTimeAmount, timeUnit, titleParameter, contentParameter);
             return 1;
         }
         else {
@@ -586,7 +586,9 @@ class CommandExecute {
 
         switch (timeUnit) {
             case "t", "tick", "s", "second", "m", "minute", "h", "hour":
-                if (TimeHolder.modifyInstanceTimer(masterId, timerId, timeAmount, timeUnit, category)) {
+                TimeHolder.ModifyCategory modifyCategory = category.equals("initial_time")? TimeHolder.ModifyCategory.INITIAL_TIME : TimeHolder.ModifyCategory.REMAINING_TIME;
+
+                if (TimeHolder.modifyInstanceTimer(masterId, timerId, timeAmount, timeUnit, modifyCategory)) {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.timer_success_modification")
                                     .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + category + " " + timeAmount + " " + timeUnit))
@@ -1143,24 +1145,24 @@ class CommandExecute {
             return 0;
         }
 
-        boolean fromApi;
+        boolean isApiAttribute;
         AttributeHolder.CustomAttribute attribute;
 
         if (AttributeHolder.doesAttributeExist(attributeId, "command")) {
-            fromApi = false;
+            isApiAttribute = false;
         }
         else if (AttributeHolder.doesAttributeExist(attributeId, "yaml")) {
-            fromApi = false;
+            isApiAttribute = false;
         }
         else if (AttributeHolder.doesAttributeExist(attributeId, "api")) {
-            fromApi = true;
+            isApiAttribute = true;
         }
         else {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
             return 0;
         }
 
-        if (fromApi) {
+        if (isApiAttribute) {
             attribute = AttributeHolder.getApiAttributes().get(attributeId);
         }
         else {
@@ -1266,7 +1268,7 @@ class CommandExecute {
 
                 UUID masterId = Resolver.resolveTargetUUID(context, playerId);
 
-                float value = AttributeHolder.getValue(masterId, attributeId, fromApi);
+                float value = AttributeHolder.getValue(masterId, attributeId, isApiAttribute);
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.attribute_value")
                                 .append(" " + value + " (" + playerId + ")")
@@ -1274,7 +1276,7 @@ class CommandExecute {
                 );
             }
             case "group" -> {
-                if (fromApi) {
+                if (isApiAttribute) {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.attribute_read_group")
                                     .append(" " + attributeId + " -> api")
@@ -1333,7 +1335,7 @@ class CommandExecute {
             return 0;
         }
 
-        boolean fromApi = AttributeHolder.doesAttributeExist(attributeId, "api");
+        boolean isApiAttribute = AttributeHolder.doesAttributeExist(attributeId, "api");
 
         AttributeHolder.ThresholdDirection thresholdDirection;
         boolean success = false;
@@ -1356,14 +1358,14 @@ class CommandExecute {
             case "set" -> {
                 if (playerId.equals("-all") || playerId.equals("-a")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
-                        success = AttributeHolder.setValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                        success = AttributeHolder.setValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
                         if (!success) {
                             break;
                         }
                     }
                 }
                 else {
-                    success = AttributeHolder.setValue(masterId, attributeId, value, fromApi, thresholdDirection);
+                    success = AttributeHolder.setValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
                 }
             }
             case "add" -> {
@@ -1373,14 +1375,14 @@ class CommandExecute {
 
                 if (playerId.equals("-all") || playerId.equals("-a")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
-                        success = AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                        success = AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
                         if (!success) {
                             break;
                         }
                     }
                 }
                 else {
-                    success = AttributeHolder.addValue(masterId, attributeId, value, fromApi, thresholdDirection);
+                    success = AttributeHolder.addValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
                 }
             }
             case "reduce" -> {
@@ -1393,14 +1395,14 @@ class CommandExecute {
 
                 if (playerId.equals("-all")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
-                        success = AttributeHolder.reduceValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                        success = AttributeHolder.reduceValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
                         if (!success) {
                             break;
                         }
                     }
                 }
                 else {
-                    success = AttributeHolder.reduceValue(masterId, attributeId, value, fromApi, thresholdDirection);
+                    success = AttributeHolder.reduceValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
                 }
             }
         }
@@ -1439,9 +1441,9 @@ class CommandExecute {
             return 0;
         }
 
-        boolean fromApi = AttributeHolder.doesAttributeExist(attributeId, "api");
+        boolean isApiAttribute = AttributeHolder.doesAttributeExist(attributeId, "api");
 
-        AttributeHolder.CustomAttribute attribute = AttributeHolder.getAttributeDefinition(attributeId, fromApi);
+        AttributeHolder.CustomAttribute attribute = AttributeHolder.getAttributeDefinition(attributeId, isApiAttribute);
 
         if (attribute == null) {
             MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
@@ -1449,7 +1451,7 @@ class CommandExecute {
         }
 
         if (category.equals("simple")) {
-            if (attribute.doesRecoveryRegistered() && fromApi) {
+            if (attribute.doesRecoveryRegistered() && isApiAttribute) {
                 MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.tryToOverrideApiRecovery));
                 return 0;
             }
@@ -1480,7 +1482,7 @@ class CommandExecute {
                 if (server != null) {
                     for (ServerPlayer serverPlayer : server.getPlayerList().getPlayers()) {
                         if (serverPlayer != null) {
-                            AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, fromApi, thresholdDirection);
+                            AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
                         }
                     }
                 }
@@ -1499,7 +1501,7 @@ class CommandExecute {
 
             attribute.setRecovery(callbackId).setRecoveryIntervalTicks(interval);
 
-            if (!fromApi) {
+            if (!isApiAttribute) {
                 AttributeHolder.saveYamlAttribute(
                     attributeId,
                     AttributeHolder.UpdateCategory.recovery,
@@ -1522,7 +1524,7 @@ class CommandExecute {
 
             attribute.setRecovery(callbackId);
 
-            if (!fromApi) {
+            if (!isApiAttribute) {
                 AttributeHolder.saveYamlAttribute(
                     attributeId,
                     AttributeHolder.UpdateCategory.recovery,
@@ -1565,11 +1567,11 @@ class CommandExecute {
             return 0;
         }
 
-        boolean fromApi = AttributeHolder.doesAttributeExist(attributeId, "api");
+        boolean isApiAttribute = AttributeHolder.doesAttributeExist(attributeId, "api");
 
         UUID masterUUID = Resolver.resolveTargetUUID(context, masterId);
 
-        AttributeHolder.displayToInfoPage(player, masterUUID, attributeId, fromApi, state);
+        AttributeHolder.displayToInfoPage(player, masterUUID, attributeId, isApiAttribute, state);
         MessagePublisher.sendSystemMessage(context,
             Component.literal("[HX] " + attributeId + " ")
                     .append(Component.translatable("commands.core_hanxu.has_changed_to"))
@@ -2308,14 +2310,14 @@ class CommandExecute {
 
     private static int commandCreateTemplateTimer(CommandContext<CommandSourceStack> context,
                                                   String timerId, String timeUnit, int timeAmount,
-                                                  String endBehavior, String behaviorContent) {
+                                                  String titleParameter, String contentParameter) {
         // Create callback.
-        Consumer<ServerPlayer> callback = Creator.createCallback(context, timerId, endBehavior, behaviorContent);
+        Consumer<ServerPlayer> callback = Creator.createCallback(context, timerId, titleParameter, contentParameter);
 
         // Then register.
         switch (timeUnit) {
             case "t", "tick", "s", "second", "m", "minute", "h", "hour":
-                TimeHolder.createTemplateTimer(timerId, timeAmount, timeUnit, callback, endBehavior, behaviorContent, "core_hanxu-command");
+                TimeHolder.createTemplateTimer(timerId, timeAmount, timeUnit, callback, titleParameter, contentParameter, "core_hanxu-command");
                 break;
             default:
                 MessagePublisher.sendFailureMessage(context, Component.translatable("commands.core_hanxu.invalid_unit_argument"));
@@ -2328,7 +2330,7 @@ class CommandExecute {
     private static int commandCreateInstanceTimer(CommandContext<CommandSourceStack> context,
                                                   String timerId, String masterString,
                                                   String timeUnit, int timeAmount,
-                                                  String endBehavior, String behaviorContent) {
+                                                  String titleParameter, String contentParameter) {
         // Reject invalid "-me" field used by non player source.
         if ((masterString.equals("-me") || masterString.equals("-m")) && context.getSource().getPlayer() == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
@@ -2339,7 +2341,7 @@ class CommandExecute {
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
         // Create callback.
-        Consumer<ServerPlayer> callback = Creator.createCallback(context, timerId, endBehavior, behaviorContent);
+        Consumer<ServerPlayer> callback = Creator.createCallback(context, timerId, titleParameter, contentParameter);
         if (callback == null) {
             return 0;
         }
@@ -2349,7 +2351,7 @@ class CommandExecute {
         switch (timeUnit) {
             case "t", "tick", "s", "second", "m", "minute", "h", "hour":
                 // Then register if timer not yet created.
-                if (!TimeHolder.createInstanceTimer(masterId, timerId, timeAmount, timeUnit, callback, endBehavior, behaviorContent, "core_hanxu-command")) {
+                if (!TimeHolder.createInstanceTimer(masterId, timerId, timeAmount, timeUnit, callback, titleParameter, contentParameter, "core_hanxu-command")) {
                     MessagePublisher.sendFailureMessage(context,
                             returnTimerError(TimerError.alreadyExist)
                     );
@@ -2386,12 +2388,12 @@ class CommandExecute {
 
                 // Send success message.
                 int startingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
-                String endBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
+                String titleParameter = TimeHolder.getInstanceTitleParameter(masterId, timerId);
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_started").withColor(General.Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
-                        Component.literal(" (" + timerId + " -> " + masterString + "): " + startingTime + " tick(s) ->> " + endBehavior)
+                        Component.literal(" (" + timerId + " -> " + masterString + "): " + startingTime + " tick(s) ->> " + titleParameter)
                                 .withColor(General.Color.SUCCESS)
                 );
 
@@ -2440,12 +2442,12 @@ class CommandExecute {
 
                 // Send success message.
                 int restartTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
-                String restartEndBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
+                String restartTitleParameter = TimeHolder.getInstanceTitleParameter(masterId, timerId);
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_restart").withColor(General.Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
-                        Component.literal("(" + timerId + " -> " + masterString + "): " + restartTime + " tick(s) ->> " + restartEndBehavior)
+                        Component.literal("(" + timerId + " -> " + masterString + "): " + restartTime + " tick(s) ->> " + restartTitleParameter)
                         .withColor(General.Color.SUCCESS)
                 );
 
@@ -2626,19 +2628,19 @@ class CommandExecute {
                     }
                     break;
                 case "end_behavior":
-                    String endBehavior = TimeHolder.getTemplateEndBehavior(timerId);
-                    String behaviorContent = TimeHolder.getTemplateBehaviorContent(timerId);
+                    String titleParameter = TimeHolder.getTemplateTitleParameter(timerId);
+                    String contentParameter = TimeHolder.getTemplateContentParameter(timerId);
 
                     if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
-                        if (endBehavior == null) {
-                            endBehavior = "null";
+                        if (titleParameter == null) {
+                            titleParameter = "null";
                         }
 
                         MessagePublisher.sendSystemMessage(context,
                                 Component.translatable("commands.chx.timer_end_behavior")
                                         .append(Component.literal("[HX] (" + timerId + ") <<- "))
-                                        .append(endBehavior)
-                                        .append(Component.literal(behaviorContent == null? "" : (" : " + behaviorContent)))
+                                        .append(titleParameter)
+                                        .append(Component.literal(contentParameter == null? "" : (" : " + contentParameter)))
                                         .withColor(General.Color.TITLE)
                         );
                     }
@@ -2699,19 +2701,19 @@ class CommandExecute {
                     }
                     break;
                 case "end_behavior":
-                    String endBehavior = TimeHolder.getInstanceEndBehavior(masterId, timerId);
-                    String behaviorContent = TimeHolder.getInstanceBehaviorContent(masterId, timerId);
+                    String titleParameter = TimeHolder.getInstanceTitleParameter(masterId, timerId);
+                    String contentParameter = TimeHolder.getInstanceContentParameter(masterId, timerId);
 
                     if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit) != -1) {
-                        if (endBehavior == null) {
-                            endBehavior = "null";
+                        if (titleParameter == null) {
+                            titleParameter = "null";
                         }
 
                         MessagePublisher.sendSystemMessage(context,
                                 Component.translatable("commands.chx.timer_end_behavior")
                                         .append(Component.literal("[HX] (" + timerId + " -> " + masterString + ") <<- "))
-                                        .append(endBehavior)
-                                        .append(Component.literal(behaviorContent == null? "" : (" : " + behaviorContent)))
+                                        .append(titleParameter)
+                                        .append(Component.literal(contentParameter == null? "" : (" : " + contentParameter)))
                                         .withColor(General.Color.TITLE)
                         );
                     }
@@ -2747,25 +2749,25 @@ class CommandExecute {
         return 1;
     }
 
-    private static void displayTimerCreateMessage(CommandContext<CommandSourceStack> context, String timerId, int timeAmount, String timeUnit, String endBehavior, String behaviorContent) {
+    private static void displayTimerCreateMessage(CommandContext<CommandSourceStack> context, String timerId, int timeAmount, String timeUnit, String titleParameter, String contentParameter) {
         // Output message.
         MessagePublisher.sendSystemMessage(context,
                 Component.translatable("commands.chx.timer_created")
                         .append(Component.literal(" " + timerId + " -> " + timeAmount + " " + timeUnit))
                         .withColor(General.Color.SUCCESS)
         );
-        switch (endBehavior) {
+        switch (titleParameter) {
             case "e", "execute":
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_with_execute_behavior")
-                                .append(Component.literal(": " + behaviorContent))
+                                .append(Component.literal(": " + contentParameter))
                                 .withColor(General.Color.SUCCESS)
                 );
                 break;
             case "r", "remind":
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_with_remind_behavior")
-                                .append(Component.literal(": " + behaviorContent))
+                                .append(Component.literal(": " + contentParameter))
                                 .withColor(General.Color.SUCCESS)
                 );
                 break;
@@ -2781,10 +2783,10 @@ class CommandExecute {
         }
     }
 
-    private static int displayAttributeIdList(CommandContext<CommandSourceStack> context, String[] attributeArrayList, boolean fromApi) {
+    private static int displayAttributeIdList(CommandContext<CommandSourceStack> context, String[] attributeArrayList, boolean isApiAttribute) {
         MessagePublisher.sendSystemMessage(
             context,
-            fromApi?
+            isApiAttribute?
                 Component.translatable("commands.chx.attribute_api_list_title").withColor(General.Color.TITLE) :
                 Component.translatable("commands.chx.attribute_yaml_list_title").withColor(General.Color.TITLE)
             );

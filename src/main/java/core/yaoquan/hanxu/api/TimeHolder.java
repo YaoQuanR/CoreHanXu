@@ -19,6 +19,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -48,6 +49,12 @@ public class TimeHolder {
     // Storage debug display list.
     private static final Set<String> refreshDisplayList = ConcurrentHashMap.newKeySet();
 
+    // Category of modify.
+    public enum ModifyCategory {
+        INITIAL_TIME,
+        REMAINING_TIME
+    }
+
     // Register your new timer to template (Available to override old timer):
     /**
      * Create a new template timer.
@@ -55,15 +62,15 @@ public class TimeHolder {
      * @param timerId           Unique title of timer.
      * @param durationTime      Time durations.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
-     * @param callback          Execute callback behavior when time run out.
-     * @param endBehavior       If you are using command callback generator,
+     * @param callback          Execute callback behavior when time run out. Null when using {@link TimerCallback} overrides.
+     * @param titleParameter    If you are using command callback generator,
      *                          remind/execute/null is required to fill in for recreate callback.
-     * @param behaviorContent   Also required when using command callback,
+     * @param contentParameter  Also required when using command callback,
      *                          remind: display information context; execute: command execution; null: nothing.
      * @param masterGroup       Required when rebuild callback behavior,
      *                          depends on mods definition of {@link TimerCallback}.
      */
-    public static void createTemplateTimer(String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
+    public static void createTemplateTimer(String timerId, int durationTime, String timeUnit, @Nullable Consumer<ServerPlayer> callback, String titleParameter, String contentParameter, String masterGroup) {
         // Convert.
         int durationTicks = Converter.convertToTicks(durationTime, timeUnit);
 
@@ -71,12 +78,24 @@ public class TimeHolder {
         if (callback == null && masterGroup != null) {
             TimerCallback timerCallback = getCallback(masterGroup);
             if (timerCallback != null) {
-                callback = timerCallback.createCustomCallback(timerId, endBehavior, behaviorContent);
+                callback = timerCallback.createCustomCallback(timerId, titleParameter, contentParameter);
             }
         }
 
         // Then create.
-        templateTimer.put(timerId, new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent, masterGroup));
+        templateTimer.put(timerId, new TimerData(timerId, durationTicks, callback, titleParameter, contentParameter, masterGroup));
+    }
+
+    /**
+     * Create a new template timer for simple API callback.
+     * @param timerId           Unique title of timer.
+     * @param durationTime      Time durations.
+     * @param timeUnit          Flexible use by: tick/second/minute/hour.
+     * @param masterGroup       Required when rebuild callback behavior,
+     *                          depends on mods definition of {@link TimerCallback}.
+     */
+    public static void createTemplateTimer(String timerId, int durationTime, String timeUnit, String masterGroup) {
+        createTemplateTimer(timerId, durationTime, timeUnit, null, null, null, masterGroup);
     }
 
     // Register your new timer to instance (For immediately use).
@@ -89,16 +108,16 @@ public class TimeHolder {
      * @param timerId           Unique title of timer.
      * @param durationTime      Time durations.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
-     * @param callback          Execute callback behavior when time run out.
-     * @param endBehavior       If you are using command callback generator,
+     * @param callback          Execute callback behavior when time run out. Null when using {@link TimerCallback} overrides.
+     * @param titleParameter     If you are using command callback generator,
      *                          remind/execute/null is required to fill in for recreate callback.
-     * @param behaviorContent   Also required when using command callback,
+     * @param contentParameter  Also required when using command callback,
      *                          remind: display information context; execute: command execution; null: nothing.
      * @param masterGroup       Required when rebuild callback behavior,
      *                          depends on mods definition of {@link TimerCallback}.
      * @return                  Does the creation success: boolean.
      */
-    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
+    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, @Nullable Consumer<ServerPlayer> callback, String titleParameter, String contentParameter, String masterGroup) {
         // Check if timer already existed.
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData != null && instantiatedData.containsKey(timerId)) {
@@ -110,7 +129,7 @@ public class TimeHolder {
             CoreHanXu.LOGGER.info("[HX] Rebuild callback from API TimerCallback.");
             TimerCallback timerCallback = getCallback(masterGroup);
             if (timerCallback != null) {
-                callback = timerCallback.createCustomCallback(timerId, endBehavior, behaviorContent);
+                callback = timerCallback.createCustomCallback(timerId, titleParameter, contentParameter);
             }
         }
 
@@ -118,12 +137,29 @@ public class TimeHolder {
         int durationTicks = Converter.convertToTicks(durationTime, timeUnit);
 
         // Create timer.
-        TimerData instanceTimer = new TimerData(timerId, durationTicks, callback, endBehavior, behaviorContent, masterGroup);
+        TimerData instanceTimer = new TimerData(timerId, durationTicks, callback, titleParameter, contentParameter, masterGroup);
 
         // Then put into instance.
         instantiatedTimer.computeIfAbsent(masterId, key -> new ConcurrentHashMap<>()).put(timerId, instanceTimer);
 
         return true;
+    }
+
+    /**
+     * Create a new instance timer for simple API callback. For immediate use.
+     * You are required to define an owner of timer (or called "master") when create an instance timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @param durationTime      Time durations.
+     * @param timeUnit          Flexible use by: tick/second/minute/hour.
+     * @param masterGroup       Required when rebuild callback behavior,
+     *                          depends on mods definition of {@link TimerCallback}.
+     * @return                  Does the creation success: boolean.
+     */
+    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, String masterGroup) {
+        return createInstanceTimer(masterId, timerId, durationTime, timeUnit, null, null, null, masterGroup);
     }
 
     // Register your timer to instance set.
@@ -266,7 +302,7 @@ public class TimeHolder {
      * @param category          Use it for identify what operation required to do:
      *                          "initial_time" or "remaining_time".
      */
-    public static boolean modifyInstanceTimer(UUID masterId, String timerId, int newTime, String timeUnit, String category) {
+    public static boolean modifyInstanceTimer(UUID masterId, String timerId, int newTime, String timeUnit, ModifyCategory category) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return false;
@@ -290,14 +326,14 @@ public class TimeHolder {
         return timerData != null? timerData.timerId : "Null";
     }
 
-    public static String getTemplateEndBehavior(String timerId) {
+    public static String getTemplateTitleParameter(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
-        return timerData.getEndBehavior();
+        return timerData.getTitleParameter();
     }
 
-    public static String getTemplateBehaviorContent(String timerId) {
+    public static String getTemplateContentParameter(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
-        return timerData.getBehaviorContent();
+        return timerData.getContentParameter();
     }
 
     public static String getInstanceId(UUID masterId, String timerId) {
@@ -309,22 +345,22 @@ public class TimeHolder {
         return timerData != null? timerData.timerId : "Null";
     }
 
-    public static String getInstanceEndBehavior(UUID masterId, String timerId) {
+    public static String getInstanceTitleParameter(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return "Not Found";
         }
         TimerData timerData = instantiatedData.get(timerId);
-        return timerData.getEndBehavior();
+        return timerData.getTitleParameter();
     }
 
-    public static String getInstanceBehaviorContent(UUID masterId, String timerId) {
+    public static String getInstanceContentParameter(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
             return "Not Found";
         }
         TimerData timerData = instantiatedData.get(timerId);
-        return timerData.getBehaviorContent();
+        return timerData.getContentParameter();
     }
 
     public static int getRemainingTimeFromTemplate(String timerId, String timeUnit) {
@@ -540,9 +576,9 @@ public class TimeHolder {
         timerDataTag.putInt("remaining_ticks", timerData.getRemainingTicks());
         timerDataTag.putInt("initial_ticks", timerData.getInitialTicks());
         timerDataTag.putBoolean("is_counting", timerData.isItCounting());
-        timerDataTag.putString("end_behavior", timerData.getEndBehavior());
-        if (timerData.getBehaviorContent() != null) {
-            timerDataTag.putString("behavior_content", timerData.getBehaviorContent());
+        timerDataTag.putString("title_parameter", timerData.getTitleParameter());
+        if (timerData.getContentParameter() != null) {
+            timerDataTag.putString("content_parameter", timerData.getContentParameter());
         }
         if (timerData.getMasterGroup() != null) {
             timerDataTag.putString("master_group", timerData.getMasterGroup());
@@ -565,19 +601,19 @@ public class TimeHolder {
 
             boolean isCounting = timerTag.getBoolean("is_counting").orElse(false);
 
-            String endBehavior = timerTag.getString("end_behavior").orElse("null");
-            String behaviorContent = timerTag.getString("behavior_content").orElse(null);
+            String titleParameter = timerTag.getString("title_parameter").orElse("null");
+            String contentParameter = timerTag.getString("content_parameter").orElse(null);
             String masterGroup = timerTag.getString("master_group").orElse("core_hanxu-command");
 
             // Rebuild timer data.
-            Consumer<ServerPlayer> callback = rebuildCallback(masterGroup, timerId, endBehavior, behaviorContent);
+            Consumer<ServerPlayer> callback = rebuildCallback(masterGroup, timerId, titleParameter, contentParameter);
             // Skip when no callback.
             if (callback == null) {
                 continue;
             }
 
             // Rebuild timer data.
-            TimerData rebuildTimer = new TimerData(timerId, initialTicks, callback, endBehavior, behaviorContent, masterGroup, isCounting);
+            TimerData rebuildTimer = new TimerData(timerId, initialTicks, callback, titleParameter, contentParameter, masterGroup, isCounting);
             rebuildTimer.remainingTicks = remainingTicks;
 
             // Then recover.
@@ -586,14 +622,14 @@ public class TimeHolder {
         }
     }
 
-    private static Consumer<ServerPlayer> rebuildCallback(String masterGroup, String timerId, String endBehavior, String behaviorContent) {
+    private static Consumer<ServerPlayer> rebuildCallback(String masterGroup, String timerId, String titleParameter, String contentParameter) {
         if (masterGroup.equals("core_hanxu-command")) {
-            return Creator.createCallback(null, timerId, endBehavior, behaviorContent);
+            return Creator.createCallback(null, timerId, titleParameter, contentParameter);
         }
         else {
             TimerCallback callback = getCallback(masterGroup);
             if (callback != null) {
-                return callback.createCustomCallback(timerId, endBehavior, behaviorContent);
+                return callback.createCustomCallback(timerId, titleParameter, contentParameter);
             }
             CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
             return null;
@@ -615,20 +651,20 @@ public class TimeHolder {
     private static class TimerData {
         private final String timerId;
         private final Consumer<ServerPlayer> callback;
-        private final String endBehavior;
-        private final String behaviorContent;
+        private final String titleParameter;
+        private final String contentParameter;
         private final String masterGroup;
         private ServerPlayer player;
         private int initialTicks;
         private int remainingTicks;
         private boolean isCounting;
 
-        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup) {
+        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String titleParameter, String contentParameter, String masterGroup) {
             this.timerId = timerId;
             this.initialTicks = durationTicks;
             this.callback = callback;
-            this.endBehavior = endBehavior;
-            this.behaviorContent = behaviorContent;
+            this.titleParameter = titleParameter;
+            this.contentParameter = contentParameter;
             this.remainingTicks = durationTicks;
             this.masterGroup = masterGroup;
             this.isCounting = false;
@@ -636,12 +672,12 @@ public class TimeHolder {
         }
 
         // Timer with controllable starting state.
-        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String endBehavior, String behaviorContent, String masterGroup, boolean isCounting) {
+        TimerData(String timerId, int durationTicks, Consumer<ServerPlayer> callback, String titleParameter, String contentParameter, String masterGroup, boolean isCounting) {
             this.timerId = timerId;
             this.initialTicks = durationTicks;
             this.callback = callback;
-            this.endBehavior = endBehavior;
-            this.behaviorContent = behaviorContent;
+            this.titleParameter = titleParameter;
+            this.contentParameter = contentParameter;
             this.remainingTicks = durationTicks;
             this.masterGroup = masterGroup;
             this.isCounting = isCounting;
@@ -653,8 +689,8 @@ public class TimeHolder {
             this.timerId = timerData.timerId;
             this.initialTicks = timerData.initialTicks;
             this.callback = timerData.callback;
-            this.endBehavior = timerData.endBehavior;
-            this.behaviorContent = timerData.behaviorContent;
+            this.titleParameter = timerData.titleParameter;
+            this.contentParameter = timerData.contentParameter;
             this.remainingTicks = timerData.remainingTicks;
             this.masterGroup = timerData.masterGroup;
             this.isCounting = false;
@@ -676,12 +712,12 @@ public class TimeHolder {
             this.isCounting = false;
         }
 
-        void modify(int newTicks, String category) {
+        void modify(int newTicks, ModifyCategory category) {
             switch (category) {
-                case "initial_time":
+                case INITIAL_TIME:
                     this.initialTicks = newTicks;
                     break;
-                case "remaining_time":
+                case REMAINING_TIME:
                     this.remainingTicks = newTicks;
                     break;
                 default:
@@ -715,12 +751,12 @@ public class TimeHolder {
             return initialTicks;
         }
 
-        String getEndBehavior() {
-            return endBehavior;
+        String getTitleParameter() {
+            return titleParameter;
         }
 
-        String getBehaviorContent() {
-            return behaviorContent;
+        String getContentParameter() {
+            return contentParameter;
         }
 
         String getMasterGroup() {

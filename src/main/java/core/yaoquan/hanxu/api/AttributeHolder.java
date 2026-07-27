@@ -139,8 +139,8 @@ public class AttributeHolder {
         return false;
     }
 
-    public static CustomAttribute getAttributeDefinition(String attributeId, boolean fromApi) {
-        if (fromApi) {
+    public static CustomAttribute getAttributeDefinition(String attributeId, boolean isApiAttribute) {
+        if (isApiAttribute) {
             return apiAttributes.get(attributeId);
         }
         else {
@@ -161,12 +161,12 @@ public class AttributeHolder {
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
      *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
      * @param attributeId       Unique title of attribute.
-     * @param fromApi           True false that where you use this function.
+     * @param isApiAttribute    True false that where you use this function.
      * @return                  Received player value: float.
      *                          If this player not set the value yet, return default value from definition: float.
      */
-    public static float getValue(UUID masterId, String attributeId, boolean fromApi) {
-        CustomAttribute attribute = getAttributeDefinition(attributeId, fromApi);
+    public static float getValue(UUID masterId, String attributeId, boolean isApiAttribute) {
+        CustomAttribute attribute = getAttributeDefinition(attributeId, isApiAttribute);
         if (attribute == null) {
             CoreHanXu.LOGGER.warn("[HX] Unknown custom attribute for get value: {}", attributeId);
             return 0.0f;
@@ -183,12 +183,12 @@ public class AttributeHolder {
     /**
      * Get global's attribute value.
      * @param attributeId       Unique title of attribute.
-     * @param fromApi           True false that where you use this function.
+     * @param isApiAttribute    True false that where you use this function.
      * @return                  Received player value: float.
      *                          If this player not set the value yet, return default value from definition: float.
      */
-    public static float getGlobalValue(String attributeId, boolean fromApi) {
-        return getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
+    public static float getGlobalValue(String attributeId, boolean isApiAttribute) {
+        return getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
     }
 
     /**
@@ -197,19 +197,19 @@ public class AttributeHolder {
      *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
-     * @param fromApi           True false that where you use this function.
+     * @param isApiAttribute    True false that where you use this function.
      * @param direction         Define the trigger type for threshold callbacks.
      *                          You can by checking {@link ThresholdDirection} for details.
      * @return                  Does the setter success: boolean.
      */
-    public static boolean setValue(UUID masterId, String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        CustomAttribute attribute = getAttributeDefinition(attributeId, fromApi);
+    public static boolean setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+        CustomAttribute attribute = getAttributeDefinition(attributeId, isApiAttribute);
         if (attribute == null) {
             CoreHanXu.LOGGER.warn("[HX] Unknown custom attribute for set value: {}", attributeId);
             return false;
         }
 
-        float currentValue = getValue(masterId, attributeId, fromApi);
+        float currentValue = getValue(masterId, attributeId, isApiAttribute);
         float newValue = Math.min(attribute.getMaximum(), Math.max(value, 0.0f));
 
         if (Float.compare(currentValue, newValue) == 0) {
@@ -234,7 +234,7 @@ public class AttributeHolder {
         // Then sync.
         ServerPlayer player = Resolver.resolveTargetPlayer(masterId);
         if (player != null) {
-            checkAndRefreshDisplay(player, masterId, attributeId, fromApi);
+            checkAndRefreshDisplay(player, masterId, attributeId, isApiAttribute);
         }
 
         return true;
@@ -246,75 +246,75 @@ public class AttributeHolder {
      *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
-     * @param fromApi           True false that where you use this function.
+     * @param isApiAttribute    True false that where you use this function.
      * @return                  Does the setter success: boolean.
      */
-    public static boolean setValue(UUID masterId, String attributeId, float value, boolean fromApi) {
-        return setValue(masterId, attributeId, value, fromApi, ThresholdDirection.POINT);
+    public static boolean setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
+        return setValue(masterId, attributeId, value, isApiAttribute, ThresholdDirection.POINT);
     }
 
     /**
      * Set global's attribute value (Full direction trigger).
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
-     * @param fromApi           True false that where you use this function.
+     * @param isApiAttribute    True false that where you use this function.
      * @param direction         Define the trigger type for threshold callbacks.
      *                          You can by checking {@link ThresholdDirection} for details.
      * @return                  Does the setter success: boolean.
      */
-    public static boolean setGlobalValue(String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, fromApi, direction);
+    public static boolean setGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, isApiAttribute, direction);
     }
 
     /**
      * Set global's attribute value (Default: Point trigger).
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
-     * @param fromApi           True false that where you use this function.
+     * @param isApiAttribute    True false that where you use this function.
      * @return                  Does the setter success: boolean.
      */
-    public static boolean setGlobalValue(String attributeId, float value, boolean fromApi) {
-        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, fromApi, ThresholdDirection.POINT);
+    public static boolean setGlobalValue(String attributeId, float value, boolean isApiAttribute) {
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, isApiAttribute, ThresholdDirection.POINT);
     }
 
-    public static boolean addValue(UUID masterId, String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        float currentValue = getValue(masterId, attributeId, fromApi);
-        return setValue(masterId, attributeId, currentValue + value, fromApi, direction);
+    public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+        float currentValue = getValue(masterId, attributeId, isApiAttribute);
+        return setValue(masterId, attributeId, currentValue + value, isApiAttribute, direction);
     }
 
-    public static boolean addValue(UUID masterId, String attributeId, float value, boolean fromApi) {
-        float currentValue = getValue(masterId, attributeId, fromApi);
-        return setValue(masterId, attributeId, currentValue + value, fromApi, ThresholdDirection.POINT);
+    public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
+        float currentValue = getValue(masterId, attributeId, isApiAttribute);
+        return setValue(masterId, attributeId, currentValue + value, isApiAttribute, ThresholdDirection.POINT);
     }
 
-    public static boolean addGlobalValue(String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, fromApi, direction);
+    public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, isApiAttribute, direction);
     }
 
-    public static boolean addGlobalValue(String attributeId, float value, boolean fromApi) {
-        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, fromApi, ThresholdDirection.POINT);
+    public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute) {
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, isApiAttribute, ThresholdDirection.POINT);
     }
 
-    public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        float currentValue = getValue(masterId, attributeId, fromApi);
-        return setValue(masterId, attributeId, currentValue - Math.abs(value), fromApi, direction);
+    public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+        float currentValue = getValue(masterId, attributeId, isApiAttribute);
+        return setValue(masterId, attributeId, currentValue - Math.abs(value), isApiAttribute, direction);
     }
 
-    public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean fromApi) {
-        float currentValue = getValue(masterId, attributeId, fromApi);
-        return setValue(masterId, attributeId, currentValue - Math.abs(value), fromApi, ThresholdDirection.POINT);
+    public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
+        float currentValue = getValue(masterId, attributeId, isApiAttribute);
+        return setValue(masterId, attributeId, currentValue - Math.abs(value), isApiAttribute, ThresholdDirection.POINT);
     }
 
-    public static boolean reduceGlobalValue(String attributeId, float value, boolean fromApi, ThresholdDirection direction) {
-        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), fromApi, direction);
+    public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), isApiAttribute, direction);
     }
 
-    public static boolean reduceGlobalValue(String attributeId, float value, boolean fromApi) {
-        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, fromApi);
-        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), fromApi, ThresholdDirection.POINT);
+    public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute) {
+        float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
+        return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), isApiAttribute, ThresholdDirection.POINT);
     }
 
     // Load YAML data for import.
@@ -379,7 +379,7 @@ public class AttributeHolder {
     }
 
     // Display out to F4 page (info page).
-    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String attributeId, boolean fromApi, boolean state) {
+    public static void displayToInfoPage(ServerPlayer player, UUID masterId, String attributeId, boolean isApiAttribute, boolean state) {
         if (masterId == null) {
             return;
         }
@@ -388,12 +388,12 @@ public class AttributeHolder {
 
         if (state) {
             refreshDisplayList.add(key);
-            float value = getValue(masterId, attributeId, fromApi);
-            syncPacketToClient(player, masterId, attributeId, true, value, fromApi, Resolver.resolveTargetMasterName(masterId));
+            float value = getValue(masterId, attributeId, isApiAttribute);
+            syncPacketToClient(player, masterId, attributeId, true, value, isApiAttribute, Resolver.resolveTargetMasterName(masterId));
         }
         else {
             refreshDisplayList.remove(key);
-            syncPacketToClient(player, masterId, attributeId, false, -1.0f, fromApi, Resolver.resolveTargetMasterName(masterId));
+            syncPacketToClient(player, masterId, attributeId, false, -1.0f, isApiAttribute, Resolver.resolveTargetMasterName(masterId));
         }
     }
 
@@ -403,19 +403,19 @@ public class AttributeHolder {
                                           String attributeId,
                                           boolean state,
                                           float value,
-                                          boolean fromApi,
+                                          boolean isApiAttribute,
                                           String masterName) {
         PacketDistributor.sendToPlayer(
-                player, new ModPayload.AttributeF4Packet(masterId, attributeId, state, value, fromApi, masterName)
+                player, new ModPayload.AttributeF4Packet(masterId, attributeId, state, value, isApiAttribute, masterName)
         );
     }
 
     // Check if required to refresh the F4 attribute display.
-    public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String attributeId, boolean fromApi) {
+    public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String attributeId, boolean isApiAttribute) {
         String key = player.getUUID() + ":" + masterId + ":" + attributeId;
 
         if (refreshDisplayList.contains(key)) {
-            displayToInfoPage(player, masterId, attributeId, fromApi, true);
+            displayToInfoPage(player, masterId, attributeId, isApiAttribute, true);
         }
     }
 
@@ -444,18 +444,18 @@ public class AttributeHolder {
             }
 
             CustomAttribute attribute = apiAttributes.get(attributeId);
-            boolean fromApi = true;
+            boolean isApiAttribute = true;
             if (attribute == null) {
                 attribute = commandAttributes.get(attributeId);
-                fromApi = false;
+                isApiAttribute = false;
             }
             if (attribute == null) {
                 continue;
             }
 
-            float value = getValue(masterId, attributeId, fromApi);
+            float value = getValue(masterId, attributeId, isApiAttribute);
 
-            syncPacketToClient(player, masterId, attributeId, true, value, fromApi, Resolver.resolveTargetMasterName(masterId));
+            syncPacketToClient(player, masterId, attributeId, true, value, isApiAttribute, Resolver.resolveTargetMasterName(masterId));
         }
     }
 
@@ -828,6 +828,9 @@ public class AttributeHolder {
                     attribute.thresholdCallbacks.add(thresholdNode);
                 }
             }
+        }
+        else {
+            attribute.thresholdCallbacks = new ArrayList<>();
         }
 
         // Read zero node.

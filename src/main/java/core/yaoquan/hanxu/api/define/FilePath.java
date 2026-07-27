@@ -35,6 +35,7 @@ public class FilePath {
     public static final List<String> SUB_DIRS = List.of(
             "scene",
             "attribute",
-            "galaxy"
+            "loot",
+            "weather"
     );
 }

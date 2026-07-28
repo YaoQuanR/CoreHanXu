@@ -5,7 +5,7 @@ System: General
 ### License System
 
 User (Player) are required to agreed license for using command system.
-Check the state from "/chx license state" (or admin: "/chx-a license state [id]")
+Check the state from "/chx license state"
 
 You can get the license state from "PermissionHolder.java":
 "getLicenseState" from API.

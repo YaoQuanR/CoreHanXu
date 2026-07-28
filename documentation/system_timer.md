@@ -5,7 +5,7 @@ System: Timer
 ### Introduction
 
 Timer system is a system to reduce time on timing design.
-User (player) is allowed to use command "/chx-a timer" for managing timer system.
+User (player) is allowed to use command "/chx timer" for managing timer system.
 Also, API is provided for advanced modification (focus on callback features),
 you can define an auto callback behavior by using API "TimerCallback" interface.
 
@@ -43,7 +43,7 @@ In detailed, API provided:
     - Read
 
 - Help:
-  - You can execute "/chx-a timer help" for details.
+  - You can execute "/chx timer help" for details.
 
 - Template and Instance:
   - When create template timer, data will NOT save into NBTs.

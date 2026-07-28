@@ -11,8 +11,8 @@ Define a scene by using YAML document at .minecraft\config\core_hanxu\scene\DOCS
 .minecraft\saves\WORLD-NAME\data\core_hanxu\scene\DOCS.yaml (world path).
 Load world path will come first.
 
-User (player) is allowed to use command "/chx-a scene" for managing scene documents.
-Also, example will be given by executing "/chx-a scene template",
+User (player) is allowed to use command "/chx scene" for managing scene documents.
+Also, example will be given by executing "/chx scene template",
 which is a book that allowed to modify and create.
 
 API is provided at "SceneHolder.java".
@@ -23,7 +23,7 @@ API is provided at "SceneHolder.java".
   - User can add YAML document at the given path.
     Execute "/chx scene play [scene_id]" for start scene.
   - In addition, HOLD writable book OR written book and execute
-    "/chx-a scene create [to_path]" can generate a new YAML document into given path.
+    "/chx scene create [to_path]" can generate a new YAML document into given path.
 
 - Requirements of Writing a New Scene
   - YAML document should at least contain "id" + "type" + "dialogs" for execution.

@@ -1080,6 +1080,10 @@ public class CommandBuilder {
                     Commands.literal("loot")
                         .then(
                             Commands.literal("help")
+                                .then(
+                                    Commands.literal("functions")
+                                        .executes(CommandExecute::executeLoot_Help_Functions)
+                                )
                                 .executes(CommandExecute::executeLoot_Help)
                         )
                         .then(
@@ -1114,6 +1118,10 @@ public class CommandBuilder {
                                                             Commands.argument("ignore_item", StringArgumentType.greedyString())
                                                                 .executes(cs -> CommandExecute.executeLoot_Give(cs, "ignore"))
                                                         )
+                                                )
+                                                .then(
+                                                    Commands.literal("-guaranteed")
+                                                        .executes(cs -> CommandExecute.executeLoot_Give(cs, "guaranteed"))
                                                 )
                                                 .suggests(CommandSuggest::suggestAllFileLootTable)
                                                 .executes(cs -> CommandExecute.executeLoot_Give(cs, "default"))
@@ -1151,6 +1159,10 @@ public class CommandBuilder {
                                                                                         .executes(cs -> CommandExecute.executeLoot_Fill(cs, true, "ignore"))
                                                                                 )
                                                                         )
+                                                                        .then(
+                                                                            Commands.literal("-guaranteed")
+                                                                                .executes(cs -> CommandExecute.executeLoot_Fill(cs, true, "guaranteed"))
+                                                                        )
                                                                         .executes(cs -> CommandExecute.executeLoot_Fill(cs, true, "default"))
                                                                 )
                                                                 .then(
@@ -1172,6 +1184,10 @@ public class CommandBuilder {
                                                                                     Commands.argument("ignore_item", StringArgumentType.greedyString())
                                                                                         .executes(cs -> CommandExecute.executeLoot_Fill(cs, false, "ignore"))
                                                                                 )
+                                                                        )
+                                                                        .then(
+                                                                            Commands.literal("-guaranteed")
+                                                                                .executes(cs -> CommandExecute.executeLoot_Fill(cs, false, "guaranteed"))
                                                                         )
                                                                         .executes(cs -> CommandExecute.executeLoot_Fill(cs, false, "default"))
                                                                 )

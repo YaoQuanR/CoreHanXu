@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.FilePath;
@@ -2045,6 +2046,48 @@ class CommandExecute {
         return 1;
     }
 
+    static int executeLoot_Help_Functions(CommandContext<CommandSourceStack> context) {
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_functions_title").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.loot_help_functions_introduction").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_functions").withColor(General.Color.TITLE));
+
+        String[] lines = {
+                "set_count: (Number/Map) count",
+                "set_damage: (Float:0.0~1.0) damage",
+                "set_exactly_damage: (Integer) damage",
+                "set_name: (String/Json) name",
+                "set_lore: (List) lore",
+                "set_custom_model_data: (List/Float/Boolean/String/Integer) floats, flags, strings, colors",
+                "enchant_randomly: (null)",
+                "set_enchantments: (Map) enchantments",
+                "enchant_with_levels: (Number/Map) levels",
+                "looting_enchant: (null)",
+                "furnace_smelt: (null)",
+                "explosion_decay: (Float:0.0~1.0) chance",
+                "limit_count: (Integer) limit",
+                "set_potion: (String) id",
+                "set_attributes: (List) attributes",
+                "set_glint_override: (Boolean) glint",
+                "set_repair_cost: (Integer) cost",
+                "set_food: (Map) food",
+                "unbreakable: (null)",
+                "set_can_break: (List) blocks",
+                "set_can_place_on: (List) blocks",
+                "set_consumable: (Map) consume_seconds, animation, sound, effects",
+                "set_equippable: (String) slot",
+                "set_trim: (String) material, pattern",
+                "set_firework: (Map) flight_duration, explosions",
+                "set_fire_resistant: (null)"
+        };
+
+        for (String line : lines) {
+            MessagePublisher.sendSystemMessage(context,
+                    Component.literal(line).withColor(General.Color.CONTENT));
+        }
+
+        return 1;
+    }
+
     static int executeLoot_List(CommandContext<CommandSourceStack> context) {
         Set<String> tableIds = LootHolder.getRegisteredTableIds();
 
@@ -2094,13 +2137,14 @@ class CommandExecute {
         }
 
         boolean success;
-        if (!category.equals("ignore")) {
-            success = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("first_item"));
-        }
-        else {
+        if (category.equals("ignore")) {
             String ignoreItem = StringArgumentType.getString(context, "ignore_item");
-            success = LootHolder.sendItemToPlayerWithIgnoreItem(player, tableId, ignoreItem);
+            success = LootHolder.sendItemToPlayerWithIgnoreItem(player, tableId, ignoreItem, false);
+        } else {
+            CoreHanXu.LOGGER.info("[HX] --> guaranteed: {}", category.equals("guaranteed"));
+            success = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("first_item"), category.equals("guaranteed"));
         }
+
 
         if (!success) {
             MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
@@ -2132,7 +2176,7 @@ class CommandExecute {
         }
 
         boolean success;
-        boolean isSorted = false;
+        boolean isSorted = false, guaranteed = false;
 
         switch (category) {
             case "sorted":
@@ -2145,9 +2189,12 @@ class CommandExecute {
                 isSorted = true;
                 ignoreItem = StringArgumentType.getString(context, "ignore_item");
                 break;
+            case "guaranteed":
+                guaranteed = true;
+                break;
         }
 
-        success = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem);
+        success = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem, guaranteed);
 
         if (!success) {
             MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));

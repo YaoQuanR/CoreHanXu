@@ -10,6 +10,8 @@ import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.JsonReader;
 import core.yaoquan.hanxu.util.YamlReader;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.advancements.critereon.BlockPredicate;
 import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponents;
@@ -21,25 +23,34 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.AdventureModePredicate;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.component.*;
+import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
+import net.minecraft.world.item.consume_effects.ConsumeEffect;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.item.equipment.trim.ArmorTrim;
+import net.minecraft.world.item.equipment.trim.TrimMaterial;
+import net.minecraft.world.item.equipment.trim.TrimPattern;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -277,9 +288,10 @@ public class LootHolder {
      * @param random                Java random generator.
      * @param luck                  Luck value that affect chance of item.
      * @param ignoreCondition       Ignore "condition" fields or not.
+     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
      * @return                      Result of generation: List<\ItemStack>.
      */
-    public static List<ItemStack> generateItemList(LootTableData data, Random random, float luck, boolean ignoreCondition) {
+    public static List<ItemStack> generateItemList(LootTableData data, Random random, float luck, boolean ignoreCondition, boolean guaranteed) {
         if (data == null || data.pools == null || data.pools.isEmpty()) {
             return Collections.emptyList();
         }
@@ -288,6 +300,29 @@ public class LootHolder {
 
         for (Pool pool : data.pools) {
             if (!doesConditionSatisfied(pool.lootConditions, random) && !ignoreCondition) {
+                continue;
+            }
+
+            // For guaranteed mode: Always provides item.
+            if (guaranteed) {
+                for (LootEntry entry : pool.lootEntries) {
+                    if (!doesConditionSatisfied(entry.lootConditions, random) && !ignoreCondition) {
+                        continue;
+                    }
+
+                    ItemStack item = generateItemStack(entry, random, luck, ignoreCondition);
+                    if (item == null) {
+                        continue;
+                    }
+
+                    item = applyFunction(item, entry.lootFunctions, random, luck, ignoreCondition);
+
+                    if (item != null && !item.isEmpty()) {
+                        items.add(item);
+                    }
+                }
+
+                // Skip pool logics.
                 continue;
             }
 
@@ -340,16 +375,17 @@ public class LootHolder {
      * @param tableId               Loot table id from registered or file table.
      * @param ignoreCondition       Ignore "condition" or not.
      * @param sendFirstItem         Determine if first generated item will be sent.
+     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
      * @return                      Does the data completed for send to player: boolean.
      */
-    public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem) {
+    public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem, boolean guaranteed) {
         LootTableData data = returnLootTableData(tableId);
 
         if (data == null) {
             return false;
         }
 
-        List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), ignoreCondition);
+        List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), ignoreCondition, guaranteed);
 
         if (sendFirstItem) {
             if (!player.addItem(items.getFirst())) {
@@ -374,16 +410,17 @@ public class LootHolder {
      * @param ignoreItemString      String that determine what item should be ignored to send for player.
      *                              Receive item id as "[item_id_n] [item_id_n+1]" which space is split sign.
      *                              If item id not contains "minecraft:", normally used "minecraft:" as prefix.
+     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
      * @return                      Does the data completed for send to player: boolean.
      */
-    public static boolean sendItemToPlayerWithIgnoreItem(ServerPlayer player, String tableId, String ignoreItemString) {
+    public static boolean sendItemToPlayerWithIgnoreItem(ServerPlayer player, String tableId, String ignoreItemString, boolean guaranteed) {
         LootTableData data = returnLootTableData(tableId);
 
         if (data == null) {
             return false;
         }
 
-        List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), true);
+        List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), true, guaranteed);
 
         List<String> ignoreItems = Arrays.stream((ignoreItemString.trim().replace("\"", "").split("\\s+")))
                 .map(string -> {
@@ -423,9 +460,10 @@ public class LootHolder {
      * @param ignoreItemString      String that determine what item should be ignored to send for player.
      *                              Receive item id as "[item_id_n] [item_id_n+1]" which space is split sign.
      *                              If item id not contains "minecraft:", normally used "minecraft:" as prefix.
+     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
      * @return                      Does the data completed for send to container: boolean.
      */
-    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted, String ignoreItemString) {
+    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted, String ignoreItemString, boolean guaranteed) {
         BlockEntity blockEntity = level.getBlockEntity(blockPos);
         if (!(blockEntity instanceof Container container)) {
             return false;
@@ -437,7 +475,7 @@ public class LootHolder {
             return false;
         }
 
-        List<ItemStack> items = generateItemList(data, new Random(), 0, ignoreCondition);
+        List<ItemStack> items = generateItemList(data, new Random(), 0, ignoreCondition, guaranteed);
         if (items.isEmpty()) {
             return true;
         }
@@ -496,18 +534,19 @@ public class LootHolder {
     }
 
     /**
-     * Generate loot and send item to a container. Normally considered condition, disrupt item list, and nothing to ignore.
+     * Generate loot and send item to a container. Normally considered condition,
+     * disrupt item list, nothing to ignore, and not guaranteed all item to be generated.
      * @param level                 Level that from {@link ServerLevel}.
      * @param blockPos              Block position that using format from {@link BlockPos}.
      * @param tableId               Loot table id from registered or file table.
      * @return                      Does the data completed for send to container: boolean.
      */
     public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId) {
-        return sendItemToContainer(level, blockPos, tableId, false, false, null);
+        return sendItemToContainer(level, blockPos, tableId, false, false, null, false);
     }
 
     /**
-     * Generate loot and send item to a container. Ignored ignore item list.
+     * Generate loot and send item to a container. Ignored ignore item list, and not guaranteed all item to be generated.
      * @param level                 Level that from {@link ServerLevel}.
      * @param blockPos              Block position that using format from {@link BlockPos}.
      * @param tableId               Loot table id from registered or file table.
@@ -516,7 +555,7 @@ public class LootHolder {
      * @return                      Does the data completed for send to container: boolean.
      */
     public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted) {
-        return sendItemToContainer(level, blockPos, tableId, ignoreCondition, isSorted, null);
+        return sendItemToContainer(level, blockPos, tableId, ignoreCondition, isSorted, null, false);
     }
 
     /// Determine if this file exists in any possible location.
@@ -663,6 +702,20 @@ public class LootHolder {
                             .append(Component.literal(" " + entry.weight))
                             .withColor(General.Color.CONTENT)
                     );
+
+                    if (entry.lootFunctions != null && !entry.lootFunctions.isEmpty()) {
+                        lines.add(Component.translatable("api.core_hanxu.loot.function_size")
+                                .append(Component.literal(" " + entry.lootFunctions.size()))
+                                .withColor(General.Color.TITLE)
+                        );
+
+                        for (LootFunction function : entry.lootFunctions) {
+                            lines.add(Component.translatable("api.core_hanxu.loot.function")
+                                    .append(Component.literal(" " + function.function))
+                                    .withColor(General.Color.CONTENT)
+                            );
+                        }
+                    }
                 }
             }
 
@@ -752,6 +805,14 @@ public class LootHolder {
 
                 for (LootEntry entry : pool.lootEntries) {
                     stringPackage.append("    -> Entry: ").append(entry.id).append(" (").append(entry.type).append(") , with weight: ").append(entry.weight).append("\n");
+
+                    if (entry.lootFunctions != null && !entry.lootFunctions.isEmpty()) {
+                        stringPackage.append("      Functions: ").append(entry.lootFunctions.size()).append("\n");
+
+                        for (LootFunction function : entry.lootFunctions) {
+                            stringPackage.append("      => Function: ").append(function.function).append("\n");
+                        }
+                    }
                 }
             }
 
@@ -904,7 +965,7 @@ public class LootHolder {
                 }
 
                 if (referenceTable != null) {
-                    List<ItemStack> subItems = generateItemList(referenceTable, random, luck, ignoreCondition);
+                    List<ItemStack> subItems = generateItemList(referenceTable, random, luck, ignoreCondition, false);
                     if (!subItems.isEmpty()) {
                         return subItems.getFirst();
                     }
@@ -966,7 +1027,7 @@ public class LootHolder {
 
     private static ItemStack applyFunction(ItemStack item, List<LootFunction> functions, Random random, float luck, boolean ignoreCondition) {
         if (functions == null || functions.isEmpty()) {
-            return null;
+            return item;
         }
 
         for (LootFunction function : functions) {
@@ -1330,6 +1391,199 @@ public class LootHolder {
                 }
                 case "minecraft:set_can_place_on", "set_can_place_on" -> {
                     setCanBreakOrPlace(parameters, item, "place");
+                }
+                case "minecraft:set_consumable", "set_consumable" -> {
+                    MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+                    if (server == null) {
+                        continue;
+                    }
+
+                    float consumeSecond = parameters != null?
+                            ((Number) parameters.getOrDefault("consume_seconds", Consumable.DEFAULT_CONSUME_SECONDS)).floatValue() :
+                            Consumable.DEFAULT_CONSUME_SECONDS;
+
+                    String animationString = parameters != null? String.valueOf(parameters.getOrDefault("animation", "eat")) : "eat";
+                    ItemUseAnimation animation = animationString.equals("drink")? ItemUseAnimation.DRINK : ItemUseAnimation.EAT;
+
+                    String soundId = parameters != null? String.valueOf(parameters.get("sound")) : null;
+                    Holder<SoundEvent> soundHolder = null;
+                    if (soundId != null) {
+                        ResourceLocation soundLocation = ResourceLocation.tryParse(soundId);
+                        if (soundLocation != null) {
+                            soundHolder = BuiltInRegistries.SOUND_EVENT.get(soundLocation).orElse(null);
+                        }
+                    }
+
+                    List<ConsumeEffect> effects = new ArrayList<>();
+                    Object effectsObject = parameters != null? parameters.get("effects") : null;
+                    if (!(effectsObject instanceof List)) {
+                        continue;
+                    }
+
+                    RegistryAccess registryAccess = server.registryAccess();
+                    Registry<MobEffect> effectRegistry = registryAccess.lookupOrThrow(Registries.MOB_EFFECT);
+
+                    for (Object rawEffect : (List<?>) effectsObject) {
+                        if (!(rawEffect instanceof Map)) {
+                            continue;
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> effectMap = (Map<String, Object>) rawEffect;
+
+                        String effectId = String.valueOf(effectMap.get("id"));
+                        int duration = ((Number) effectMap.getOrDefault("duration", 100)).intValue();
+                        int amplifier = ((Number) effectMap.getOrDefault("amplifier", 0)).intValue();
+                        float probability = ((Number) effectMap.getOrDefault("probability", 1.0f)).floatValue();
+
+                        if (effectId == null) {
+                            continue;
+                        }
+
+                        ResourceLocation location = ResourceLocation.tryParse(effectId);
+                        if (location == null) {
+                            continue;
+                        }
+
+                        ResourceKey<MobEffect> resourceKey = ResourceKey.create(Registries.MOB_EFFECT, location);
+                        Optional<Holder.Reference<MobEffect>> reference = effectRegistry.get(resourceKey);
+                        if (reference.isEmpty()) {
+                            continue;
+                        }
+
+                        MobEffectInstance instance = new MobEffectInstance(reference.get(), duration, amplifier);
+                        effects.add(new ApplyStatusEffectsConsumeEffect(List.of(instance), probability));
+                    }
+
+                    if (soundHolder == null) {
+                        soundHolder = SoundEvents.GENERIC_EAT;
+                    }
+
+                    Consumable consumable = new Consumable(
+                            consumeSecond,
+                            animation,
+                            soundHolder,
+                            true,
+                            effects
+                    );
+
+                    item.set(DataComponents.CONSUMABLE, consumable);
+                }
+                case "minecraft:set_equippable", "set_equippable" -> {
+                    Object slotObject = parameters != null? parameters.get("slot") : null;
+                    if (slotObject == null) {
+                        continue;
+                    }
+
+                    EquipmentSlot slot;
+                    switch (String.valueOf(slotObject)) {
+                        case "offhand" -> slot = EquipmentSlot.OFFHAND;
+                        case "head" -> slot = EquipmentSlot.HEAD;
+                        case "chest" -> slot = EquipmentSlot.CHEST;
+                        case "legs" -> slot = EquipmentSlot.LEGS;
+                        case "feet" -> slot = EquipmentSlot.FEET;
+                        default -> slot = EquipmentSlot.MAINHAND;
+                    }
+
+                    Equippable equippable = Equippable.builder(slot).build();
+                    item.set(DataComponents.EQUIPPABLE, equippable);
+                }
+                case "minecraft:set_trim", "set_trim" -> {
+                    String material = parameters != null? String.valueOf(parameters.get("material")) : null;
+                    String pattern = parameters != null? String.valueOf(parameters.get("pattern")) : null;
+                    if (material == null || pattern == null) {
+                        continue;
+                    }
+
+                    MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+                    if (server == null) {
+                        continue;
+                    }
+
+                    RegistryAccess registryAccess = server.registryAccess();
+                    Registry<TrimMaterial> materialRegistry = registryAccess.lookupOrThrow(Registries.TRIM_MATERIAL);
+                    Registry<TrimPattern> patternRegistry = registryAccess.lookupOrThrow(Registries.TRIM_PATTERN);
+
+                    ResourceLocation materialLocation = ResourceLocation.tryParse(material);
+                    ResourceLocation patternLocation = ResourceLocation.tryParse(pattern);
+                    if (materialLocation == null || patternLocation == null) {
+                        continue;
+                    }
+
+                    ResourceKey<TrimMaterial> materialResourceKey = ResourceKey.create(Registries.TRIM_MATERIAL, materialLocation);
+                    ResourceKey<TrimPattern> patternResourceKey = ResourceKey.create(Registries.TRIM_PATTERN, patternLocation);
+
+                    Optional<Holder.Reference<TrimMaterial>> materialReference = materialRegistry.get(materialResourceKey);
+                    Optional<Holder.Reference<TrimPattern>> patternReference = patternRegistry.get(patternResourceKey);
+                    if (materialReference.isEmpty() || patternReference.isEmpty()) {
+                        continue;
+                    }
+
+                    item.set(DataComponents.TRIM, new ArmorTrim(materialReference.get(), patternReference.get()));
+                }
+                case "minecraft:set_firework", "set_firework" -> {
+                    Object explosionObject = parameters != null? parameters.get("explosions") : null;
+                    List<FireworkExplosion> explosions = new ArrayList<>();
+
+                    if (!(explosionObject instanceof List)) {
+                        continue;
+                    }
+
+                    for (Object rawExplosion : (List<?>) explosionObject) {
+                        if (!(rawExplosion instanceof Map)) {
+                            continue;
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> explosionMap = (Map<String, Object>) rawExplosion;
+
+                        String shapeString = String.valueOf(explosionMap.getOrDefault("shape", "small_ball"));
+                        FireworkExplosion.Shape shape;
+                        switch (shapeString) {
+                            case "large_ball" -> shape = FireworkExplosion.Shape.LARGE_BALL;
+                            case "star" -> shape = FireworkExplosion.Shape.STAR;
+                            case "creeper" -> shape = FireworkExplosion.Shape.CREEPER;
+                            case "burst" -> shape = FireworkExplosion.Shape.BURST;
+                            default -> shape = FireworkExplosion.Shape.SMALL_BALL;
+                        }
+
+                        IntList colors = new IntArrayList();
+                        Object colorObject = explosionMap.getOrDefault("colors", null);
+                        if (colorObject instanceof List) {
+                            for (Object color : (List<?>) colorObject) {
+                                if (color instanceof Number) {
+                                    colors.add(((Number) color).intValue());
+                                }
+                            }
+                        }
+
+                        IntList fadeColors = new IntArrayList();
+                        Object fadeColorObject = explosionMap.getOrDefault("fade_colors", null);
+                        if (fadeColorObject instanceof List) {
+                            for (Object color : (List<?>) fadeColorObject) {
+                                if (color instanceof Number) {
+                                    fadeColors.add(((Number) color).intValue());
+                                }
+                            }
+                        }
+
+                        boolean hasTrail = (boolean) explosionMap.getOrDefault("trail", false);
+                        boolean hasTwinkle = (boolean) explosionMap.getOrDefault("twinkle", false);
+
+                        explosions.add(new FireworkExplosion(shape, colors, fadeColors, hasTrail, hasTwinkle));
+                    }
+
+                    int flightDuration = ((Number) parameters.getOrDefault("flight_duration", 1)).intValue();
+
+                    if (item.is(Items.FIREWORK_ROCKET)) {
+                        item.set(DataComponents.FIREWORKS, new Fireworks(flightDuration, explosions));
+                    }
+                    else if (item.is(Items.FIREWORK_STAR)) {
+                        if (explosions.isEmpty()) {
+                            continue;
+                        }
+                        item.set(DataComponents.FIREWORK_EXPLOSION, explosions.getFirst());
+                    }
                 }
                 case "core_hanxu:set_exactly_damage", "set_exactly_damage" -> {
                     Object damage = parameters != null? parameters.get("damage") : null;

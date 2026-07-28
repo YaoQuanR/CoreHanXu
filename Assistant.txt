@@ -1,0 +1,53 @@
+HanXu (Core) Powered Engine for Minecraft
+Copyright (C) 2026 YaoQuanR (YaoQuan)
+
+This document extends the definitions and procedures outlined in license.txt.
+
+Covered language translation and platform migration scenarios.
+
+Translation work:
+Translation is considered as "adaptation". Any unauthorized republishing of a translation will be treated as copyright infringement.
+If you seek authorization to translation:
+1. Republish:
+    - You are required to send the author a formal request email, which includes a brief introduction about yourself and your intended scope.
+    - You should wait for the author's reply of acceptance before proceeding.
+    - You should clearly display proof of your authorization includes time & name on the publication page.
+    - When you republish work is done, email the author a list of links.
+    - Usually, you must license your work under AGPL and includes your name as required by license.txt.
+    - Also, your translation work is considered a derivative version.
+    - Unless authorization revoke due to valid complaints, you remain responsible for the translation.
+
+2. Co-work:
+    - You are required to send the author a formal request email, which includes a brief introduction about yourself,
+      a list of responsible members, and your intended scope.
+    - You may submit your translated language file in the request email, or other possible download link.
+    - You will receive a reply of acceptance, and may receive further update message for your translation work.
+    - In further publish, your member list will be announced to be responsible member for handling request.
+    - Unless authorization revoke due to valid complaints, you remain responsible for the translation.
+
+Migration work:
+Under the license of CC BY-NC-ND, any work that includes textures/sounds without clearly authorization is considered infringement.
+If you seek authorization to migration:
+1. Platform migration to other Minecraft Java Edition version:
+    - Your work is considered a derivative version.
+      Thus, you are required to license your program under the license of AGPL.
+    - You should not modify the original resources, or otherwise constitutes infringement.
+    - Notifying the author is optional, but you must include your name as required by license.txt.
+
+2. Platform migration to Minecraft Bedrock Edition version or/and
+   Minecraft NetEase (Chinese) Edition version included modified Java/Bedrock Edition:
+    - Your work is considered a derivative version.
+    - You are required to send the author a formal request email, which includes a brief introduction about yourself and your intended scope.
+    - You should wait for the author's reply of acceptance before proceeding.
+    - You should clearly display proof of your authorization includes time & name on the publication page.
+    - When you republish work is done, email the author a list of links.
+    - Usually, you must license your work under AGPL and includes your name as required by license.txt.
+    - This procedure is to ensure you authorized to use CC BY-NC-ND resources to other platform.
+      Otherwise, your work will be treated as copyright infringement.
+    - *For NetEase (Chinese) Edition version only:
+        All additional package that depend on this version must also be licensed under an OSI-approved license.
+
+Further explanation:
+- Derivative work: Derivative and adaptation is an end use type that requires authorization.
+- Assistant: Republish (any platform)/ Modification (any%)/ Reuse CC BY-NC-ND resources (any%)/ Translation (any%).
+

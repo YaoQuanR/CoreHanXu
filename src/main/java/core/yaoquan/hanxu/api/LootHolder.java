@@ -10,10 +10,8 @@ import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.JsonReader;
 import core.yaoquan.hanxu.util.YamlReader;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.advancements.critereon.BlockPredicate;
+import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -23,17 +21,27 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.AdventureModePredicate;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomModelData;
-import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.component.*;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
@@ -1184,6 +1192,168 @@ public class LootHolder {
                         }
                     }
                 }
+                case "minecraft:set_potion", "set_potion" -> {
+                    Object potionId = parameters != null? parameters.get("id") : null;
+                    if (potionId == null) {
+                        continue;
+                    }
+
+                    String potionIdString = potionId.toString();
+
+                    MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+                    if (server == null) {
+                        continue;
+                    }
+
+                    RegistryAccess registryAccess = server.registryAccess();
+                    Registry<Potion> potionRegistry = registryAccess.lookupOrThrow(Registries.POTION);
+
+                    ResourceLocation potionLocation = ResourceLocation.tryParse(potionIdString);
+                    if (potionLocation == null) {
+                        continue;
+                    }
+
+                    Optional<Holder.Reference<Potion>> reference = potionRegistry.get(potionLocation);
+
+                    if (reference.isEmpty()) {
+                        continue;
+                    }
+
+                    item.set(DataComponents.POTION_CONTENTS, new PotionContents(reference.get()));
+                }
+                case "minecraft:set_attributes", "set_attributes" -> {
+                    Object attributes = parameters != null? parameters.get("attributes") : null;
+                    if (!(attributes instanceof List<?> rawList)) {
+                        continue;
+                    }
+
+                    ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
+                    
+                    if (ServerLifecycleHooks.getCurrentServer() == null) {
+                        continue;
+                    }
+                    
+                    RegistryAccess registryAccess = ServerLifecycleHooks.getCurrentServer().registryAccess();
+                    Registry<Attribute> registry = registryAccess.lookupOrThrow(Registries.ATTRIBUTE);
+
+                    for (Object rawEntry : rawList) {
+                        if (!(rawEntry instanceof Map)) {
+                            continue;
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> entry = (Map<String, Object>) rawEntry;
+
+                        String attributeId = String.valueOf(entry.get("id"));
+                        String slot = String.valueOf(entry.getOrDefault("slot", "mainhand"));
+                        String operation = String.valueOf(entry.getOrDefault("operation", "add"));
+                        Object amountObject = entry.get("amount");
+
+                        if (attributeId == null || amountObject == null) {
+                            continue;
+                        }
+
+                        ResourceLocation attributeLocation = ResourceLocation.tryParse(attributeId);
+                        if (attributeLocation == null) {
+                            continue;
+                        }
+
+                        double amount = ((Number) amountObject).doubleValue();
+                        AttributeModifier.Operation modifierOperation;
+                        switch (operation) {
+                            case "multiply_base" -> modifierOperation = AttributeModifier.Operation.ADD_MULTIPLIED_BASE;
+                            case "multiply_total" -> modifierOperation = AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL;
+                            default -> modifierOperation = AttributeModifier.Operation.ADD_VALUE;
+                        }
+
+                        EquipmentSlotGroup slotGroup;
+                        switch (slot) {
+                            case "offhand" -> slotGroup = EquipmentSlotGroup.OFFHAND;
+                            case "head" -> slotGroup = EquipmentSlotGroup.HEAD;
+                            case "chest" -> slotGroup = EquipmentSlotGroup.CHEST;
+                            case "legs" -> slotGroup = EquipmentSlotGroup.LEGS;
+                            case "feet" -> slotGroup = EquipmentSlotGroup.FEET;
+                            default -> slotGroup = EquipmentSlotGroup.MAINHAND;
+                        }
+
+                        ResourceKey<Attribute> resourceKey = ResourceKey.create(Registries.ATTRIBUTE, attributeLocation);
+                        Optional<Holder.Reference<Attribute>> reference = registry.get(resourceKey);
+                        
+                        if (reference.isEmpty()) {
+                            continue;
+                        }
+
+                        AttributeModifier modifier = new AttributeModifier(attributeLocation, amount, modifierOperation);
+                        builder.add(reference.get(), modifier, slotGroup);
+                    }
+
+                    ItemAttributeModifiers modifiers = builder.build();
+
+                    item.remove(DataComponents.ATTRIBUTE_MODIFIERS);
+                    item.set(DataComponents.ATTRIBUTE_MODIFIERS, modifiers);
+                }
+                case "minecraft:set_glint_override", "set_glint_override" -> {
+                    Object glintOverride = parameters != null? parameters.get("glint") : null;
+                    if (glintOverride instanceof Boolean) {
+                        item.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, (Boolean) glintOverride);
+                    }
+                }
+                case "minecraft:set_repair_cost", "set_repair_cost" -> {
+                    Object cost = parameters != null? parameters.get("cost") : null;
+                    if (cost instanceof Number) {
+                        item.set(DataComponents.REPAIR_COST, ((Number) cost).intValue());
+                    }
+                }
+                case "minecraft:set_food", "set_food" -> {
+                    Object foodObject = parameters != null? parameters.get("food") : null;
+                    if (!(foodObject instanceof Map)) {
+                        continue;
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> foodMap = (Map<String, Object>) foodObject;
+
+                    int nutrition = ((Number) foodMap.getOrDefault("nutrition", 4)).intValue();
+                    float saturation = ((Number) foodMap.getOrDefault("saturation", 0.6f)).floatValue();
+                    boolean canAlwaysEat = (Boolean) foodMap.getOrDefault("can_always_eat", false);
+
+                    FoodProperties foodProperties = new FoodProperties(
+                            nutrition, saturation, canAlwaysEat
+                    );
+                    item.set(DataComponents.FOOD, foodProperties);
+                }
+                case "minecraft:unbreakable", "unbreakable" -> {
+                    item.set(DataComponents.UNBREAKABLE, Unit.INSTANCE);
+                }
+                case "minecraft:set_can_break", "set_can_break" -> {
+                    setCanBreakOrPlace(parameters, item, "break");
+                }
+                case "minecraft:set_can_place_on", "set_can_place_on" -> {
+                    setCanBreakOrPlace(parameters, item, "place");
+                }
+                case "core_hanxu:set_exactly_damage", "set_exactly_damage" -> {
+                    Object damage = parameters != null? parameters.get("damage") : null;
+                    int damageValue;
+                    if (damage instanceof Number) {
+                        damageValue = ((Number) damage).intValue();
+                    }
+                    else {
+                        continue;
+                    }
+
+                    int maximumDamage = item.getMaxDamage();
+                    item.setDamageValue(Math.min(damageValue, maximumDamage - 1));
+                }
+                case "core_hanxu:set_fire_resistant", "set_fire_resistant" -> {
+                    MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+                    if (server == null) {
+                        continue;
+                    }
+
+                    TagKey<DamageType> fireTag = TagKey.create(Registries.DAMAGE_TYPE, ResourceLocation.withDefaultNamespace("is_fire"));
+
+                    item.set(DataComponents.DAMAGE_RESISTANT, new DamageResistant(fireTag));
+                }
                 // Default -> continue.
             }
         }
@@ -1245,5 +1415,48 @@ public class LootHolder {
         }
 
         return data;
+    }
+
+    private static void setCanBreakOrPlace(Map<String, Object> parameters, ItemStack item, String category) {
+        Object blocksObject = parameters != null? parameters.get("blocks") : null;
+        if (!(blocksObject instanceof List)) {
+            return;
+        }
+
+        List<Block> blocks = new ArrayList<>();
+        for (Object rawBlock : (List<?>) blocksObject) {
+            if (!(rawBlock instanceof String)) {
+                return;
+            }
+
+            ResourceLocation blockLocation = ResourceLocation.tryParse(String.valueOf(rawBlock));
+            if (blockLocation == null) {
+                return;
+            }
+
+            Optional<Holder.Reference<Block>> reference = BuiltInRegistries.BLOCK.get(blockLocation);
+
+            if (reference.isEmpty()) {
+                return;
+            }
+
+            blocks.add(reference.get().value());
+        }
+
+        if (!blocks.isEmpty()) {
+            if (ServerLifecycleHooks.getCurrentServer() == null) {
+                return;
+            }
+            RegistryAccess registryAccess = ServerLifecycleHooks.getCurrentServer().registryAccess();
+            HolderGetter<Block> blockGetter = registryAccess.lookupOrThrow(Registries.BLOCK);
+            BlockPredicate predicate = BlockPredicate.Builder.block().of(blockGetter, blocks).build();
+
+            if (category.equals("break")) {
+                item.set(DataComponents.CAN_BREAK, new AdventureModePredicate(List.of(predicate)));
+            }
+            else if (category.equals("place")) {
+                item.set(DataComponents.CAN_PLACE_ON, new AdventureModePredicate(List.of(predicate)));
+            }
+        }
     }
 }

@@ -1,0 +1,9 @@
+id: book_test
+type: simple
+default: {interval: 40}
+dialogs:
+- {text: this is a test which contains a text}
+- {speaker: '@a', execute: /weather rain}
+- {text: color test, color: 13421772}
+- {speaker: '@skip', execute: /weather clear}
+- {speaker: '@r', text: ''}

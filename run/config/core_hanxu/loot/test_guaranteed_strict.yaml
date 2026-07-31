@@ -1,0 +1,84 @@
+id: "test_guaranteed_strict"
+
+pools:
+  # ===== 池1：极低概率，普通模式几乎拿不到 =====
+  - rolls: 1
+    entries:
+      - type: item
+        id: "minecraft:diamond_block"
+        weight: 1
+        functions:
+          - function: set_count
+            count: 5
+
+  # ===== 池2：需要极端运气 =====
+  - rolls: 1
+    entries:
+      - type: item
+        id: "minecraft:netherite_ingot"
+        weight: 1
+        functions:
+          - function: set_count
+            count: 2
+
+  # ===== 池3：条件概率 1% =====
+  - rolls: 1
+    entries:
+      - type: item
+        id: "minecraft:dragon_head"
+        weight: 1
+    conditions:
+      - condition: random_chance
+        chance: 0.01
+
+  # ===== 池4：权重极低 =====
+  - rolls: 5
+    entries:
+      - type: item
+        id: "minecraft:emerald_block"
+        weight: 100
+      - type: item
+        id: "minecraft:diamond_block"
+        weight: 1
+      - type: item
+        id: "minecraft:nether_star"
+        weight: 1
+
+  # ===== 池5：范围抽取 0~1 次 =====
+  - rolls:
+      min: 0
+      max: 1
+    entries:
+      - type: item
+        id: "minecraft:enchanted_golden_apple"
+        weight: 1
+
+  # ===== 池6：bonus_rolls 为 0（普通模式无加成） =====
+  - rolls: 1
+    bonus_roll: 0
+    entries:
+      - type: item
+        id: "minecraft:beacon"
+        weight: 1
+
+  # ===== 池7：多个低概率条件叠加 =====
+  - rolls: 1
+    entries:
+      - type: item
+        id: "minecraft:elytra"
+        weight: 1
+    conditions:
+      - condition: random_chance
+        chance: 0.05
+      - condition: random_chance
+        chance: 0.05
+
+  # ===== 池8：只有 1% 概率抽到 =====
+  - rolls: 1
+    entries:
+      - type: item
+        id: "minecraft:trident"
+        weight: 1
+    conditions:
+      - condition: random_chance
+        chance: 0.01

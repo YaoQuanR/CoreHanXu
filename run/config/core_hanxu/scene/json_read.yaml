@@ -1,0 +1,19 @@
+id: "json_read"
+type: "simple"
+
+default:
+  interval: 20
+  color: 0xFFD700
+  json: true
+
+dialogs:
+  - speaker: "System"
+    text: "The test is about to start"
+  - text: '{"text":"click","click_event":{"action":"open_url","url":"https://www.minecraft.net"}}'
+  - text: '[{"text":"try","color":"red"}]'
+  - text: '{]'
+  - speaker: "can you see me?"
+    text: '{}'
+  - text: '{text:t,color:red}'
+  - text: '[]'
+  - text: '{tex:a,color:blue}'

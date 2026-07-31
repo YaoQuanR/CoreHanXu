@@ -1,0 +1,68 @@
+id: "test104"
+type: "simple"
+
+default:
+  color: 0xFFFACD
+  interval: 40
+  bold: false
+  italic: false
+
+dialogs:
+  - speaker: "§6[系统]"
+    text: "=== 寒旭MOD场景系统全面测试 ==="
+    color: 0xFFAA00
+    interval: 60
+
+  - speaker: "new1"
+    text: "Hello! I'm new1, testing basic speaker"
+    italic: false
+
+  - text: "This is system speaking (no speaker)"
+    color: 0x88FF88
+
+  - speaker: "@r"
+    text: "I'm a random player! Who are you?"
+    bold: true
+    interval: 60
+    execute: "time query daytime"
+
+  - speaker: "@a"
+    text: "Attention everyone! Color test incoming"
+    color: 0xFFD700
+    interval: 40
+
+  - speaker: "@s"
+    text: "Myself... testing @s replacement"
+    execute: "weather clear"
+
+  - speaker: "@p"
+    text: "CAN YOU SEE ME? (Obfuscated test)"
+    obfuscated: true
+
+  - speaker: "@p"
+    text: "underline? bold? or strikethrough? — All combined!"
+    underlined: true
+    bold: true
+    italic: false
+    strikethrough: true
+    interval: 100
+
+  - text: "Shadow color is useless. (This tests no color override)"
+    color: 0x666666
+
+  - speaker: "new1"
+    text: "Interval test completed! Scene ends in 3..."
+    interval: 20
+
+  - speaker: "new1"
+    text: "2..."
+    interval: 20
+
+  - speaker: "new1"
+    text: "1..."
+    interval: 20
+
+  - speaker: "§6[系统]"
+    text: "=== Scene Test Finished ==="
+    color: 0x55FF55
+    bold: true

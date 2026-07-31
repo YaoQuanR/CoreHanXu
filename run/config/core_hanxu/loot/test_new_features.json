@@ -1,0 +1,118 @@
+{
+  "id": "test_new_features",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "id": "minecraft:stone",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_consumable",
+              "consume_seconds": 2.0,
+              "animation": "eat",
+              "sound": "entity.generic.eat",
+              "effects": [
+                {
+                  "id": "minecraft:speed",
+                  "duration": 200,
+                  "amplifier": 1,
+                  "probability": 1.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "id": "minecraft:leather_helmet",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_equippable",
+              "slot": "head"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "id": "minecraft:iron_chestplate",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_trim",
+              "material": "minecraft:iron",
+              "pattern": "minecraft:coast"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "id": "minecraft:firework_rocket",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_firework",
+              "flight_duration": 2,
+              "explosions": [
+                {
+                  "shape": "large_ball",
+                  "colors": [16711680, 65280],
+                  "fade_colors": [255],
+                  "trail": true,
+                  "twinkle": true
+                },
+                {
+                  "shape": "star",
+                  "colors": [16776960],
+                  "trail": false,
+                  "twinkle": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "id": "minecraft:firework_star",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_firework",
+              "explosions": [
+                {
+                  "shape": "creeper",
+                  "colors": [65280],
+                  "trail": true,
+                  "twinkle": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

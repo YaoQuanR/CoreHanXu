@@ -491,6 +491,11 @@ public class CommandBuilder {
                             Commands.literal("play")
                                 .then(
                                     Commands.argument("scene_name", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("player_id", StringArgumentType.word())
+                                                .suggests(CommandSuggest::suggestPlayer)
+                                                .executes(CommandExecute::executeScene_Play)
+                                        )
                                         .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_PLAY.getAsInt()))
                                         .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Play)

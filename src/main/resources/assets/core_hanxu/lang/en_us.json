@@ -117,7 +117,7 @@
   "commands.chx.scene_help_innertext1": "/chx scene: Display the guide information.",
   "commands.chx.scene_help_innertext2": "/chx scene help: Current page.",
   "commands.chx.scene_help_innertext3": "/chx scene list: List out all available scene documents.",
-  "commands.chx.scene_help_innertext4": "/chx scene play ![scene_id]: Play the specific scene.",
+  "commands.chx.scene_help_innertext4": "/chx scene play ![scene_id] #[player_id]: Play the specific scene.",
   "commands.chx.scene_help_innertext5": "/chx scene create ![to_path]: Submit book and analysis as YAML document.",
   "commands.chx.scene_help_innertext6": "/chx scene delete ![scene_id] #{global/world}: Delete specific scene.",
   "commands.chx.scene_help_innertext7": "/chx scene template: Receive a book contains YAML scene template.",

@@ -721,6 +721,14 @@ class CommandExecute {
 
     static int executeScene_Play(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
+
+        try {
+            String playerId = StringArgumentType.getString(context, "player_id");
+            UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
+            player = Resolver.resolveTargetPlayer(playerUUID);
+        }
+        catch (IllegalArgumentException ignored) {}
+
         if (player == null) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
             return 0;

@@ -1,5 +1,5 @@
 
-System: General
+General
 =
 
 ### Introduction

@@ -10,13 +10,9 @@ You can compare, modify, and operates with scoreboard in Minecraft.
 
 Variable will storage at world NBT ([save]/data/core_hanxu.dat: core.yaoquan.hanxu.variables) when server stop.
 
-### Features
+### General guides
 
-It can split into general, API side, and command side guides.
-
-#### General guides
-
-<1> Type
+#### <1> Type
 
 Variable system was inspired by Java class system, which storage by clearly type for operations.
 
@@ -32,7 +28,7 @@ If you wish to understand what the type represented, you may check the following
 
 Minecraft scoreboard system only storage integer type value.
 
-<2> Compare/Modify
+#### <2> Compare/Modify
 
 Variable system allows to compare value and return boolean if compare condition satisfied.
 Also, variable system also allows to modify value in different situation.
@@ -47,7 +43,7 @@ Here is the support list:
 - Value modify (set):                                   String, integer, boolean, float, double, long.
 - Number modify (add, reduce):                          Integer, float, double, long.
 
-<3> Type alias
+#### <3> Type alias
 
 It is accepted when specifying type of variable:
 - String: string, str, String.
@@ -59,9 +55,9 @@ It is accepted when specifying type of variable:
 
 Variable system only return full lower case name for type varification.
 
-#### API side guides
+### API side guides
 
-<1> Create
+#### <1> Create
 
 Ensure you understand what type you should be used.
 
@@ -80,7 +76,7 @@ boolean success = VariableHolder.createVariable(
 );
 ```
 
-<2> Delete
+#### <2> Delete
 
 It will mask all contained name variable.
 ```
@@ -96,7 +92,7 @@ use this method:
 VariableHolder.deleteAllVariables();
 ```
 
-<3> Read value
+#### <3> Read value
 
 Receive map:
 ```
@@ -129,7 +125,7 @@ Object objectValue = VariableHolder.getObjectFrom(name, type);
 String finalValue = String.valueOf(objectValue);
 ```
 
-<4> Compare
+#### <4> Compare
 
 It primarily purpose is provided for command side, but API is also usable.
 
@@ -249,7 +245,7 @@ catch (NumberFormatException ignored) {}
 
 If you wish to know other compare method, please view `api.VariableHolder.java` for details.
 
-<5> Modify
+#### <5> Modify
 
 You can mask a new value by:
 ```
@@ -278,7 +274,7 @@ catch (NullPointerException ignored) {}
 catch (NumberFormatException ignored) {}
 ```
 
-<6> Scoreboard operations
+#### <6> Scoreboard operations
 
 You can put value from/to scoreboard to/from variable by the following methods.
 
@@ -330,16 +326,16 @@ catch (IllegalArgumentException e) {
 }
 ```
 
-<7> Other operations
+#### <7> Other operations
 
 If you wish to know more method to operate, you may check `api.VariableHolder.java` for details.
 
-#### Command side guides
+### Command side guides
 
 Variable system supports to use command at players, command blocks, or console for operations,
 excepts float/double value approximate equals.
 
-<1> Create
+#### <1> Create
 
 Ensure you understand what type you should be used.
 
@@ -352,7 +348,7 @@ Example: `
 /chx variable create integer int_value 150
 `
 
-<2> Delete
+#### <2> Delete
 
 You can only delete one variable at once.
 
@@ -360,7 +356,7 @@ Execute as format: `
 /chx variable delete [string: variable name]
 `
 
-<3> Copy from/to scoreboard score
+#### <3> Copy from/to scoreboard score
 
 If you want to operate variable with Minecraft scoreboard, you can copy and paste by the following methods.
 
@@ -372,7 +368,7 @@ Format that copy variable to score: `
 /chx variable copy [string: variable name] to [string: player id (scoreboard owner)] [string: score name]
 `
 
-<4> Compare
+#### <4> Compare
 
 Variable system supports "if then" operation by if command.
 
@@ -401,7 +397,7 @@ Further action if satisfied: `
 [string: player id (Optional. Use when you definding target scoreboard owner)]
 `
 
-<5> Modify
+#### <5> Modify
 
 If you want to modify a value immediately, you can use modify command.
 
@@ -409,6 +405,6 @@ Format: `
 /chx variable modify [string: variable name] {set/add/reduce/same(Copy variable to variable)} [string: new value (new value/ target variable)]
 `
 
-<6> Other operations
+#### <6> Other operations
 
 If you seek for more commands, you can view `/chx variable help` for help.

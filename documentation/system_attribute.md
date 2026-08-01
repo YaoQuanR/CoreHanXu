@@ -13,16 +13,15 @@ The primarily use of attribute system is provided for players and entities.
 This system is freely to define attribute such as "Adrenaline", "Sanity" and much more.
 For supporting those features, you can define thresholds which is a trigger value defined for threshold behavior (Java callback or execute commands).
 
-
 Also, if you wish to make the value modification at time based,
 you can define recovery callback for complex behavior.
 But, recovery method is optional (You can use set add reduce to manually modify attribute value).
 
 It will also split as API side and command side operations.
 
-#### General terms
+### General terms
 
-Directions
+#### Directions
 
 It is a field that tells what is this attribute pass through the threshold.
 There is three possible situation and four types of trigger.
@@ -42,9 +41,9 @@ There are same to those three situation, but with one different:
 - POINT + UP + DOWN -> Trigger when the situation happened.
 - FLEX: It triggered when it pass through by POINT, UP or DOWN.
 
-#### API side guides
+### API side guides
 
-<1> Define general attribute
+#### <1> Define general attribute
 
 At the starts of designing callbacks, I decided to use api.custom.BehaviorRegistry.java for
 general callback register.
@@ -134,7 +133,7 @@ public void onServerStarting(ServerStartingEvent event) {
 
 If you still confused, you may check for the examples at `registry.test.TestHolder.java`.
 
-<2> Parameters
+#### <2> Parameters
 
 It is a context to help you for customization.
 It contains:
@@ -157,7 +156,7 @@ BehaviorRegister("attribute:example:example100", (player, parameters) -> {
 });
 ```
 
-<3> Assign value
+#### <3> Assign value
 
 The register is an attribute definition. 
 To assign for player or global, you can use two different ways:
@@ -229,7 +228,7 @@ AttributeHolder.reduceValue(
 );
 ```
 
-<4> Other operations
+#### <4> Other operations
 
 If you wish to know more method to operate, you may check `api.AttributeHolder.java` for details.
 
@@ -246,12 +245,12 @@ AttributeHolder.displayToInfoPage(
 );
 ```
 
-#### Command side guides
+### Command side guides
 
 It is an easier method to operates attributes.
 You can use limited callback (General use) or full callback (Requires Java register) for threshold/recovery.
 
-<1> Define simple attribute
+#### <1> Define simple attribute
 
 If you define a command attribute, it is **deletable** attribute (API attribute can not be deleted).
 Also, command attribute will automatically register by YAML attribute files.
@@ -261,7 +260,7 @@ or ".minecraft/saves/[save]/data/core_hanxu/attribute/[name].yaml" (World path).
 To create a new attribute, execute as format: 
 `/chx attribute create [string: attribute id] {global/world} [float: maximum value] [float: default value]`
 
-<2> Define threshold
+#### <2> Define threshold
 
 When you finish the creation, define a threshold by format: 
 `/chx attribute define [string: attribute id] [float: threshold] {execute/remind} [greedy string: content (execute: Considered as command; remind: Considered as sentence)]`
@@ -272,7 +271,7 @@ If you wish to link up the API callback, you can execute as format:
 
 *Define threshold to 0 for creating zero threshold.
 
-<3> Define recovery
+#### <3> Define recovery
 
 It is an optional method that to linearly increase/decrease value, or link up to API recovery.
 
@@ -283,7 +282,7 @@ To link up API recovery:
 `/chx attribute recovery api [string: callback api]`
 (!) Ensure you are admin (Permission level = 10).
 
-<4> Modify attribute
+#### <4> Modify attribute
 
 If you need a flexible modification to attribute, you can execute by format:
 `/chx attribute modify {set/add/reduce} [float: new value] [string: direction (point/up/down/flex)]`
@@ -292,7 +291,7 @@ Set: Set the value to the new value.
 Add: Add value to old value (Accepted negative).
 Reduce: Reduce value to old value (Considered as minus).
 
-<5> Other operations
+#### <5> Other operations
 
 If you seek for more commands, you can view `/chx attribute help` for help.
 

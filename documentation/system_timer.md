@@ -7,18 +7,16 @@ System: Timer
 Timer system is a system that allows Java callback or custom behavior after timer time out.
 This system provides API and command side support.
 
-### Features
+### General terms
 
-#### General terms
-
-Master/Master id
+#### Master/Master id
 
 It is a term that reference to the owner of the timer.
 It can be player, global, or temporary.
 
-#### API side guides
+### API side guides
 
-<1> Template timer
+#### <1> Template timer
 
 Template timer is a temporary timer to define timer id, duration time,
 time unit, and behavior details for repeatedly apply instances.
@@ -128,7 +126,7 @@ TimeHolder.createTemplateTimer(
 );
 ```
 
-<2> Instance timer
+#### <2> Instance timer
 
 Instance timer is a method to immediately create a usable timer.
 It similar to template timer, but provide masterId (playerUUID or global/temp) at first step.
@@ -148,7 +146,7 @@ TimeHolder.createInstanceTimer(
 // Or same like template timer method: skip callback and parameters.
 ```
 
-<3> Using timer
+#### <3> Using timer
 
 When finish creation, you can use those method to run and modify your timer:
 ```
@@ -178,7 +176,7 @@ TimeHolder.deleteTemplateTimer(timerId);
 TimeHolder.deleteInstanceTimer(masterId, timerId);
 ```
 
-<4> Modify timer
+#### <4> Modify timer
 
 When using instance timer, you are advised to modify timer when no system using this timer now.
 ```
@@ -194,7 +192,7 @@ TimeHolder.modifyInstanceTimer(
 );
 ```
 
-<5> Other operations
+#### <5> Other operations
 
 Sometimes you may need to get the status of a timer, you may check `api.TimeHolder.java` for details.
 
@@ -211,12 +209,12 @@ TimeHolder.displayToInfoPage(
 );
 ```
 
-#### Command side guides
+### Command side guides
 
 For easier to use timer system. Mod provides commands for operations.
 You can use limited callback (General use) or full callback (Requires Java register) for timer behavior.
 
-<1> Create timer
+#### <1> Create timer
 
 Template timer is an intermediate form to apply timer usage.
 Instance timer is for immediately use.
@@ -249,7 +247,7 @@ Example 2: `
 /chx timer instance timer200 -global 15 second remind time is up!
 `
 
-<2> Apply timer
+#### <2> Apply timer
 
 When created template timer, you must apply it to instance for use.
 
@@ -257,7 +255,7 @@ Format: `
 /chx timer instance apply [string: timer id (Template timer's name)] [string: master id (Who take this timer)]
 `
 
-<3> Using timer
+#### <3> Using timer
 
 When finish creation, use those commands to run timer.
 
@@ -285,7 +283,7 @@ Modify timer: `
 /chx timer instance modify [string: master id] [string: timer id] {remaining/initial} [integer: new value] [string: time unit (tick/second/minute/hour)]
 `
 
-<5> Other operations
+#### <5> Other operations
 
 If you seek for more commands, you can view `/chx timer help` for help.
 

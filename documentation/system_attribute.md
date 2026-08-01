@@ -253,7 +253,7 @@ You can use limited callback (General use) or full callback (Requires Java regis
 
 <1> Define simple attribute
 
-If you define a command attribute, it is *deletable attribute (API attribute can not be deleted).
+If you define a command attribute, it is **deletable** attribute (API attribute can not be deleted).
 Also, command attribute will automatically register by YAML attribute files.
 You can view the file from ".minecraft/config/core_hanxu/attribute/[name].yaml" (Global path)
 or ".minecraft/saves/[save]/data/core_hanxu/attribute/[name].yaml" (World path).

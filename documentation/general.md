@@ -20,7 +20,7 @@ If you seek for help or raise issues, please contact me by email (Formal):
 It is an open-sourced mod, so that if you seek for other Minecraft version,
 you are encouraged to migrate by yourself and under the terms from license.
 
-It *may* be migrated to Minecraft Java Edition 1.21.1 in NeoForge.
+It **may** be migrated to Minecraft Java Edition 1.21.1 in NeoForge (Not a promise).
 
 ### License
 

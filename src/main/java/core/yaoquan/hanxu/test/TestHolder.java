@@ -315,7 +315,7 @@ public class TestHolder {
                 // Define a attribute.
                 AttributeHolder.CustomAttribute attribute1 = new AttributeHolder.CustomAttribute(
                     "core_hanxu-test:run_value", 60, 10)
-                    // Fluent factory: define threshold and zero behaviors.
+                    // Chain factory: define threshold and zero behaviors.
                     // It must be satisfied of the rule [function name]:[name space]:[threshold name].
                     .onThreshold(20, "attribute:core_hanxu-test:give_sword")
                     .onThreshold(40, "attribute:core_hanxu-test:give_speed")

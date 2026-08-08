@@ -3,8 +3,12 @@ package core.yaoquan.hanxu.util;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.AttributeHolder;
+import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.Error;
+import core.yaoquan.hanxu.api.weather.ColoredRain;
+import core.yaoquan.hanxu.api.weather.Fog;
+import core.yaoquan.hanxu.api.weather.Wind;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -13,6 +17,8 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import static core.yaoquan.hanxu.api.define.Error.returnGeneralError;
@@ -221,6 +227,133 @@ public class Creator {
         }
     }
 
+    /**
+     * Create weather for command/YAML definitions.
+     */
+    public static WeatherHolder.WeatherDefinition createWeatherDefinition(
+            String id, WeatherHolder.WeatherType type, Random random,
+            Map<String, Object> parameters) {
+        int minimumDuration = Cast.toInteger(parameters, "minimum_duration", 1200);
+        int maximumDuration = Cast.toInteger(parameters, "maximum_duration", 6000);
+        int minimumStillness = Cast.toInteger(parameters, "minimum_stillness", 1200);
+        int maximumStillness = Cast.toInteger(parameters, "maximum_stillness", 6000);
+
+        switch (type) {
+            case FOG -> {
+                int color = Cast.toInteger(parameters, "color", WeatherHolder.DefaultColor.FOG);
+                float minimumDistance = Cast.toFloat(parameters, "minimum_distance", 4f);
+                float maximumDistance = Cast.toFloat(parameters, "maximum_distance", 64f);
+
+                Fog fog = new Fog(id, random)
+                        .color(color)
+                        .distance(minimumDistance, maximumDistance)
+                        .duration(minimumDuration, maximumDuration)
+                        .stillness(minimumStillness, maximumStillness);
+
+                Object heightOffsets = parameters.get("height_offsets");
+                if (!(heightOffsets instanceof Map)) {
+                    return fog;
+                }
+
+                for (Map.Entry<?, ?> entry : ((Map<?, ?>) heightOffsets).entrySet()) {
+                    if (entry.getKey() instanceof Number && entry.getValue() instanceof Number) {
+                        fog.heightOffset(
+                                ((Number) entry.getKey()).floatValue(),
+                                ((Number) entry.getValue()).floatValue()
+                        );
+                    }
+                }
+
+                return fog;
+            }
+            case COLORED_RAIN -> {
+                int skyColor = Cast.toInteger(parameters, "sky_color", WeatherHolder.DefaultColor.RAINY_SKY);
+                int rainColor = Cast.toInteger(parameters, "rain_color", WeatherHolder.DefaultColor.RAIN);
+                int snowColor = Cast.toInteger(parameters, "snow_color", WeatherHolder.DefaultColor.SNOW);
+
+                ColoredRain coloredRain = new ColoredRain(id, random)
+                        .skyColor(skyColor)
+                        .rainColor(rainColor)
+                        .snowColor(snowColor)
+                        .duration(minimumDuration, maximumDuration)
+                        .stillness(minimumStillness, maximumStillness);
+
+                coloredRain
+                        .rainBiomes(getRainType(parameters, "rain_biomes"))
+                        .snowBiomes(getRainType(parameters, "snow_biomes"))
+                        .dryBiomes(getRainType(parameters, "dry_biomes"));
+
+                return coloredRain;
+            }
+            case WIND -> {
+                Wind wind = new Wind(id, random)
+                        .duration(minimumDuration, maximumDuration)
+                        .stillness(minimumStillness, maximumStillness);
+
+                String windType = Cast.toString(parameters, "wind_type");
+
+                if (windType == null) {
+                    CoreHanXu.LOGGER.warn("[HX] Received null wind type for: {}", id);
+                    return null;
+                }
+
+                windType = windType.toLowerCase();
+
+                Object vectorObject = parameters.get("vector");
+
+                if (!(vectorObject instanceof Map)) {
+                    CoreHanXu.LOGGER.warn("[HX] Received null vector for: {}", id);
+                    return null;
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> vector = (Map<String, Object>) vectorObject;
+                switch (windType) {
+                    case "static" -> wind.staticVector(
+                            Cast.toDouble(vector, "x", 0),
+                            Cast.toDouble(vector, "y", 0),
+                            Cast.toDouble(vector, "z", 0)
+                    );
+                    case "static_range" -> wind.staticVector(
+                            Cast.toDouble(vector, "minimum_x", 0),
+                            Cast.toDouble(vector, "maximum_x", 0),
+                            Cast.toDouble(vector, "minimum_y", 0),
+                            Cast.toDouble(vector, "maximum_y", 0),
+                            Cast.toDouble(vector, "minimum_z", 0),
+                            Cast.toDouble(vector, "maximum_z", 0)
+                    );
+                    case "dynamic" -> wind.dynamicVector(
+                            Cast.toDouble(vector, "minimum_x", 0),
+                            Cast.toDouble(vector, "maximum_x", 0),
+                            Cast.toDouble(vector, "minimum_y", 0),
+                            Cast.toDouble(vector, "maximum_y", 0),
+                            Cast.toDouble(vector, "minimum_z", 0),
+                            Cast.toDouble(vector, "maximum_z", 0)
+                    );
+                    default -> CoreHanXu.LOGGER.warn("[HX] Received unknown wind type for: {}", id);
+                }
+
+                float minimumSpeedReduction = Cast.toFloat(parameters, "minimum_speed_reduction", 0);
+                float maximumSpeedReduction = Cast.toFloat(parameters, "maximum_speed_reduction", 0);
+                wind.speedReduction(minimumSpeedReduction, maximumSpeedReduction);
+
+                float minimumDriftDistance = Cast.toFloat(parameters, "minimum_drift_distance", 0);
+                float maximumDriftDistance = Cast.toFloat(parameters, "maximum_drift_distance", 0);
+                wind.driftDistance(minimumDriftDistance, maximumDriftDistance);
+
+                boolean affectRain = Cast.toBoolean(parameters, "affect_rain", true);
+                float dynamicSpeedChange = Cast.toFloat(parameters, "dynamic_speed_change", 0);
+                wind.affectRain(affectRain).dynamicSpeedChange(dynamicSpeedChange);
+
+                return wind;
+            }
+            // Wait for more definitions.
+            default -> {
+                return null;
+            }
+        }
+    }
+
     private static AttributeHolder.ThresholdDirection getThresholdDirection(String[] recoveryData) {
         String direction = recoveryData[2];
 
@@ -232,5 +365,24 @@ public class Creator {
             default -> thresholdDirection = AttributeHolder.ThresholdDirection.POINT;
         }
         return thresholdDirection;
+    }
+
+    private static ColoredRain.RainType getRainType(Map<String, Object> parameters, String key) {
+        if (parameters.isEmpty() || !parameters.containsKey(key)) {
+            return ColoredRain.RainType.DEFAULT;
+        }
+
+        if (!(parameters.get(key) instanceof String)) {
+            return ColoredRain.RainType.DEFAULT;
+        }
+
+        String rainType = parameters.get(key).toString().toLowerCase();
+
+        return switch (rainType) {
+            case "rain" -> ColoredRain.RainType.RAIN;
+            case "snow" -> ColoredRain.RainType.SNOW;
+            case "dry" -> ColoredRain.RainType.DRY;
+            default -> ColoredRain.RainType.DEFAULT;
+        };
     }
 }

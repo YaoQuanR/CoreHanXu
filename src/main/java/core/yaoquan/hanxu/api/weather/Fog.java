@@ -1,0 +1,188 @@
+package core.yaoquan.hanxu.api.weather;
+
+import core.yaoquan.hanxu.api.WeatherHolder;
+import net.minecraft.server.level.ServerLevel;
+
+import java.util.Map;
+import java.util.Random;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+/// @since 0.7.0 (Internal Development)
+public class Fog implements WeatherHolder.WeatherDefinition {
+    private final String id;
+    private final Random random;
+    private int color = WeatherHolder.DefaultColor.FOG;
+    private float minimumDistance = 4f;
+    private float maximumDistance = 64f;
+    private int minimumDuration = 1200;
+    private int maximumDuration = 6000;
+    private int minimumStillness = 1200;
+    private int maximumStillness = 6000;
+    private final SortedMap<Float, Float> heightOffsets = new TreeMap<>();
+
+    public Fog(String id, Random random) {
+        this.id = id;
+        this.random = random;
+    }
+
+    public Fog color(int color) {
+        this.color = color;
+        return this;
+    }
+
+    public Fog distance(float minimum, float maximum) {
+        this.minimumDistance = Math.min(minimum, maximum);
+        this.maximumDistance = Math.max(minimum, maximum);
+        return this;
+    }
+
+    public Fog duration(int minimum, int maximum) {
+        this.minimumDuration = Math.min(minimum, maximum);
+        this.maximumDuration = Math.max(minimum, maximum);
+        return this;
+    }
+
+    public Fog stillness(int minimum, int maximum) {
+        this.minimumStillness = Math.min(minimum, maximum);
+        this.maximumStillness = Math.max(minimum, maximum);
+        return this;
+    }
+
+    public Fog heightOffset(float height, float offset) {
+        this.heightOffsets.put(height, offset);
+        return this;
+    }
+
+    public float getDistance(float height) {
+        float offset = 0;
+
+        if (!heightOffsets.isEmpty()) {
+            offset = offsetInterpolation(height);
+        }
+
+        return Math.min(Math.max(minimumDistance + offset, 0), maximumDistance);
+    }
+
+    @Override
+    public WeatherHolder.WeatherInstance create(Random random) {
+        int duration = minimumDuration + random.nextInt(maximumDuration - minimumDuration + 1);
+        int stillness = minimumStillness + random.nextInt(maximumStillness - minimumStillness + 1);
+
+        return new WeatherHolder.WeatherInstance(
+                id,
+                WeatherHolder.WeatherType.FOG,
+                duration,
+                stillness,
+                this
+        );
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public Random getRandom() {
+        return random;
+    }
+
+    @Override
+    public int getMinimumDuration() {
+        return minimumDuration;
+    }
+
+    @Override
+    public int getMaximumDuration() {
+        return maximumDuration;
+    }
+
+    @Override
+    public int getMinimumStillness() {
+        return minimumStillness;
+    }
+
+    @Override
+    public int getMaximumStillness() {
+        return maximumStillness;
+    }
+
+    // Always able to use (No conditions).
+    @Override
+    public boolean isAble(ServerLevel level) {
+        return true;
+    }
+
+    @Override
+    public WeatherHolder.WeatherType getWeatherType() {
+        return WeatherHolder.WeatherType.FOG;
+    }
+
+    public int getColor() {
+        return color;
+    }
+
+    public float getMinimumDistance() {
+        return minimumDistance;
+    }
+
+    public float getMaximumDistance() {
+        return maximumDistance;
+    }
+
+    public SortedMap<Float, Float> getHeightOffsets() {
+        return heightOffsets;
+    }
+
+    @Override
+    public String toString() {
+        return "HanXu(Core):WeatherHolder-Definitions:{id=" + id +
+                ", color=" + color +
+                ", distance=" + minimumDistance +
+                "~" + maximumDistance +
+                ", duration=" + minimumDuration +
+                "~" + maximumDuration +
+                ", stillness=" + minimumStillness +
+                "~" + maximumStillness +
+                ", heightOffsets=" + heightOffsets
+                + "}";
+    }
+
+    private float offsetInterpolation(float height) {
+        float nearestLowerHeight = Float.NEGATIVE_INFINITY;
+        float nearestUpperHeight = Float.POSITIVE_INFINITY;
+        float nearestLowerOffset = 0f;
+        float nearestUpperOffset = 0f;
+
+        for (Map.Entry<Float, Float> entry : heightOffsets.entrySet()) {
+            // Nearest lower variables.
+            if (entry.getKey() <= height) {
+                nearestLowerHeight = entry.getKey();
+                nearestLowerOffset = entry.getValue();
+            }
+            // First nearest upper variables.
+            if (entry.getKey() > height && nearestUpperHeight == Float.POSITIVE_INFINITY) {
+                nearestUpperHeight = entry.getKey();
+                nearestUpperOffset = entry.getValue();
+            }
+        }
+
+        // If not in an interval:
+        // If this height lower than every node, use the first offset value.
+        if (nearestLowerHeight == Float.NEGATIVE_INFINITY) {
+            return nearestUpperOffset;
+        }
+        // If this height is the upperest value than every node, use the last offset value.
+        if (nearestUpperHeight == Float.POSITIVE_INFINITY) {
+            return nearestLowerOffset;
+        }
+        // If exactly into a node, use this node's offset.
+        if (nearestLowerHeight == nearestUpperHeight) {
+            return nearestLowerOffset;
+        }
+
+        float delta = (height - nearestLowerHeight) / (nearestUpperHeight - nearestLowerHeight);
+        return nearestLowerOffset + delta * (nearestUpperOffset - nearestLowerOffset);
+    }
+}

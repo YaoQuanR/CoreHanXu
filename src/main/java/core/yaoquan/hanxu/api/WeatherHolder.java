@@ -1,11 +1,16 @@
 package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.util.Creator;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 import net.neoforged.fml.common.EventBusSubscriber;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Weather System API
@@ -13,440 +18,250 @@ import java.util.*;
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
 public class WeatherHolder {
-    private static class DefaultColor {
-        private static final int RAIN = 0xCFEBFF;
-        private static final int SKY = 0xCCF0FF;
-        private static final int RAINY_SKY = 0x4D82A8;
-        private static final int SNOW = 0xEDF8FF;
-        private static final int FOG = 0xCCDDEE;
+    public static class DefaultColor {
+        public static final int RAIN = 0xCFEBFF;
+        public static final int RAINY_SKY = 0x4D82A8;
+        public static final int SNOW = 0xEDF8FF;
+        public static final int FOG = 0xCCDDEE;
     }
 
-    // Structure of a custom weather.
-    public static class CustomWeather {
+    public enum WeatherType {
+        FOG, COLORED_RAIN, WIND,
+        COLORED_MOON, PARTICLE_STORM,
+        AURORA, VOID_FOG,
+    }
+
+    public interface WeatherDefinition {
+        String getId();
+        Random getRandom();
+        int getMinimumDuration();
+        int getMaximumDuration();
+        int getMinimumStillness();
+        int getMaximumStillness();
+        WeatherType getWeatherType();
+        boolean isAble(ServerLevel level);
+        WeatherInstance create(Random random);
+    }
+
+    public static class WeatherInstance {
         private final String id;
-        private final Random random;
-        private WeatherTrigger trigger;
-        private final List<Fog> fogs = new ArrayList<>();
-        private final List<ColoredRain> coloredRains = new ArrayList<>();
-        private final List<Wind> winds = new ArrayList<>();
+        private final WeatherType type;
+        private final WeatherDefinition definition;
+        private int remainingTicks;
+        private int durationTicks;
+        private int stillnessTicks;
+        private boolean isStillness;
+        private boolean isActive;
+        private boolean isReady;
 
-        public CustomWeather(String id, Random random) {
+        public WeatherInstance(String id, WeatherType type, int durationTicks, int stillnessTicks, WeatherDefinition definition) {
             this.id = id;
-            this.random = random;
+            this.type = type;
+            this.remainingTicks = durationTicks;
+            this.durationTicks = durationTicks;
+            this.stillnessTicks = stillnessTicks;
+            this.definition = definition;
+
+            this.isStillness = false;
+            this.isActive = false;
+            this.isReady = false;
         }
 
-        public CustomWeather trigger(WeatherTrigger trigger) {
-            this.trigger = trigger;
-            return this;
+        public void activate() {
+            this.isActive = true;
+            this.isReady = false;
+            this.remainingTicks = this.durationTicks;
         }
 
-        public CustomWeather fog(Fog fog) {
-            this.fogs.add(fog);
-            return this;
+        public void ready() {
+            this.isReady = true;
+            this.isActive = false;
+            this.isStillness = false;
         }
 
-        public CustomWeather coloredRain(ColoredRain coloredRain) {
-            this.coloredRains.add(coloredRain);
-            return this;
+        public void stillness() {
+            this.isStillness = true;
+            this.isActive = false;
+            this.isReady = false;
+            this.remainingTicks = this.stillnessTicks;
         }
 
-        public CustomWeather wind(Wind wind) {
-            this.winds.add(wind);
-            return this;
+        public void tickCount() {
+            if (remainingTicks <= 0) {
+                return;
+            }
+
+            remainingTicks--;
+        }
+
+        public void setRemainingTicks(int ticks) {
+            this.remainingTicks = ticks;
+        }
+
+        public void setDurationTicks(int ticks) {
+            this.durationTicks = ticks;
+        }
+
+        public void setStillnessTicks(int ticks) {
+            this.stillnessTicks = ticks;
+        }
+
+        public boolean doesStageChange() {
+            return remainingTicks <= 0;
         }
 
         public String getId() {
             return id;
         }
 
-        public Random getRandom() {
-            return random;
-        }
-
-        public WeatherTrigger getTrigger() {
-            return trigger;
-        }
-
-        public List<Fog> getFogs() {
-            return fogs;
-        }
-
-        public List<ColoredRain> getColoredRains() {
-            return coloredRains;
-        }
-
-        public List<Wind> getWinds() {
-            return winds;
-        }
-    }
-
-    // Inner weather components:
-    public static class WeatherTrigger {
-        private int minimumDuration = 1200;
-        private int maximumDuration = 3600;
-        private int minimumStillness = 1200;
-        private int maximumStillness = 3600;
-        private boolean ensureSatisfied = false;
-
-        public WeatherTrigger duration(int minimumDuration, int maximumDuration) {
-            this.minimumDuration = Math.min(minimumDuration, maximumDuration);
-            this.maximumDuration = Math.max(minimumDuration, maximumDuration);
-            return this;
-        }
-
-        public WeatherTrigger stillness(int minimumStillness, int maximumStillness) {
-            this.minimumStillness = Math.min(minimumStillness, maximumStillness);
-            this.maximumStillness = Math.max(minimumStillness, maximumStillness);
-            return this;
-        }
-
-        public WeatherTrigger ensureSatisfied(boolean ensureSatisfied) {
-            this.ensureSatisfied = ensureSatisfied;
-            return this;
-        }
-
-        public int getDuration(Random random) {
-            if (minimumDuration == maximumDuration) {
-                return minimumDuration;
-            }
-
-            return minimumDuration + random.nextInt(maximumDuration - minimumDuration + 1);
-        }
-
-        public int getStillness(Random random) {
-            if (minimumStillness == maximumStillness) {
-                return minimumStillness;
-            }
-
-            return minimumStillness + random.nextInt(maximumStillness - minimumStillness + 1);
-        }
-
-        public int getDuration() {
-            if (minimumDuration == maximumDuration) {
-                return minimumDuration;
-            }
-
-            return minimumDuration + new Random().nextInt(maximumDuration - minimumDuration + 1);
-        }
-
-        public int getStillness() {
-            if (minimumStillness == maximumStillness) {
-                return minimumStillness;
-            }
-
-            return minimumStillness + new Random().nextInt(maximumStillness - minimumStillness + 1);
-        }
-
-        public boolean doesEnsureSatisfied() {
-            return ensureSatisfied;
-        }
-    }
-
-    public static class Fog {
-        private int color = DefaultColor.FOG;
-        private float minimumDistance = 4f;
-        private float maximumDistance = 64f;
-        private final SortedMap<Float, Float> heightOffsets = new TreeMap<>();
-
-        public Fog color(int color) {
-            this.color = color;
-            return this;
-        }
-
-        public Fog distance(float minimumDistance, float maximumDistance) {
-            this.minimumDistance = Math.min(minimumDistance, maximumDistance);
-            this.maximumDistance = Math.max(minimumDistance, maximumDistance);
-            return this;
-        }
-
-        public Fog heightOffset(float height, float offsetDistance) {
-            this.heightOffsets.put(height, offsetDistance);
-            return this;
-        }
-
-        public float getDistance(float height) {
-            float offset = 0;
-
-            if (!heightOffsets.isEmpty()) {
-                offset = offsetInterpolation(height);
-            }
-
-            return Math.min(Math.max(minimumDistance + offset, 0), maximumDistance);
-        }
-
-        public int getColor() {
-            return color;
-        }
-
-        // Always able to use (No conditions):
-        public boolean isAble() {
-            return true;
-        }
-
-        public boolean isAble(ServerLevel level) {
-            return true;
-        }
-
-        private float offsetInterpolation(float height) {
-            float nearestLowerHeight = Float.NEGATIVE_INFINITY;
-            float nearestUpperHeight = Float.POSITIVE_INFINITY;
-            float nearestLowerOffset = 0f;
-            float nearestUpperOffset = 0f;
-
-            for (Map.Entry<Float, Float> entry : heightOffsets.entrySet()) {
-                // Nearest lower variables.
-                if (entry.getKey() <= height) {
-                    nearestLowerHeight = entry.getKey();
-                    nearestLowerOffset = entry.getValue();
-                }
-
-                // First nearest upper variables.
-                if (entry.getKey() > height && nearestUpperHeight == Float.POSITIVE_INFINITY) {
-                    nearestUpperHeight = entry.getKey();
-                    nearestUpperOffset = entry.getValue();
-                }
-            }
-
-            // If not in an interval:
-            // If this height lower than every node, use the first offset value.
-            if (nearestLowerHeight == Float.NEGATIVE_INFINITY) {
-                return nearestUpperOffset;
-            }
-            // If this height is the upperest value than every node, use the last offset value.
-            if (nearestUpperHeight == Float.POSITIVE_INFINITY) {
-                return nearestLowerOffset;
-            }
-            // If exactly into a node, use this node's offset.
-            if (nearestLowerHeight == nearestUpperHeight) {
-                return nearestLowerOffset;
-            }
-
-            float delta = (height - nearestLowerHeight) / (nearestUpperHeight - nearestLowerHeight);
-
-            return nearestLowerOffset + delta * (nearestUpperHeight - nearestLowerHeight);
-        }
-    }
-
-    // Define what behavior should override when player enter a specific climate (Biome set).
-    public enum RainType {
-        DEFAULT, RAIN, SNOW, DRY
-    }
-
-    public static class ColoredRain {
-        private int rainColor = DefaultColor.RAIN;
-        private int snowColor = DefaultColor.SNOW;
-        private int skyColor = DefaultColor.RAINY_SKY;
-        private RainType rainBiomesOverride = RainType.DEFAULT;
-        private RainType snowBiomesOverride = RainType.DEFAULT;
-        private RainType dryBiomesOverride = RainType.DEFAULT;
-
-        public ColoredRain rainColor(int rainColor) {
-            this.rainColor = rainColor;
-            return this;
-        }
-
-        public ColoredRain snowColor(int snowColor) {
-            this.snowColor = snowColor;
-            return this;
-        }
-
-        public ColoredRain skyColor(int skyColor) {
-            this.skyColor = skyColor;
-            return this;
-        }
-
-        public ColoredRain rainBiomes(RainType rainBiomesOverride) {
-            this.rainBiomesOverride = rainBiomesOverride;
-            return this;
-        }
-
-        public ColoredRain snowBiomes(RainType snowBiomesOverride) {
-            this.snowBiomesOverride = snowBiomesOverride;
-            return this;
-        }
-
-        public ColoredRain dryBiomes(RainType dryBiomesOverride) {
-            this.dryBiomesOverride = dryBiomesOverride;
-            return this;
-        }
-
-        public int getRainColor() {
-            return rainColor;
-        }
-
-        public int getSnowColor() {
-            return snowColor;
-        }
-
-        public int getSkyColor() {
-            return skyColor;
-        }
-
-        public RainType getRainBiomesOverride() {
-            return rainBiomesOverride;
-        }
-
-        public RainType getSnowBiomesOverride() {
-            return snowBiomesOverride;
-        }
-
-        public RainType getDryBiomesOverride() {
-            return dryBiomesOverride;
-        }
-
-        // Only able when raining or thundering.
-        public boolean isAble(ServerLevel level) {
-            return level.isRaining() || level.isThundering();
-        }
-    }
-
-    // Determine how the direction change.
-    public enum WindType {
-        STATIC, STATIC_RANGE, DYNAMIC
-    }
-
-    public static class Wind {
-        private Vec3 staticVector = Vec3.ZERO;
-        private Vec3 minimumVector = Vec3.ZERO;
-        private Vec3 maximumVector = Vec3.ZERO;
-        private WindType type = WindType.STATIC;
-        private float minimumSpeedReduction = 0f;
-        private float maximumSpeedReduction = 0f;
-        private float minimumDriftDistance = 0f;
-        private float maximumDriftDistance = 0f;
-        private boolean affectRainDirection = true;
-        private float dynamicSpeedChange = 0.02f;
-        private double dynamicPhaseChangeX, dynamicPhaseChangeY, dynamicPhaseChangeZ;
-
-        public Wind staticVector(double vectorX, double vectorY, double vectorZ) {
-            this.type = WindType.STATIC;
-            this.staticVector = new Vec3(vectorX, vectorY, vectorZ);
-            return this;
-        }
-
-        public Wind staticVector(double minimumX, double maximumX, double minimumY, double maximumY, double minimumZ, double maximumZ) {
-            this.type = WindType.STATIC_RANGE;
-            this.minimumVector = new Vec3(minimumX, minimumY, minimumZ);
-            this.maximumVector = new Vec3(maximumX, maximumY, maximumZ);
-            return this;
-        }
-
-        public Wind dynamicVector(Random random, double minimumX, double maximumX, double minimumY, double maximumY, double minimumZ, double maximumZ) {
-            this.type = WindType.DYNAMIC;
-            this.minimumVector = new Vec3(minimumX, minimumY, minimumZ);
-            this.maximumVector = new Vec3(maximumX, maximumY, maximumZ);
-
-            this.dynamicPhaseChangeX = random.nextDouble() * 2 * Math.PI;
-            this.dynamicPhaseChangeY = random.nextDouble() * 2 * Math.PI;
-            this.dynamicPhaseChangeZ = random.nextDouble() * 2 * Math.PI;
-            return this;
-        }
-
-        public Wind staticVector(Vec3 staticVector) {
-            this.type = WindType.STATIC;
-            this.staticVector = staticVector;
-            return this;
-        }
-
-        public Wind staticVector(Vec3 minimumVector, Vec3 maximumVector) {
-            this.type = WindType.STATIC_RANGE;
-            this.minimumVector = minimumVector;
-            this.maximumVector = maximumVector;
-            return this;
-        }
-
-        public Wind dynamicVector(Random random, Vec3 minimumVector, Vec3 maximumVector) {
-            this.type = WindType.DYNAMIC;
-            this.minimumVector = minimumVector;
-            this.maximumVector = maximumVector;
-
-            this.dynamicPhaseChangeX = random.nextDouble() * 2 * Math.PI;
-            this.dynamicPhaseChangeY = random.nextDouble() * 2 * Math.PI;
-            this.dynamicPhaseChangeZ = random.nextDouble() * 2 * Math.PI;
-            return this;
-        }
-
-        public Wind speedReduction(float minimumSpeedReduction, float maximumSpeedReduction) {
-            this.minimumSpeedReduction = Math.min(minimumSpeedReduction, maximumSpeedReduction);
-            this.maximumSpeedReduction = Math.max(minimumSpeedReduction, maximumSpeedReduction);
-            return this;
-        }
-
-        public Wind driftDistance(float minimumDriftDistance, float maximumDriftDistance) {
-            this.minimumDriftDistance = Math.min(minimumDriftDistance, maximumDriftDistance);
-            this.maximumDriftDistance = Math.max(minimumDriftDistance, maximumDriftDistance);
-            return this;
-        }
-
-        public Wind affectWindDirection(boolean affectRainDirection) {
-            this.affectRainDirection = affectRainDirection;
-            return this;
-        }
-
-        public Wind dynamicSpeed(float dynamicSpeedChange) {
-            this.dynamicSpeedChange = dynamicSpeedChange;
-            return this;
-        }
-
-        public Vec3 getStaticVector() {
-            return staticVector;
-        }
-
-        public Vec3 getVector(Random random) {
-            return switch (type) {
-                case STATIC -> staticVector;
-                case STATIC_RANGE -> new Vec3(
-                        minimumVector.x + random.nextDouble() * (maximumVector.x - minimumVector.x),
-                        minimumVector.y + random.nextDouble() * (maximumVector.y - minimumVector.y),
-                        minimumVector.z + random.nextDouble() * (maximumVector.z - minimumVector.z)
-                );
-                case DYNAMIC -> new Vec3(
-                        minimumVector.x + (maximumVector.x - minimumVector.x) * (0.5 + 0.5 * Math.sin(dynamicPhaseChangeX)),
-                        minimumVector.y + (maximumVector.y - minimumVector.y) * (0.5 + 0.5 * Math.sin(dynamicPhaseChangeY)),
-                        minimumVector.z + (maximumVector.z - minimumVector.z) * (0.5 + 0.5 * Math.sin(dynamicPhaseChangeZ))
-                );
-            };
-        }
-
-        public void tickDynamic(Random random) {
-            if (type == WindType.DYNAMIC) {
-                dynamicPhaseChangeX += dynamicSpeedChange * (0.5 + 0.5 * random.nextDouble());
-                dynamicPhaseChangeY += dynamicSpeedChange * (0.5 + 0.5 * random.nextDouble());
-                dynamicPhaseChangeZ += dynamicSpeedChange * (0.5 + 0.5 * random.nextDouble());
-            }
-        }
-
-        public float getSpeedReduction(Random random) {
-            if (minimumSpeedReduction == maximumSpeedReduction) {
-                return minimumSpeedReduction;
-            }
-
-            return minimumSpeedReduction + random.nextFloat() * (maximumSpeedReduction - minimumSpeedReduction);
-        }
-
-        public float getDriftDistance(Random random) {
-            if (minimumDriftDistance == maximumDriftDistance) {
-                return minimumDriftDistance;
-            }
-
-            return minimumDriftDistance + random.nextFloat() * maximumDriftDistance;
-        }
-
-        public boolean doesAffectRainDirection() {
-            return affectRainDirection;
-        }
-
-        public WindType getWindType() {
+        public WeatherType getType() {
             return type;
         }
 
-        // Always able to use (No conditions):
-        public boolean isAble() {
-            return true;
+        public WeatherDefinition getDefinition() {
+            return definition;
         }
 
-        public boolean isAble(ServerLevel level) {
-            return true;
+        public int getRemainingTicks() {
+            return remainingTicks;
         }
+
+        public int getDurationTicks() {
+            return durationTicks;
+        }
+
+        public int getStillnessTicks() {
+            return stillnessTicks;
+        }
+
+        public boolean doesStillness() {
+            return isStillness;
+        }
+
+        public boolean doesActive() {
+            return isActive;
+        }
+
+        public boolean doesReady() {
+            return isReady;
+        }
+    }
+
+    public static class WeatherState {
+        private WeatherInstance activeInstance;
+        private final Map<WeatherType, WeatherInstance> readyInstances = new ConcurrentHashMap<>();
+
+        public void activeNextInstance(WeatherType type) {
+            WeatherInstance instance = readyInstances.get(type);
+            if (instance == null) {
+                return;
+            }
+
+            instance.activate();
+            this.activeInstance = instance;
+
+            readyInstances.remove(type);
+        }
+
+        public WeatherInstance getActiveInstance() {
+            return activeInstance;
+        }
+
+        public WeatherInstance getReadyInstance(WeatherType type) {
+            return readyInstances.get(type);
+        }
+
+        public void setActiveInstance(WeatherInstance activeInstance) {
+            this.activeInstance = activeInstance;
+        }
+
+        public void setReadyInstance(WeatherInstance readyInstance) {
+            if (readyInstance == null) {
+                return;
+            }
+
+            readyInstances.put(readyInstance.getType(), readyInstance);
+        }
+
+        public void clearReadyInstance(WeatherType type) {
+            readyInstances.remove(type);
+        }
+
+        public void clearAllReadyInstance() {
+            readyInstances.clear();
+        }
+
+        public boolean doesReady(WeatherType type) {
+            WeatherInstance instance = readyInstances.get(type);
+            return instance != null && instance.doesReady();
+        }
+
+        public boolean doesReady(String id) {
+            for (WeatherInstance instance : readyInstances.values()) {
+                if (instance.getId().equals(id) && instance.doesReady()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public boolean doesAnyReady() {
+            return !readyInstances.isEmpty();
+        }
+
+        public Collection<WeatherInstance> getAllReadyInstances() {
+            return readyInstances.values();
+        }
+
+        public boolean doesActive(String id) {
+            return activeInstance != null && activeInstance.getId().equals(id);
+        }
+
+        public boolean doesPrepareOrUsing(String id) {
+            if (activeInstance != null && activeInstance.getId().equals(id)) {
+                return true;
+            }
+
+            for (WeatherInstance instance : readyInstances.values()) {
+                if (instance.getId().equals(id)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    // All registered weather.
+    private static final Map<String, WeatherDefinition> apiWeathers = new ConcurrentHashMap<>();
+    private static final Map<String, WeatherDefinition> commandWeathers = new ConcurrentHashMap<>();
+    // State of weather.
+    private static final Map<ResourceKey<Level>, WeatherState> weatherStates = new ConcurrentHashMap<>();
+
+    public static void register(WeatherDefinition weatherDefinition) {
+        apiWeathers.put(weatherDefinition.getId(), weatherDefinition);
+        CoreHanXu.LOGGER.info("[HX] Registered weather definition: {}", weatherDefinition.getId());
+    }
+
+    public static void unregister(WeatherDefinition weatherDefinition) {
+        apiWeathers.remove(weatherDefinition.getId());
+        CoreHanXu.LOGGER.info("[HX] Unregistered weather definition: {}", weatherDefinition.getId());
+    }
+
+    public static boolean register(String id, WeatherType type, Random random, Map<String, Object> parameters) {
+        if (apiWeathers.containsKey(id) || commandWeathers.containsKey(id)) {
+            CoreHanXu.LOGGER.warn("[HX] Reject duplicated weather definition: {}", id);
+            return false;
+        }
+        WeatherDefinition definition = Creator.createWeatherDefinition(id, type, random, parameters);
+        if (definition == null) {
+            return false;
+        }
+
+        commandWeathers.put(id, definition);
+
+        CoreHanXu.LOGGER.info("[HX] Registered weather definition by command: {}", id);
+        return true;
     }
 }

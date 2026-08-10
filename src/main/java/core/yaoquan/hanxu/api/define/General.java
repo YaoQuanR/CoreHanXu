@@ -1,5 +1,7 @@
 package core.yaoquan.hanxu.api.define;
 
+import net.minecraft.nbt.NbtAccounter;
+
 import java.util.UUID;
 
 public class General {
@@ -18,8 +20,17 @@ public class General {
         public static final int FAILURE = 0xFF5555;
     }
 
+    public static class Standard {
+        private static final long NBT_MAX_SIZE = 32L * 1024 * 1024;
+        private static final int NBT_MAX_DEPTH = 128;
+
+        public static NbtAccounter newNbtAccounter() {
+            return new NbtAccounter(NBT_MAX_SIZE, NBT_MAX_DEPTH);
+        }
+    }
+
     public static class Version {
-        private static final String CORE_VERSION = "0.7.id1";
+        private static final String CORE_VERSION = "0.7.id2";
 
         public static String getCoreVersion() {
             return CORE_VERSION;

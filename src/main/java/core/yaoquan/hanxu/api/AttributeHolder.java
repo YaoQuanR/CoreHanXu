@@ -103,7 +103,7 @@ public class AttributeHolder {
     }
 
     /**
-     * For API and command unregister.
+     * For Command source unregister.
      * @param attributeId       Unique title of attribute.
      * @return                  Does unregister success: boolean.
      */
@@ -566,7 +566,7 @@ public class AttributeHolder {
         CompoundTag dataRoot;
         try {
             // Limited to 32MB -> 128 Depth.
-            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
+            NbtAccounter accounter = General.Standard.newNbtAccounter();
             dataRoot = NbtIo.readCompressed(file, accounter);
         }
         catch (IOException e) {

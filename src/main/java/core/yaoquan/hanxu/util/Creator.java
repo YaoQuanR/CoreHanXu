@@ -233,10 +233,21 @@ public class Creator {
     public static WeatherHolder.WeatherDefinition createWeatherDefinition(
             String id, WeatherHolder.WeatherType type, Random random,
             Map<String, Object> parameters) {
-        int minimumDuration = Cast.toInteger(parameters, "minimum_duration", 1200);
-        int maximumDuration = Cast.toInteger(parameters, "maximum_duration", 6000);
-        int minimumStillness = Cast.toInteger(parameters, "minimum_stillness", 1200);
-        int maximumStillness = Cast.toInteger(parameters, "maximum_stillness", 6000);
+        int minimumDuration = 1200;
+        int maximumDuration = 6000;
+        Object durationObject = parameters.get("duration");
+        if (durationObject instanceof Map<?, ?> durationMap) {
+            minimumDuration = Cast.toInteger(durationMap.get("min"), minimumDuration);
+            maximumDuration = Cast.toInteger(durationMap.get("max"), maximumDuration);
+        }
+
+        int minimumStillness = 600;
+        int maximumStillness = 2400;
+        Object stillnessObject = parameters.get("stillness");
+        if (stillnessObject instanceof Map<?, ?> stillnessMap) {
+            minimumStillness = Cast.toInteger(stillnessMap.get("min"), minimumStillness);
+            maximumStillness = Cast.toInteger(stillnessMap.get("max"), maximumStillness);
+        }
 
         switch (type) {
             case FOG -> {
@@ -348,7 +359,7 @@ public class Creator {
                 return wind;
             }
             // Wait for more definitions.
-            default -> {
+            case null, default -> {
                 return null;
             }
         }

@@ -535,7 +535,7 @@ public class TimeHolder {
         CompoundTag dataRoot;
         try {
             // Limited to 32MB -> 128 Depth.
-            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
+            NbtAccounter accounter = General.Standard.newNbtAccounter();
             dataRoot = NbtIo.readCompressed(file, accounter);
         }
         catch (IOException e) {

@@ -84,6 +84,7 @@ public class Error {
         unexceptedTarget,
         unavailableTargetPath,
         mismatchFileElement,
+        missingNecessaryField,
     }
 
     public static Component returnTimerError(TimerError timerError) {
@@ -186,6 +187,7 @@ public class Error {
             case unexceptedTarget -> "[HX] Unexcepted target: ";
             case unavailableTargetPath ->  "[HX] Unavailable target path.";
             case mismatchFileElement ->  "[HX] Mismatch to the file element: ";
+            case missingNecessaryField -> "[HX] Missing necessary field: ";
             default -> "[HX] Undefined error type: " + codeError;
         };
     }

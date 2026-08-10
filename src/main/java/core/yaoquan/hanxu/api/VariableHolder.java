@@ -2,6 +2,7 @@ package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.FilePath;
+import core.yaoquan.hanxu.api.define.General;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -900,7 +901,7 @@ public class VariableHolder {
 
         CompoundTag root;
         try {
-            NbtAccounter accounter = new NbtAccounter(32L * 1024 * 1024, 128);
+            NbtAccounter accounter = General.Standard.newNbtAccounter();
             root = NbtIo.readCompressed(file, accounter);
         }
         catch (IOException e) {

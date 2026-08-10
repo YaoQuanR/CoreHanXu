@@ -73,7 +73,7 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
     }
 
     @Override
-    public WeatherHolder.WeatherInstance create(Random random) {
+    public WeatherHolder.WeatherInstance createInstance(Random random) {
         int duration = minimumDuration + random.nextInt(maximumDuration - minimumDuration);
         int stillness = minimumStillness + random.nextInt(maximumStillness - minimumStillness);
         return new WeatherHolder.WeatherInstance(

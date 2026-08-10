@@ -1,5 +1,6 @@
 package core.yaoquan.hanxu.util;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class Cast {
@@ -18,6 +19,11 @@ public class Cast {
         return value instanceof Number? ((Number) value).doubleValue() : defaultValue;
     }
 
+    public static long toLong(Map<String, Object> map, String key, long defaultValue) {
+        Object value = map.get(key);
+        return value instanceof Number? ((Number) value).longValue() : defaultValue;
+    }
+
     public static String toString(Map<String, Object> map, String key, String defaultValue) {
         Object value = map.get(key);
         return value instanceof String? (String) value : defaultValue;
@@ -26,6 +32,16 @@ public class Cast {
     public static boolean toBoolean(Map<String, Object> map, String key, boolean defaultValue) {
         Object value = map.get(key);
         return value instanceof Boolean? (Boolean) value : defaultValue;
+    }
+
+    public static String toStringOrThrow(Map<String, Object> map, String key, String exception) throws IOException {
+        Object value = map.get(key);
+        if (value instanceof String) {
+            return (String) value;
+        }
+        else {
+            throw new IOException(exception);
+        }
     }
 
     public static int toInteger(Object object, int defaultValue) {
@@ -38,6 +54,10 @@ public class Cast {
 
     public static double toDouble(Object object, double defaultValue) {
         return object instanceof Number? ((Number) object).doubleValue() : defaultValue;
+    }
+
+    public static long toLong(Object object, long defaultValue) {
+        return object instanceof Number? ((Number) object).longValue() : defaultValue;
     }
 
     public static String toString(Object object, String defaultValue) {

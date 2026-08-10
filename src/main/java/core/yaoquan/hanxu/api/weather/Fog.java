@@ -65,7 +65,7 @@ public class Fog implements WeatherHolder.WeatherDefinition {
     }
 
     @Override
-    public WeatherHolder.WeatherInstance create(Random random) {
+    public WeatherHolder.WeatherInstance createInstance(Random random) {
         int duration = minimumDuration + random.nextInt(maximumDuration - minimumDuration + 1);
         int stillness = minimumStillness + random.nextInt(maximumStillness - minimumStillness + 1);
 

@@ -1,19 +1,19 @@
 package core.yaoquan.hanxu.api.weather;
 
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /// @since 0.7.0 (Internal Development)
 public class Fog implements WeatherHolder.WeatherDefinition {
     private final String id;
     private final Random random;
     private int color = WeatherHolder.DefaultColor.FOG;
-    private float minimumDistance = 4f;
+    private float minimumDistance = 8f;
     private float maximumDistance = 64f;
     private int minimumDuration = 1200;
     private int maximumDuration = 6000;
@@ -76,6 +76,52 @@ public class Fog implements WeatherHolder.WeatherDefinition {
                 stillness,
                 this
         );
+    }
+
+    @Override
+    public void sendToPlayer(ServerPlayer player, WeatherHolder.WeatherInstance instance, String dimension) {
+        if (player == null || instance == null) {
+            return;
+        }
+
+        float transition = 0.1f;
+
+        float progress = (float) instance.getRemainingTicks() / instance.getInitialTicks();
+        float currentDistance;
+        float minimumDistance = getMinimumDistance();
+        float maximumDistance = getMaximumDistance();
+
+        switch (instance.getPhase()) {
+            case ACTIVE -> {
+                float activeProgress = 1.0f - progress;
+                if (activeProgress < 0.1f) {
+                    float ratio = activeProgress / transition;
+                    currentDistance = maximumDistance - (maximumDistance - minimumDistance) * ratio;
+                }
+                else if (activeProgress < 0.9f) {
+                    currentDistance = minimumDistance;
+                }
+                else {
+                    float ratio = (activeProgress - 0.9f) / transition;
+                    currentDistance = minimumDistance + (maximumDistance - minimumDistance) * ratio;
+                }
+            }
+            case STILLNESS -> currentDistance = -1;
+            default -> {
+                return;
+            }
+        }
+
+        currentDistance = currentDistance != -1? Math.max(currentDistance, 2.0f) : -1;
+
+        WeatherPayload.FogPacket packet = new WeatherPayload.FogPacket(
+                instance.getPhase(),
+                dimension,
+                getColor(),
+                currentDistance
+        );
+
+        PacketDistributor.sendToPlayer(player, packet);
     }
 
     @Override

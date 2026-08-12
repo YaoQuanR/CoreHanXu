@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.util;
 import java.io.IOException;
 import java.util.Map;
 
+/// @since 0.7.0 (Internal Development)
 public class Cast {
     public static int toInteger(Map<String, Object> map, String key, int defaultValue) {
         Object value = map.get(key);

@@ -1,6 +1,9 @@
 package core.yaoquan.hanxu.registry.event;
 
 import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
+import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -15,7 +18,7 @@ public class ModNetwork {
     public static class TimerF4Client {
         private static final Map<String, TimerInfo> localInfoDisplayTimer = new ConcurrentHashMap<>();
 
-        public static void add(ModPayload.TimerF4Packet packet) {
+        public static void add(GeneralPayload.TimerF4Packet packet) {
             UUID masterId = packet.masterId();
             String timerId = packet.timerId();
             String key = masterId.toString() + ":" + timerId;
@@ -67,12 +70,12 @@ public class ModNetwork {
     public static class AttributeF4Client {
         private static final Map<String, AttributeInfo> localInfoDisplayAttribute = new ConcurrentHashMap<>();
 
-        public static void add(ModPayload.AttributeF4Packet packet) {
+        public static void add(GeneralPayload.AttributeF4Packet packet) {
             UUID masterId = packet.masterId();
             String attributeId = packet.attributeId();
             String key = masterId.toString() + ":" + attributeId;
 
-            localInfoDisplayAttribute.put(key, new AttributeInfo(packet.value(), packet.fromApi(), packet.masterName()));
+            localInfoDisplayAttribute.put(key, new AttributeInfo(packet.value(), packet.isApiAttribute(), packet.masterName()));
         }
 
         public static void remove(UUID masterId, String attributeId) {
@@ -104,6 +107,48 @@ public class ModNetwork {
         public record AttributeInfo(float value, boolean fromApi, String masterName) {}
     }
 
+    public static class WeatherF4Client {
+        private static final Map<String, WeatherInfo> localInfoDisplayWeather = new ConcurrentHashMap<>();
+
+        public static void add(GeneralPayload.WeatherF4Packet packet) {
+            String key = packet.dimension() + ":" + packet.weatherId();
+            localInfoDisplayWeather.put(key, new WeatherInfo(
+                    packet.weatherType(),
+                    packet.phase(),
+                    packet.remainingTicks(),
+                    packet.initialTicks(),
+                    packet.durationTicks(),
+                    packet.stillnessTicks()
+            ));
+        }
+
+        public static void remove(String dimension, String weatherId) {
+            String key = dimension + ":" + weatherId;
+            localInfoDisplayWeather.remove(key);
+        }
+
+        public static void clear() {
+            localInfoDisplayWeather.clear();
+        }
+
+        public static Set<String> getAllInfoKeys() {
+            return localInfoDisplayWeather.keySet();
+        }
+
+        public static WeatherInfo getWeatherInfo(String key) {
+            return localInfoDisplayWeather.get(key);
+        }
+
+        public record WeatherInfo(
+                WeatherHolder.WeatherType type,
+                WeatherHolder.WeatherPhase phase,
+                int remainingTicks,
+                int initialTicks,
+                int durationTicks,
+                int stillnessTicks
+        ) {}
+    }
+
     @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
     public static class RegisterNetworking {
         @SubscribeEvent
@@ -111,15 +156,39 @@ public class ModNetwork {
             final PayloadRegistrar registrar = event.registrar("1");
 
             registrar.playToClient(
-                    ModPayload.TimerF4Packet.TYPE,
-                    ModPayload.TimerF4Packet.STREAM_CODEC,
-                    ModPayload.TimerF4Packet::handleClient
+                    GeneralPayload.TimerF4Packet.TYPE,
+                    GeneralPayload.TimerF4Packet.STREAM_CODEC,
+                    GeneralPayload.TimerF4Packet::handleClient
             );
 
             registrar.playToClient(
-                    ModPayload.AttributeF4Packet.TYPE,
-                    ModPayload.AttributeF4Packet.STREAM_CODEC,
-                    ModPayload.AttributeF4Packet::handleClient
+                    GeneralPayload.AttributeF4Packet.TYPE,
+                    GeneralPayload.AttributeF4Packet.STREAM_CODEC,
+                    GeneralPayload.AttributeF4Packet::handleClient
+            );
+
+            registrar.playToClient(
+                    GeneralPayload.WeatherF4Packet.TYPE,
+                    GeneralPayload.WeatherF4Packet.STREAM_CODEC,
+                    GeneralPayload.WeatherF4Packet::handleClient
+            );
+
+            registrar.playToClient(
+                    WeatherPayload.FogPacket.TYPE,
+                    WeatherPayload.FogPacket.STREAM_CODEC,
+                    WeatherPayload.FogPacket::handleClient
+            );
+
+            registrar.playToClient(
+                    WeatherPayload.ColoredRainPacket.TYPE,
+                    WeatherPayload.ColoredRainPacket.STREAM_CODEC,
+                    WeatherPayload.ColoredRainPacket::handleClient
+            );
+
+            registrar.playToClient(
+                    WeatherPayload.WindPacket.TYPE,
+                    WeatherPayload.WindPacket.STREAM_CODEC,
+                    WeatherPayload.WindPacket::handleClient
             );
         }
     }

@@ -1,18 +1,16 @@
 package core.yaoquan.hanxu;
 
-import core.yaoquan.hanxu.api.AttributeHolder;
-import core.yaoquan.hanxu.api.TimeHolder;
-import core.yaoquan.hanxu.api.VariableHolder;
+import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.ModDataGenerator;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
-import core.yaoquan.hanxu.api.PermissionHolder;
 import core.yaoquan.hanxu.registry.config.PermissionConfig;
 import core.yaoquan.hanxu.registry.object.ModBlock;
 import core.yaoquan.hanxu.registry.object.ModBlockEntity;
 import core.yaoquan.hanxu.registry.object.ModCreativeModeTab;
 import core.yaoquan.hanxu.registry.object.ModItem;
 import core.yaoquan.hanxu.test.TestCallback;
+import core.yaoquan.hanxu.test.TestWeather;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -91,6 +89,11 @@ public class CoreHanXu {
 
         VariableHolder.loadAllVariables(overworld);
         LOGGER.info("[HX] Rebuild Procedure: Variable - Variables");
+
+        WeatherHolder.initializeAll();
+        CoreHanXu.LOGGER.info("[HX] Initialize Weather States for All Levels");
+
+        TestWeather.testFog();
     }
 
     @SubscribeEvent
@@ -124,6 +127,8 @@ public class CoreHanXu {
 
             AttributeHolder.loadAttributeForPlayer(serverPlayer);
             LOGGER.info("[HX] Load Procedure: Attribute - Player: {}", serverPlayer.getName().getString());
+
+            TestWeather.displayTestFog();
         }
     }
 
@@ -153,7 +158,7 @@ public class CoreHanXu {
         AttributeHolder.saveAttributeToGlobal(overworld);
         LOGGER.info("[HX] Save Procedure: Attribute - Global");
 
-        VariableHolder.saveAllVariables(overworld);
+        VariableHolder.packAllVariables(overworld);
         LOGGER.info("[HX] Save Procedure: Variables");
     }
 

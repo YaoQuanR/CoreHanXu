@@ -8,7 +8,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Register your callback behavior by here.
+ * <p><b>
+ *     Behavior Registry
+ * </b></p>
+ * <p>
+ *     Callback behavior register method.
+ * </p>
+ * @since 0.5.0 (Internal Development)
  */
 public class BehaviorRegistry {
     private static final Map<String, BehaviorCallback> callbacks = new ConcurrentHashMap<>();
@@ -28,6 +34,19 @@ public class BehaviorRegistry {
     }
 
     /**
+     * Register a callback for callback behavior.
+     * @param functionName      Part of the callback id, define what function system used this callback.
+     * @param nameSpace         Usually used your mod id or other name space for avoiding naming conflict.
+     * @param callbackName      The callback name.
+     * @param callback          Define the Java code callback by using lambda (player, parameter) -> {}.
+     *                          Please view {@link BehaviorCallback}.
+     */
+    public static void register(String functionName, String nameSpace, String callbackName, BehaviorCallback callback) {
+        String fullCallbackId = functionName + ":" + nameSpace + ":" + callbackName;
+        register(fullCallbackId, callback);
+    }
+
+    /**
      * Execute the callback behavior.
      * @param player            Player that from {@link ServerPlayer}.
      * @param callbackId        Accept format of [function name]:[name space]:[callback name] for execution.
@@ -42,6 +61,19 @@ public class BehaviorRegistry {
         else {
             CoreHanXu.LOGGER.warn("[HX] No callback found: {}", finalCallbackId);
         }
+    }
+
+    /**
+     * Execute the callback behavior.
+     * @param player            Player that from {@link ServerPlayer}.
+     * @param functionName      Part of the callback id, define what function system used this callback.
+     * @param nameSpace         Usually used your mod id or other name space for avoiding naming conflict.
+     * @param callbackName      The callback name.
+     * @param parameters        Accept custom map for advanced conditions.
+     */
+    public static void execute(ServerPlayer player, String functionName, String nameSpace, String callbackName, Map<String, String> parameters) {
+        String fullCallbackId = functionName + ":" + nameSpace + ":" + callbackName;
+        execute(player, fullCallbackId, parameters);
     }
 
     public static boolean isRegistered(String callbackId) {

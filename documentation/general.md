@@ -35,7 +35,7 @@ But if you are using API side system, you can freely to use the API within the t
 
 ### Permission
 
-Permission is a system to handle user's permission level.
+Permission system is used to handle user's permission level.
 If you are not admin and not agreed license, you will be considered as level 0.
 
 #### Permission set

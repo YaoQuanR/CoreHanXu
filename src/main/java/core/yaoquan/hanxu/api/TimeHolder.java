@@ -4,7 +4,8 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.TimerCallback;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.registry.event.ModPayload;
+import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.Resolver;
@@ -19,6 +20,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -30,7 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * Timer system API
+ * <p><b>
+ *     Timer system API
+ * </b></p>
+ * <p>
+ *     Timer system is a system that allows Java callback or custom behavior after timer time out.
+ *     This system provides API and command side support.
+ * </p>
  * @since 0.2.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
@@ -321,71 +329,71 @@ public class TimeHolder {
     }
 
     // Method of getting timer's information:
-    public static String getTemplateId(String timerId) {
+    public static @NotNull NullableValue<String> getTemplateId(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
-        return timerData != null? timerData.timerId : "Null";
+        return NullableValue.ofNullable(timerData == null? null : timerData.getTimerId());
     }
 
-    public static String getTemplateTitleParameter(String timerId) {
+    public static @NotNull NullableValue<String> getTemplateTitleParameter(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
-        return timerData.getTitleParameter();
+        return NullableValue.ofNullable(timerData == null? null : timerData.getTitleParameter());
     }
 
-    public static String getTemplateContentParameter(String timerId) {
+    public static @NotNull NullableValue<String> getTemplateContentParameter(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
-        return timerData.getContentParameter();
+        return NullableValue.ofNullable(timerData == null? null : timerData.getContentParameter());
     }
 
-    public static String getInstanceId(UUID masterId, String timerId) {
+    public static @NotNull NullableValue<String> getInstanceId(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return "Null";
+            return NullableValue.none();
         }
         TimerData timerData = instantiatedData.get(timerId);
-        return timerData != null? timerData.timerId : "Null";
+        return NullableValue.ofNullable(timerData == null? null : timerData.getTimerId());
     }
 
-    public static String getInstanceTitleParameter(UUID masterId, String timerId) {
+    public static @NotNull NullableValue<String> getInstanceTitleParameter(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return "Not Found";
+            return NullableValue.ofNullable("Not Found");
         }
         TimerData timerData = instantiatedData.get(timerId);
-        return timerData.getTitleParameter();
+        return NullableValue.ofNullable(timerData == null? null : timerData.getTitleParameter());
     }
 
-    public static String getInstanceContentParameter(UUID masterId, String timerId) {
+    public static @NotNull NullableValue<String> getInstanceContentParameter(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return "Not Found";
+            return NullableValue.ofNullable("Not Found");
         }
         TimerData timerData = instantiatedData.get(timerId);
-        return timerData.getContentParameter();
+        return NullableValue.ofNullable(timerData == null? null : timerData.getContentParameter());
     }
 
-    public static int getRemainingTimeFromTemplate(String timerId, String timeUnit) {
+    public static @NotNull NullableValue<Integer> getRemainingTimeFromTemplate(String timerId, String timeUnit) {
         TimerData timerData = templateTimer.get(timerId);
         return getRemainingTicks(timeUnit, timerData);
     }
 
-    public static int getInitialTimeFromTemplate(String timerId, String timeUnit) {
+    public static @NotNull NullableValue<Integer> getInitialTimeFromTemplate(String timerId, String timeUnit) {
         TimerData timerData = templateTimer.get(timerId);
         return getInitialTicks(timeUnit, timerData);
     }
 
-    public static int getRemainingTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
+    public static @NotNull NullableValue<Integer> getRemainingTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return -1;
+            return NullableValue.none();
         }
         TimerData timerData = instantiatedData.get(timerId);
         return getRemainingTicks(timeUnit, timerData);
     }
 
-    public static int getInitialTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
+    public static @NotNull NullableValue<Integer> getInitialTimeFromInstance(UUID masterId, String timerId, String timeUnit) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return -1;
+            return NullableValue.none();
         }
         TimerData timerData = instantiatedData.get(timerId);
         return getInitialTicks(timeUnit, timerData);
@@ -424,7 +432,9 @@ public class TimeHolder {
             return;
         }
 
-        int remainingTicks = getRemainingTimeFromInstance(masterId, timerId, "tick");
+        int remainingTicks = getRemainingTimeFromInstance(masterId, timerId, "tick")
+                .matching(ticks -> ticks, () -> -1);
+
         boolean isCounting = isInstanceTimerCounting(masterId, timerId);
         String masterName = Resolver.resolveTargetMasterName(masterId);
         String key = player.getUUID() + ":" + masterId + ":" + timerId;
@@ -436,10 +446,10 @@ public class TimeHolder {
             refreshDisplayList.remove(key);
         }
 
-        CoreHanXu.LOGGER.info("[HX] Display debug timer info. State: {}", state);
+        CoreHanXu.LOGGER.info("[HX] Sync packet: Timer system for display: {} -> {} (state:{})", timerId, masterName, state);
 
         PacketDistributor.sendToPlayer(
-                player, new ModPayload.TimerF4Packet(masterId, timerId, state, remainingTicks, isCounting, masterName)
+                player, new GeneralPayload.TimerF4Packet(masterId, timerId, state, remainingTicks, isCounting, masterName)
         );
     }
 
@@ -548,23 +558,31 @@ public class TimeHolder {
         rebuildTimerData(allTimersTag, General.TargetUUID.GLOBAL_UUID);
     }
 
-    private static int getRemainingTicks(String timeUnit, TimerData timerData) {
+    private static @NotNull NullableValue<Integer> getRemainingTicks(String timeUnit, TimerData timerData) {
+        if (timerData == null) {
+            return NullableValue.none();
+        }
+
         return switch (timeUnit) {
-            case "t", "tick" -> timerData != null? timerData.getRemainingTicks() : -1;
-            case "s", "second" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_SECOND : -1;
-            case "m", "minute" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_MINUTE : -1;
-            case "h", "hour" -> timerData != null? timerData.getRemainingTicks() / TICKS_PER_HOUR : -1;
-            default -> -1;
+            case "t", "tick" -> NullableValue.ofNotNull(timerData.getRemainingTicks());
+            case "s", "second" -> NullableValue.ofNotNull(timerData.getRemainingTicks() / TICKS_PER_SECOND);
+            case "m", "minute" -> NullableValue.ofNotNull(timerData.getRemainingTicks() / TICKS_PER_MINUTE);
+            case "h", "hour" -> NullableValue.ofNotNull(timerData.getRemainingTicks() / TICKS_PER_HOUR);
+            default -> NullableValue.none();
         };
     }
 
-    private static int getInitialTicks(String timeUnit, TimerData timerData) {
+    private static @NotNull NullableValue<Integer> getInitialTicks(String timeUnit, TimerData timerData) {
+        if (timerData == null) {
+            return NullableValue.none();
+        }
+
         return switch (timeUnit) {
-            case "t", "tick" -> timerData != null? timerData.getInitialTicks() : -1;
-            case "s", "second" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_SECOND : -1;
-            case "m", "minute" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_MINUTE : -1;
-            case "h", "hour" -> timerData != null? timerData.getInitialTicks() / TICKS_PER_HOUR : -1;
-            default -> -1;
+            case "t", "tick" -> NullableValue.ofNotNull(timerData.getInitialTicks());
+            case "s", "second" -> NullableValue.ofNotNull(timerData.getInitialTicks() / TICKS_PER_SECOND);
+            case "m", "minute" -> NullableValue.ofNotNull(timerData.getInitialTicks() / TICKS_PER_MINUTE);
+            case "h", "hour" -> NullableValue.ofNotNull(timerData.getInitialTicks() / TICKS_PER_HOUR);
+            default -> NullableValue.none();
         };
     }
 

@@ -2,6 +2,7 @@ package core.yaoquan.hanxu.registry.event;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.TimeHolder;
+import core.yaoquan.hanxu.api.WeatherHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -47,11 +48,15 @@ public class ModInfoOverlay {
         displayLines.add("-= Core HanXu Information =-");
         displayLines.add("Loaded.");
 
+        int maximumDisplay = 10;
+
+        int displayedTimer = 0;
         int displayedAttribute = 0;
+        int displayedWeather = 0;
         displayLines.add("");
         displayLines.add("-> Timer");
         for (String key : ModNetwork.TimerF4Client.getAllInfoKeys()) {
-            if (displayedAttribute < 10) {
+            if (displayedTimer < maximumDisplay) {
                 String[] parts = key.split(":", 2);
                 String timerId = parts[1];
 
@@ -71,7 +76,7 @@ public class ModInfoOverlay {
                     displayLines.add("(" + timerId + " -> " + masterName + ") " + remainingHours + ":" + remainingMinutes + ":" + remainingSeconds + ":" + remainingTicks + (isItCounting? " (-)" : " (#)"));
                 }
 
-                displayedAttribute++;
+                displayedTimer++;
             }
             else {
                 displayLines.add("And more...");
@@ -82,7 +87,7 @@ public class ModInfoOverlay {
         displayLines.add("");
         displayLines.add("-> Attribute");
         for (String key : ModNetwork.AttributeF4Client.getAllInfoKeys()) {
-            if (displayedAttribute < 10) {
+            if (displayedAttribute < maximumDisplay) {
                 String[] parts = key.split(":", 2);
                 String attributeId = parts[1];
                 ModNetwork.AttributeF4Client.AttributeInfo attributeInfo = ModNetwork.AttributeF4Client.getAttributeInfo(key);
@@ -96,6 +101,33 @@ public class ModInfoOverlay {
                     displayLines.add("(" + attributeId + " -> " + attributeInfo.masterName() + ") " + displayValue);
                 }
                 displayedAttribute++;
+            }
+            else {
+                displayLines.add("And more...");
+                break;
+            }
+        }
+
+        displayLines.add("");
+        displayLines.add("-> Weather");
+        for (String key : ModNetwork.WeatherF4Client.getAllInfoKeys()) {
+            if (displayedWeather < maximumDisplay) {
+                String[] parts = key.split(":", 3);
+                String dimension = parts[0] + ":" + parts[1];
+                String weatherId = parts[2];
+                ModNetwork.WeatherF4Client.WeatherInfo weatherInfo = ModNetwork.WeatherF4Client.getWeatherInfo(key);
+
+                if (weatherInfo != null) {
+                    WeatherHolder.WeatherPhase phase = weatherInfo.phase();
+                    int nextTicks = phase == WeatherHolder.WeatherPhase.STILLNESS? weatherInfo.stillnessTicks() : weatherInfo.durationTicks();
+                    CoreHanXu.LOGGER.info("[HX] --> weatherid={}, phase={}, nextTicks={}, remaining={}, initial={}", weatherId, phase, nextTicks, weatherInfo.remainingTicks(), weatherInfo.initialTicks());
+
+                    displayLines.add("(" + weatherId + " -> " + dimension + ") " + weatherInfo.phase().name().toLowerCase() + " <<< " + weatherInfo.remainingTicks() + " / " + weatherInfo.initialTicks() + " <... " + nextTicks + " (t)");
+                }
+                else {
+                    displayLines.add("(" + weatherId + " -> " + dimension + ") LOST");
+                }
+                displayedWeather++;
             }
             else {
                 displayLines.add("And more...");

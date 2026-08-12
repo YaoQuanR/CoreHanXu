@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "core_hanxu:block/loot_deployer",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "core_hanxu:block/loot_deployer"
+    },
+    "facing=south": {
+      "model": "core_hanxu:block/loot_deployer",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "core_hanxu:block/loot_deployer",
+      "y": 270
+    }
+  }
+}

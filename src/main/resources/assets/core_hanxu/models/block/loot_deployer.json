@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "bottom": "core_hanxu:block/loot_deployer_bottom",
+    "front": "core_hanxu:block/loot_deployer_front",
+    "side": "core_hanxu:block/loot_deployer_side",
+    "top": "core_hanxu:block/loot_deployer_top"
+  }
+}

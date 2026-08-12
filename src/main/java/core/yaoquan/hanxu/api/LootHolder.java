@@ -7,6 +7,7 @@ import com.mojang.serialization.JsonOps;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.api.solution.NullableValue;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.JsonReader;
 import core.yaoquan.hanxu.util.YamlReader;
@@ -60,6 +61,7 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemKilledByPlayerCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -74,96 +76,16 @@ import static core.yaoquan.hanxu.api.define.Error.returnCodeError;
  * @since 0.6.0 (Internal Development)
  */
 public class LootHolder {
-    public static class LootTableData {
-        public String id;
-        public List<Pool> pools;
-    }
-
-    public static class Pool {
-        public Roll roll;
-        public Integer bonusRoll = null;
-        public List<LootEntry> lootEntries;
-        public List<LootCondition> lootConditions;
-    }
-
-    public static class Roll {
-        public int minimum;
-        public int maximum;
-        public boolean rangeMode;
-
-        // Fixed value.
-        public static Roll fixed(int value) {
-            Roll roll = new Roll();
-            roll.minimum = roll.maximum = value;
-            roll.rangeMode = false;
-            return roll;
-        }
-
-        // Range of chances.
-        public static Roll range(int minimum, int maximum) {
-            Roll roll = new Roll();
-            roll.minimum = Math.min(minimum, maximum);
-            roll.maximum = Math.max(minimum, maximum);
-            roll.rangeMode = true;
-            return roll;
-        }
-    }
-
-    public static class LootEntry {
-        public String type;                         // Vanilla feature: Define "item", "loot_table" or "empty"(Nothing).
-        public String id;                           // Vanilla feature: Item id or loot table id.
-        public int weight = 1;                      // Vanilla feature: Affects possibilities of choose.
-        public List<LootFunction> lootFunctions;    // Vanilla feature: Post-processing of selected entry.
-        public List<LootCondition> lootConditions;  // Vanilla feature: Conditions.
-    }
-
-    // Define when this poll available.
-    public static class LootCondition {
-        public String condition;
-        public Map<String, Object> parameters;
-
-        public LootItemCondition toVanillaCondition() {
-            ResourceLocation resourceLocation = ResourceLocation.tryParse(condition);
-            if (condition == null) {
-                return null;
-            }
-
-            switch (condition) {
-                case "minecraft:random_chance", "random_chance" -> {
-                    double chance = parameters != null?
-                            ((Number) parameters.getOrDefault("chance", 1.0)).doubleValue() : 1.0;
-                    return LootItemRandomChanceCondition.randomChance((float) chance).build();
-                }
-                case "minecraft:survives_explosion", "survives_explosion" -> {
-                    return ExplosionCondition.survivesExplosion().build();
-                }
-                case "minecraft:killed_by_player", "killed_by_player" -> {
-                    return LootItemKilledByPlayerCondition.killedByPlayer().build();
-                }
-                default -> {
-                    return null;
-                }
-            }
-        }
-    }
-
-    // Define the post-processing of selected entry.
-    public static class LootFunction {
-        public String function;
-        public Map<String, Object> parameters;
-        public List<LootCondition> lootConditions;
-    }
-
     // Vanilla table cache.
     private static final Map<ResourceLocation, LootTableData> vanillaTableCache = new ConcurrentHashMap<>();
 
     /// Gain loot table data from YAML/JSON file.
-    public static LootTableData loadFromFile(String fileName) throws IOException {
+    public static NullableValue<LootTableData> loadFromFile(String fileName) {
         Map<String, Object> rawData = null;
         Exception lastException = null;
 
         if (fileName.contains(":")) {
-            return null;
+            return NullableValue.none();
         }
 
         if (fileName.endsWith(".yaml")) {
@@ -194,7 +116,7 @@ public class LootHolder {
                 try {
                     rawData = JsonReader.read("loot", fileName);
                 }
-                catch (FileNotFoundException e2) {
+                catch (IOException e2) {
                     lastException = e2;
                 }
             }
@@ -204,24 +126,26 @@ public class LootHolder {
         }
 
         if (rawData == null) {
-            throw new IOException("[HX] Loot table not found: " + fileName, lastException);
+            CoreHanXu.LOGGER.warn("[HX] Loot table not found: {}", fileName, lastException);
+            return NullableValue.none();
         }
 
         LootTableData data = parseLootTableData(rawData);
 
         if (data.id == null || !data.id.equals(fileName)) {
-            throw new IOException(returnCodeError(Error.CodeError.mismatchFileElement) + fileName + " ≠ " + data.id);
+            CoreHanXu.LOGGER.warn("{}{} ≠ {}", returnCodeError(Error.CodeError.mismatchFileElement), fileName, data.id);
+            return NullableValue.none();
         }
 
         CoreHanXu.LOGGER.info("[HX] Loot table loaded: {}", fileName);
 
-        return data;
+        return NullableValue.ofNullable(data);
     }
 
     /// Gain loot table data from vanilla.
-    public static LootTableData loadFromVanilla(ResourceLocation id, LootTable vanillaTable) {
+    public static @NotNull NullableValue<LootTableData> loadFromVanilla(ResourceLocation id, LootTable vanillaTable) {
         if (vanillaTableCache.containsKey(id)) {
-            return vanillaTableCache.get(id);
+            return NullableValue.ofNotNull(vanillaTableCache.get(id));
         }
 
         // Build new.
@@ -259,7 +183,7 @@ public class LootHolder {
 
         vanillaTableCache.put(id, data);
 
-        return data;
+        return NullableValue.ofNotNull(data);
     }
 
     public static Set<String> getRegisteredTableIds() {
@@ -370,6 +294,22 @@ public class LootHolder {
     }
 
     /**
+     * Generate a new item stack list from loot table data.
+     * @param nullableData          Loot table data from {@link #loadFromFile(String)} or {@link #loadFromVanilla(ResourceLocation, LootTable)}.
+     * @param random                Java random generator.
+     * @param luck                  Luck value that affect chance of item.
+     * @param ignoreCondition       Ignore "condition" fields or not.
+     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
+     * @return                      Result of generation: List<\ItemStack>.
+     */
+    public static List<ItemStack> generateItemList(NullableValue<LootTableData> nullableData, Random random, float luck, boolean ignoreCondition, boolean guaranteed) {
+        return nullableData.matching(
+                data -> generateItemList(data, random, luck, ignoreCondition, guaranteed),
+                Collections::emptyList
+        );
+    }
+
+    /**
      * Generate loot and send item to player.
      * @param player                Player that from {@link ServerPlayer}.
      * @param tableId               Loot table id from registered or file table.
@@ -379,11 +319,12 @@ public class LootHolder {
      * @return                      Does the data completed for send to player: boolean.
      */
     public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem, boolean guaranteed) {
-        LootTableData data = returnLootTableData(tableId);
-
-        if (data == null) {
+        NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
+        if (nullableTable.isNull()) {
             return false;
         }
+
+        LootTableData data = nullableTable.get();
 
         List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), ignoreCondition, guaranteed);
 
@@ -414,11 +355,12 @@ public class LootHolder {
      * @return                      Does the data completed for send to player: boolean.
      */
     public static boolean sendItemToPlayerWithIgnoreItem(ServerPlayer player, String tableId, String ignoreItemString, boolean guaranteed) {
-        LootTableData data = returnLootTableData(tableId);
-
-        if (data == null) {
+        NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
+        if (nullableTable.isNull()) {
             return false;
         }
+
+        LootTableData data = nullableTable.get();
 
         List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), true, guaranteed);
 
@@ -469,11 +411,12 @@ public class LootHolder {
             return false;
         }
 
-        LootTableData data = returnLootTableData(tableId);
-
-        if (data == null) {
+        NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
+        if (nullableTable.isNull()) {
             return false;
         }
+
+        LootTableData data = nullableTable.get();
 
         List<ItemStack> items = generateItemList(data, new Random(), 0, ignoreCondition, guaranteed);
         if (items.isEmpty()) {
@@ -636,15 +579,16 @@ public class LootHolder {
     public static List<Component> readLootTable(String tableId) {
         List<Component> lines = new ArrayList<>();
 
-        LootTableData data = returnLootTableData(tableId);
-
-        if (data == null) {
+        NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
+        if (nullableTable.isNull()) {
             lines.add(Component.translatable("api.core_hanxu.loot.empty_table")
                     .append(Component.literal(" " + tableId))
                     .withColor(General.Color.FAILURE)
             );
             return lines;
         }
+
+        LootTableData data = nullableTable.get();
 
         // Else readable.
         lines.add(Component.translatable("api.core_hanxu.loot.table_title")
@@ -763,12 +707,13 @@ public class LootHolder {
     public static String readLootTableAsString(String tableId) {
         StringBuilder stringPackage = new StringBuilder();
 
-        LootTableData data = returnLootTableData(tableId);
-
-        if (data == null) {
+        NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
+        if (nullableTable.isNull()) {
             stringPackage.append("[HX] Empty table: ").append(tableId);
             return stringPackage.toString();
         }
+
+        LootTableData data = nullableTable.get();
 
         // Else readable.
         stringPackage.append("[HX] Loot table found: ").append(tableId).append("\n");
@@ -956,15 +901,10 @@ public class LootHolder {
                 }
             }
             case "minecraft:loot_table", "loot_table" -> {
-                LootTableData referenceTable;
-                try {
-                    referenceTable = loadFromFile(entry.id);
-                }
-                catch (IOException e) {
-                    referenceTable = null;
-                }
+                NullableValue<LootTableData> nullableTable = loadFromFile(entry.id);
 
-                if (referenceTable != null) {
+                if (nullableTable.isPresent()) {
+                    LootTableData referenceTable = nullableTable.get();
                     List<ItemStack> subItems = generateItemList(referenceTable, random, luck, ignoreCondition, false);
                     if (!subItems.isEmpty()) {
                         return subItems.getFirst();
@@ -1638,37 +1578,31 @@ public class LootHolder {
         return referenceEnchantment;
     }
 
-    private static LootTableData returnLootTableData(String tableId) {
+    private static @NotNull NullableValue<LootTableData> returnLootTableData(String tableId) {
         // Read from file.
-        LootTableData data;
-        try {
-            data = loadFromFile(tableId);
-        }
-        catch (IOException e) {
-            data = null;
-        }
+        NullableValue<LootTableData> nullableTable = loadFromFile(tableId);
 
         // Read from vanilla.
-        if (data == null) {
+        if (nullableTable.isNull()) {
             ResourceLocation idLocation = ResourceLocation.tryParse(tableId);
             if (idLocation == null) {
-                return null;
+                return NullableValue.none();
             }
 
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             if (server == null) {
-                return null;
+                return NullableValue.none();
             }
 
             ResourceKey<LootTable> tableKey = ResourceKey.create(Registries.LOOT_TABLE, idLocation);
             LootTable table = server.reloadableRegistries().getLootTable(tableKey);
 
             if (table != LootTable.EMPTY) {
-                data = loadFromVanilla(idLocation, table);
+                nullableTable = loadFromVanilla(idLocation, table);
             }
         }
 
-        return data;
+        return nullableTable;
     }
 
     private static void setCanBreakOrPlace(Map<String, Object> parameters, ItemStack item, String category) {
@@ -1712,5 +1646,85 @@ public class LootHolder {
                 item.set(DataComponents.CAN_PLACE_ON, new AdventureModePredicate(List.of(predicate)));
             }
         }
+    }
+
+    public static class LootTableData {
+        public String id;
+        public List<Pool> pools;
+    }
+
+    public static class Pool {
+        public Roll roll;
+        public Integer bonusRoll = null;
+        public List<LootEntry> lootEntries;
+        public List<LootCondition> lootConditions;
+    }
+
+    public static class Roll {
+        public int minimum;
+        public int maximum;
+        public boolean rangeMode;
+
+        // Fixed value.
+        public static Roll fixed(int value) {
+            Roll roll = new Roll();
+            roll.minimum = roll.maximum = value;
+            roll.rangeMode = false;
+            return roll;
+        }
+
+        // Range of chances.
+        public static Roll range(int minimum, int maximum) {
+            Roll roll = new Roll();
+            roll.minimum = Math.min(minimum, maximum);
+            roll.maximum = Math.max(minimum, maximum);
+            roll.rangeMode = true;
+            return roll;
+        }
+    }
+
+    public static class LootEntry {
+        public String type;                         // Vanilla feature: Define "item", "loot_table" or "empty"(Nothing).
+        public String id;                           // Vanilla feature: Item id or loot table id.
+        public int weight = 1;                      // Vanilla feature: Affects possibilities of choose.
+        public List<LootFunction> lootFunctions;    // Vanilla feature: Post-processing of selected entry.
+        public List<LootCondition> lootConditions;  // Vanilla feature: Conditions.
+    }
+
+    // Define when this poll available.
+    public static class LootCondition {
+        public String condition;
+        public Map<String, Object> parameters;
+
+        public LootItemCondition toVanillaCondition() {
+            ResourceLocation resourceLocation = ResourceLocation.tryParse(condition);
+            if (condition == null) {
+                return null;
+            }
+
+            switch (condition) {
+                case "minecraft:random_chance", "random_chance" -> {
+                    double chance = parameters != null?
+                            ((Number) parameters.getOrDefault("chance", 1.0)).doubleValue() : 1.0;
+                    return LootItemRandomChanceCondition.randomChance((float) chance).build();
+                }
+                case "minecraft:survives_explosion", "survives_explosion" -> {
+                    return ExplosionCondition.survivesExplosion().build();
+                }
+                case "minecraft:killed_by_player", "killed_by_player" -> {
+                    return LootItemKilledByPlayerCondition.killedByPlayer().build();
+                }
+                default -> {
+                    return null;
+                }
+            }
+        }
+    }
+
+    // Define the post-processing of selected entry.
+    public static class LootFunction {
+        public String function;
+        public Map<String, Object> parameters;
+        public List<LootCondition> lootConditions;
     }
 }

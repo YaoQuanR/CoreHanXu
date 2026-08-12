@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "core.yaoquan.hanxu.render.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "core_hanxu.refmap.json",
+  "mixins": ["FogRender"],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

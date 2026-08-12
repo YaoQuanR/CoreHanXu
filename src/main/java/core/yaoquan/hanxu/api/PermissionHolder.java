@@ -11,7 +11,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Permission system API
+ * <p><b>
+ *     Permission system API
+ * </b></p>
+ * <p>
+ *     Permission system is used to handle user's permission level.
+ * </p>
  * @since 0.1ea (Internal Development)
  */
 public class PermissionHolder {

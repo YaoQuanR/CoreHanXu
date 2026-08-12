@@ -4,7 +4,8 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.registry.event.ModPayload;
+import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.Resolver;
 import core.yaoquan.hanxu.util.YamlReader;
@@ -19,6 +20,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +31,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 /**
- * Attribute system API
+ * <p><b>
+ *     Attribute system API
+ * </b></p>
+ * <p>
+ *     Attribute system is a heavy system that storage value, threshold behavior,
+ *     zero callback, and recovery system.
+ *     The primarily use of attribute system is provided for players and entities.
+ * </p>
  * @since 0.5.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
@@ -139,12 +148,12 @@ public class AttributeHolder {
         return false;
     }
 
-    public static CustomAttribute getAttributeDefinition(String attributeId, boolean isApiAttribute) {
+    public static @NotNull NullableValue<CustomAttribute> getAttributeDefinition(String attributeId, boolean isApiAttribute) {
         if (isApiAttribute) {
-            return apiAttributes.get(attributeId);
+            return NullableValue.ofNullable(apiAttributes.get(attributeId));
         }
         else {
-            return commandAttributes.get(attributeId);
+            return NullableValue.ofNullable(commandAttributes.get(attributeId));
         }
     }
 
@@ -154,6 +163,14 @@ public class AttributeHolder {
 
     public static Map<String, CustomAttribute> getCommandAttributes() {
         return commandAttributes;
+    }
+
+    public static @NotNull NullableValue<CustomAttribute> getApiAttribute(String attributeId) {
+        return NullableValue.ofNullable(apiAttributes.get(attributeId));
+    }
+
+    public static @NotNull NullableValue<CustomAttribute> getCommandAttribute(String attributeId) {
+        return NullableValue.ofNullable(commandAttributes.get(attributeId));
     }
 
     /**
@@ -166,18 +183,21 @@ public class AttributeHolder {
      *                          If this player not set the value yet, return default value from definition: float.
      */
     public static float getValue(UUID masterId, String attributeId, boolean isApiAttribute) {
-        CustomAttribute attribute = getAttributeDefinition(attributeId, isApiAttribute);
-        if (attribute == null) {
-            CoreHanXu.LOGGER.warn("[HX] Unknown custom attribute for get value: {}", attributeId);
-            return 0.0f;
-        }
+        return getAttributeDefinition(attributeId, isApiAttribute)
+                .matching(
+                        attribute -> {
+                            // Receive value, create new concurrent hash map if null.
+                            Map<String, Float> playerValues = attributeValues
+                                    .computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
 
-        // Receive value, create new concurrent hash map if null.
-        Map<String, Float> playerValues = attributeValues
-            .computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
-
-        // Return received value, or return default value from definition if null.
-        return playerValues.computeIfAbsent(attribute.getAttributeId(), k -> attribute.getDefaultValue());
+                            // Return received value, or return default value from definition if null.
+                            return playerValues.computeIfAbsent(attribute.getAttributeId(), k -> attribute.getDefaultValue());
+                        },
+                        () -> {
+                            CoreHanXu.LOGGER.warn("[HX] Unknown custom attribute for get value: {}", attributeId);
+                            return 0.0f;
+                        }
+                );
     }
 
     /**
@@ -203,11 +223,13 @@ public class AttributeHolder {
      * @return                  Does the setter success: boolean.
      */
     public static boolean setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
-        CustomAttribute attribute = getAttributeDefinition(attributeId, isApiAttribute);
-        if (attribute == null) {
+        NullableValue<CustomAttribute> nullableAttribute = getAttributeDefinition(attributeId, isApiAttribute);
+        if (nullableAttribute.isNull()) {
             CoreHanXu.LOGGER.warn("[HX] Unknown custom attribute for set value: {}", attributeId);
             return false;
         }
+
+        CustomAttribute attribute = nullableAttribute.get();
 
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         float newValue = Math.min(attribute.getMaximum(), Math.max(value, 0.0f));
@@ -321,19 +343,26 @@ public class AttributeHolder {
     /**
      * Get the YAML attribute data from sub path "attribute" for all .yaml documents.
      * @param fileName          The file name of YAML.
-     * @return                  New attribute class data: Attribute.
+     * @return                  New attribute class data: NullableValue<\Attribute>.
      */
-    public static Attribute loadYamlAttribute(String fileName) throws IOException {
-        Map<String, Object> attributeData = YamlReader.read("attribute", fileName);
+    public static NullableValue<Attribute> loadYamlAttribute(String fileName) {
+        try {
+            Map<String, Object> attributeData = YamlReader.read("attribute", fileName);
 
-        // Check if the id equals to file name.
-        Attribute attribute = parseAttributeData(attributeData);
-        String yamlFileName = attribute.id;
-        if (yamlFileName != null && !yamlFileName.equals(fileName)) {
-            throw new IOException(returnCodeError(CodeError.mismatchFileElement) + fileName + "≠" + yamlFileName);
+            // Check if the id equals to file name.
+            Attribute attribute = parseAttributeData(attributeData);
+            String yamlFileName = attribute.id;
+            if (yamlFileName != null && !yamlFileName.equals(fileName)) {
+                CoreHanXu.LOGGER.warn("{}{} ≠ {}", returnCodeError(CodeError.mismatchFileElement), fileName, yamlFileName);
+                return NullableValue.none();
+            }
+
+            return NullableValue.ofNullable(attribute);
         }
-
-        return attribute;
+        catch (IOException e) {
+            CoreHanXu.LOGGER.warn("[HX] Failed to load YAML attribute: {} ", fileName, e);
+            return NullableValue.none();
+        }
     }
 
     /**
@@ -405,8 +434,10 @@ public class AttributeHolder {
                                           float value,
                                           boolean isApiAttribute,
                                           String masterName) {
+        CoreHanXu.LOGGER.info("[HX] Sync packet: Attribute system for display: {} -> {} (state:{})", attributeId, player.getName(), state);
+
         PacketDistributor.sendToPlayer(
-                player, new ModPayload.AttributeF4Packet(masterId, attributeId, state, value, isApiAttribute, masterName)
+                player, new GeneralPayload.AttributeF4Packet(masterId, attributeId, state, value, isApiAttribute, masterName)
         );
     }
 
@@ -475,11 +506,15 @@ public class AttributeHolder {
                 String attributeId = value.getKey();
                 float currentValue = value.getValue();
 
-                CustomAttribute attribute = apiAttributes.get(attributeId);
-                if (attribute == null) {
-                    attribute = commandAttributes.get(attributeId);
+                NullableValue<CustomAttribute> nullableAttribute = NullableValue.ofNullable(apiAttributes.get(attributeId))
+                        .getOrOther(NullableValue.ofNullable(commandAttributes.get(attributeId)));
+
+                if (nullableAttribute.isNull()) {
+                    continue;
                 }
-                if (attribute == null || attribute.getRecoveryCurveId() == null || attribute.recoveryIntervalTicks <= 0) {
+
+                CustomAttribute attribute = nullableAttribute.get();
+                if (attribute.getRecoveryCurveId() == null || attribute.recoveryIntervalTicks <= 0) {
                     continue;
                 }
 
@@ -583,13 +618,10 @@ public class AttributeHolder {
         List<Path> files = YamlReader.listOut("attribute");
         for (Path file : files) {
             String fileName = file.getFileName().toString().replace(".yaml", "");
-            try {
-                Attribute attribute = loadYamlAttribute(fileName);
-                registerYamlAttribute(attribute, false);
-            }
-            catch (IOException e) {
-                CoreHanXu.LOGGER.warn("[HX] Failed to load YAML attribute: {}", fileName, e);
-            }
+
+            NullableValue<Attribute> nullableAttribute = loadYamlAttribute(fileName);
+
+            nullableAttribute.ifPresent(attribute -> registerYamlAttribute(attribute, false));
         }
     }
 

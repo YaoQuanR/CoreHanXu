@@ -2,6 +2,7 @@ package core.yaoquan.hanxu.api.weather;
 
 import core.yaoquan.hanxu.api.WeatherHolder;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Random;
@@ -167,6 +168,11 @@ public class Wind implements WeatherHolder.WeatherDefinition {
                 stillness,
                 this
         );
+    }
+
+    @Override
+    public void sendToPlayer(ServerPlayer player, WeatherHolder.WeatherInstance instance, String dimension) {
+
     }
 
     @Override

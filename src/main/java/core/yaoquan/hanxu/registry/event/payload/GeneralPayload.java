@@ -1,6 +1,8 @@
-package core.yaoquan.hanxu.registry.event;
+package core.yaoquan.hanxu.registry.event.payload;
 
 import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.event.ModNetwork;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -11,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public class ModPayload {
+public class GeneralPayload {
     public record TimerF4Packet(UUID masterId, String timerId, boolean isVisible, int remainingTicks, boolean isCounting, String masterName)
             implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<TimerF4Packet> TYPE =
@@ -47,7 +49,7 @@ public class ModPayload {
         }
     }
 
-    public record AttributeF4Packet(UUID masterId, String attributeId, boolean isVisible, float value, boolean fromApi, String masterName)
+    public record AttributeF4Packet(UUID masterId, String attributeId, boolean isVisible, float value, boolean isApiAttribute, String masterName)
             implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<AttributeF4Packet> TYPE =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "attribute_f4_packet"));
@@ -57,7 +59,7 @@ public class ModPayload {
                 ByteBufCodecs.STRING_UTF8, AttributeF4Packet::attributeId,
                 ByteBufCodecs.BOOL, AttributeF4Packet::isVisible,
                 ByteBufCodecs.FLOAT, AttributeF4Packet::value,
-                ByteBufCodecs.BOOL, AttributeF4Packet::fromApi,
+                ByteBufCodecs.BOOL, AttributeF4Packet::isApiAttribute,
                 ByteBufCodecs.STRING_UTF8, AttributeF4Packet::masterName,
                 AttributeF4Packet::new
         );
@@ -77,6 +79,62 @@ public class ModPayload {
                 }
             }).exceptionally(e -> {
                 CoreHanXu.LOGGER.error("[HX] Failed to update F4 list to attribute system: ", e);
+                return null;
+            });
+        }
+    }
+
+    public record WeatherF4Packet(String weatherId, WeatherHolder.WeatherType weatherType, WeatherHolder.WeatherPhase phase, int remainingTicks, int initialTicks, int durationTicks, int stillnessTicks, boolean isVisible, String dimension)
+            implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<WeatherF4Packet> TYPE =
+                new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "weather_f4_packet"));
+
+        public static final StreamCodec<ByteBuf, WeatherF4Packet> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, WeatherF4Packet::weatherId,
+                ByteBufCodecs.STRING_UTF8.map(str -> {
+                            try {
+                                return WeatherHolder.WeatherType.valueOf(str.toUpperCase());
+                            }
+                            catch (IllegalArgumentException e) {
+                                return WeatherHolder.WeatherType.NULL;
+                            }
+                        }, wt ->
+                                wt.name().toLowerCase()
+                ), WeatherF4Packet::weatherType,
+                ByteBufCodecs.STRING_UTF8.map(str -> {
+                            try {
+                                return WeatherHolder.WeatherPhase.valueOf(str.toUpperCase());
+                            }
+                            catch (IllegalArgumentException e) {
+                                return WeatherHolder.WeatherPhase.IDLE;
+                            }
+                        }, wp ->
+                                wp.name().toLowerCase()
+                ), WeatherF4Packet::phase,
+                ByteBufCodecs.INT, WeatherF4Packet::remainingTicks,
+                ByteBufCodecs.INT, WeatherF4Packet::initialTicks,
+                ByteBufCodecs.INT, WeatherF4Packet::durationTicks,
+                ByteBufCodecs.INT, WeatherF4Packet::stillnessTicks,
+                ByteBufCodecs.BOOL, WeatherF4Packet::isVisible,
+                ByteBufCodecs.STRING_UTF8, WeatherF4Packet::dimension,
+                WeatherF4Packet::new
+        );
+
+        @Override
+        public @NotNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+
+        public static void handleClient(WeatherF4Packet packet, IPayloadContext context) {
+            context.enqueueWork(() -> {
+                if (packet.isVisible()) {
+                    ModNetwork.WeatherF4Client.add(packet);
+                }
+                else {
+                    ModNetwork.WeatherF4Client.remove(packet.dimension(), packet.weatherId());
+                }
+            }).exceptionally(e -> {
+                CoreHanXu.LOGGER.error("[HX] Failed to update F4 list to weather system: ", e);
                 return null;
             });
         }

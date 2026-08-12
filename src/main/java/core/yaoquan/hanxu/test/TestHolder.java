@@ -7,6 +7,7 @@ import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.api.solution.NullableValue;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;
@@ -86,13 +87,13 @@ public class TestHolder {
 
                 // Then create timer:
                 // Delete old timer for new (For test usage), normally advised to delete old and mask it, or else use "reset".
-                if (TimeHolder.getInstanceId(General.TargetUUID.GLOBAL_UUID, "test1") != null) {
+                if (TimeHolder.getInstanceId(General.TargetUUID.GLOBAL_UUID, "test1").isPresent()) {
                     TimeHolder.deleteInstanceTimer(
                             General.TargetUUID.GLOBAL_UUID,
                             "test1"
                     );
                 }
-                else if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test1") != null) {
+                else if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test1").isPresent()) {
                     TimeHolder.deleteInstanceTimer(
                             serverPlayer.getUUID(),
                             "test1"
@@ -123,7 +124,7 @@ public class TestHolder {
                 // Check: TestCallback & CoreHanXu .java
 
                 // Delete old timer for new (For test usage), normally advised to delete old and mask it, or else use "reset".
-                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test2") != null) {
+                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test2").isPresent()) {
                     TimeHolder.deleteInstanceTimer(
                             serverPlayer.getUUID(),
                             "test2"
@@ -154,7 +155,7 @@ public class TestHolder {
             case 3:
                 // Now create global timer.
 
-                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test3") != null) {
+                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test3").isPresent()) {
                     TimeHolder.deleteInstanceTimer(
                             General.TargetUUID.GLOBAL_UUID,
                             "test3"
@@ -182,7 +183,7 @@ public class TestHolder {
             case 4:
                 // Now create player timer, with auto restart feature.
 
-                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test4") != null) {
+                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test4").isPresent()) {
                     TimeHolder.deleteInstanceTimer(
                             serverPlayer.getUUID(),
                             "test4"
@@ -210,7 +211,7 @@ public class TestHolder {
             case 5:
                 // Now using template timer feature for creation, which use command's callback creator.
 
-                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test5") != null) {
+                if (TimeHolder.getInstanceId(serverPlayer.getUUID(), "test5").isPresent()) {
                     TimeHolder.deleteTemplateTimer(
                             "test5"
                     );
@@ -305,10 +306,8 @@ public class TestHolder {
         switch (testId) {
             case 1:
                 // Unregister when existed.
-                AttributeHolder.CustomAttribute currentAttribute = AttributeHolder.getAttributeDefinition("core_hanxu-test:run_value", true);
-                if (currentAttribute != null) {
-                    AttributeHolder.unregister(currentAttribute);
-                }
+                NullableValue<AttributeHolder.CustomAttribute> nullableAttribute = AttributeHolder.getAttributeDefinition("core_hanxu-test:run_value", true);
+                nullableAttribute.ifPresent(AttributeHolder::unregister);
 
                 // Remember: Register your own attribute when server start!
 

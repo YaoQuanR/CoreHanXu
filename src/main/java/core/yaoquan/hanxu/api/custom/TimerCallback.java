@@ -5,7 +5,14 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.function.Consumer;
 
 /**
- * Override this interface for your callback definition.
+ * <p><b>
+ *     Timer Callback Registry
+ * </b></p>
+ * <p>
+ *     Override this interface for your callback definition.
+ *     Only timer will use this callback registry.
+ * </p>
+ * @since 0.2.0 (Internal Development)
  */
 public interface TimerCallback {
     String getMasterGroupId();

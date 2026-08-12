@@ -14,6 +14,10 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
+tasks.named("processResources") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 version = mod_version
 group = mod_group_id
 
@@ -91,6 +95,7 @@ neoForge {
             // "REGISTRIES": For firing of registry events.
             // "REGISTRYDUMP": For getting the contents of all registries.
             systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'mixin.debug.export', 'true'
 
             // Recommended logging level for the console
             // You can set various levels here.
@@ -106,6 +111,16 @@ neoForge {
         "${mod_id}" {
             sourceSet(sourceSets.main)
         }
+    }
+
+    sourceSets.main.resources {
+        srcDir 'src/generated/resources'
+    }
+
+    dependencies {
+        implementation "net.fabricmc:sponge-mixin:0.16.5+mixin.0.8.7"
+        annotationProcessor "net.fabricmc:sponge-mixin:0.16.5+mixin.0.8.7"
+        compileOnly "net.fabricmc:sponge-mixin:0.16.5+mixin.0.8.7"
     }
 }
 

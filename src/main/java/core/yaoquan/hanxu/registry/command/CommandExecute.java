@@ -9,6 +9,7 @@ import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.api.solution.NullableValue;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
@@ -333,7 +334,7 @@ class CommandExecute {
         }
 
         // Check if timer exist.
-        if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
+        if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit).isPresent()) {
             MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.timer_already_exist"));
             return 0;
         }
@@ -401,7 +402,7 @@ class CommandExecute {
         int selectedTimeAmount = Converter.convertFromRangeToRandom(timeFirstRange, timeSecondRange);
 
         // Check if timer exist.
-        if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
+        if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit).isPresent()) {
             MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.timer_already_exist"));
             return 0;
         }
@@ -1034,11 +1035,13 @@ class CommandExecute {
             }
         }
 
-        AttributeHolder.CustomAttribute attribute = AttributeHolder.getCommandAttributes().get(attributeId);
-        if (attribute == null) {
+        NullableValue<AttributeHolder.CustomAttribute> nullableAttribute = AttributeHolder.getCommandAttribute(attributeId);
+        if (nullableAttribute.isNull()) {
             MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
             return 0;
         }
+
+        AttributeHolder.CustomAttribute attribute = nullableAttribute.get();
 
         switch (category) {
             case "remind", "execute" -> {
@@ -1171,12 +1174,17 @@ class CommandExecute {
             return 0;
         }
 
-        if (isApiAttribute) {
-            attribute = AttributeHolder.getApiAttributes().get(attributeId);
+        NullableValue<AttributeHolder.CustomAttribute> nullableAttribute;
+        nullableAttribute = isApiAttribute?
+                AttributeHolder.getApiAttribute(attributeId) :
+                AttributeHolder.getCommandAttribute(attributeId);
+
+        if (nullableAttribute.isNull()) {
+            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            return 0;
         }
-        else {
-            attribute = AttributeHolder.getCommandAttributes().get(attributeId);
-        }
+
+        attribute = nullableAttribute.get();
 
         switch (category) {
             case "threshold_all" -> {
@@ -1452,12 +1460,13 @@ class CommandExecute {
 
         boolean isApiAttribute = AttributeHolder.doesAttributeExist(attributeId, "api");
 
-        AttributeHolder.CustomAttribute attribute = AttributeHolder.getAttributeDefinition(attributeId, isApiAttribute);
-
-        if (attribute == null) {
+        NullableValue<AttributeHolder.CustomAttribute> nullableAttribute = AttributeHolder.getAttributeDefinition(attributeId, isApiAttribute);
+        if (nullableAttribute.isNull()) {
             MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
             return 0;
         }
+
+        AttributeHolder.CustomAttribute attribute = nullableAttribute.get();
 
         if (category.equals("simple")) {
             if (attribute.doesRecoveryRegistered() && isApiAttribute) {
@@ -1661,8 +1670,8 @@ class CommandExecute {
             return 0;
         }
 
-        String variableType = VariableHolder.getType(variableName);
-        String variableValue = VariableHolder.getStringFrom(variableName);
+        String variableType = VariableHolder.getType(variableName).getOrElse("?");
+        String variableValue = VariableHolder.getStringFrom(variableName).getOrElse("?");
 
         MessagePublisher.sendSystemMessage(context,
             Component.translatable("commands.chx.variable_read")
@@ -1684,8 +1693,15 @@ class CommandExecute {
         }
 
         if (override) {
-            String actualType = VariableHolder.getType(variableName);
-            if (actualType != null && !actualType.equals(variableType)) {
+            NullableValue<String> nullableType = VariableHolder.getType(variableName);
+            if (nullableType.isNull()) {
+                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                return 0;
+            }
+
+            String actualType = nullableType.get();
+
+            if (!actualType.equals(variableType)) {
                 MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
                 return 0;
             }
@@ -1719,7 +1735,7 @@ class CommandExecute {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_all_deleted").withColor(General.Color.SUCCESS));
         }
         else {
-            String variableType = VariableHolder.getType(variableName);
+            String variableType = VariableHolder.getType(variableName).getOrElse("?");
             if (VariableHolder.deleteVariable(variableName)) {
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.variable_deleted")
@@ -1973,7 +1989,7 @@ class CommandExecute {
 
         MessagePublisher.sendSystemMessage(context,
                 Component.translatable("commands.chx.variable_case")
-                        .append(Component.literal(" " + VariableHolder.getStringFrom(variableName)))
+                        .append(Component.literal(" " + VariableHolder.getStringFrom(variableName).getOrElse("?")))
                         .withColor(General.Color.CONTENT)
         );
 
@@ -1990,11 +2006,13 @@ class CommandExecute {
             return 0;
         }
 
-        String variableType = VariableHolder.getType(variableName);
-        if (variableType == null) {
+        NullableValue<String> nullableType = VariableHolder.getType(variableName);
+        if (nullableType.isNull()) {
             MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
             return 0;
         }
+
+        String variableType = nullableType.get();
 
         try {
             switch (category) {
@@ -2024,7 +2042,7 @@ class CommandExecute {
 
         MessagePublisher.sendSystemMessage(context,
                 Component.translatable("commands.chx.variable_modified")
-                        .append(" " + variableName + " " + category + " " + newValue + " = " + VariableHolder.getStringFrom(variableName))
+                        .append(" " + variableName + " " + category + " " + newValue + " = " + VariableHolder.getStringFrom(variableName).getOrElse("?"))
                         .withColor(General.Color.CONTENT)
         );
 
@@ -2434,7 +2452,7 @@ class CommandExecute {
         }
 
         switch (categoryOfOperation) {
-            case "start":
+            case "start" -> {
                 // Then start.
                 if (!TimeHolder.startInstanceTimer(masterId, timerId)) {
                     MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToStart));
@@ -2442,8 +2460,16 @@ class CommandExecute {
                 }
 
                 // Send success message.
-                int startingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
-                String titleParameter = TimeHolder.getInstanceTitleParameter(masterId, timerId);
+                NullableValue<Integer> nullableStarting = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
+                NullableValue<String> nullableTitle = TimeHolder.getInstanceTitleParameter(masterId, timerId);
+                if (nullableStarting.isNull() || nullableTitle.isNull()) {
+                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    return 0;
+                }
+
+                int startingTime = nullableStarting.get();
+                String titleParameter = nullableTitle.get();
+
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_started").withColor(General.Color.SUCCESS)
                 );
@@ -2451,9 +2477,8 @@ class CommandExecute {
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + startingTime + " tick(s) ->> " + titleParameter)
                                 .withColor(General.Color.SUCCESS)
                 );
-
-                break;
-            case "stop":
+            }
+            case "stop" -> {
                 // Then stop.
                 if (!TimeHolder.stopInstanceTimer(masterId, timerId)) {
                     MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToStop));
@@ -2461,7 +2486,13 @@ class CommandExecute {
                 }
 
                 // Send success message.
-                int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
+                NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
+                if (nullableRemaining.isNull()) {
+                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    return 0;
+                }
+
+                int remainingTime = nullableRemaining.get();
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_stopped").withColor(General.Color.SUCCESS)
                 );
@@ -2469,9 +2500,8 @@ class CommandExecute {
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " tick(s)")
                                 .withColor(General.Color.SUCCESS)
                 );
-
-                break;
-            case "reset":
+            }
+            case "reset" -> {
                 // Then reset.
                 if (!TimeHolder.resetInstanceTimer(masterId, timerId)) {
                     MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToReset));
@@ -2479,7 +2509,13 @@ class CommandExecute {
                 }
 
                 // Send success message.
-                int initialTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
+                NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
+                if (nullableInitial.isNull()) {
+                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    return 0;
+                }
+
+                int initialTime = nullableInitial.get();
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_reset").withColor(General.Color.SUCCESS)
                 );
@@ -2487,27 +2523,33 @@ class CommandExecute {
                         Component.literal(" (" + timerId + " -> " + masterString + "): " + initialTime + " tick(s)")
                                 .withColor(General.Color.SUCCESS)
                 );
-
-                break;
-            case "restart":
+            }
+            case "restart" -> {
                 if (!TimeHolder.restartInstanceTimer(masterId, timerId)) {
                     MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToRestart));
                     return 0;
                 }
 
                 // Send success message.
-                int restartTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
-                String restartTitleParameter = TimeHolder.getInstanceTitleParameter(masterId, timerId);
+                NullableValue<Integer> nullableRestart = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
+                NullableValue<String> nullableTitle = TimeHolder.getInstanceTitleParameter(masterId, timerId);
+                if (nullableRestart.isNull() || nullableTitle.isNull()) {
+                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    return 0;
+                }
+
+                int restartTime = nullableRestart.get();
+                String restartTitleParameter = nullableTitle.get();
+
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_restart").withColor(General.Color.SUCCESS)
                 );
                 MessagePublisher.sendSystemMessage(context,
                         Component.literal("(" + timerId + " -> " + masterString + "): " + restartTime + " tick(s) ->> " + restartTitleParameter)
-                        .withColor(General.Color.SUCCESS)
+                                .withColor(General.Color.SUCCESS)
                 );
-
-                break;
-            case "delete":
+            }
+            case "delete" -> {
                 // Then delete.
                 if (!TimeHolder.deleteInstanceTimer(masterId, timerId)) {
                     MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToDeleteInstance));
@@ -2522,11 +2564,11 @@ class CommandExecute {
                         Component.literal(" (" + timerId + " -> " + masterString + ")")
                                 .withColor(General.Color.SUCCESS)
                 );
-
-                break;
-            default:
+            }
+            default -> {
                 MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
                 return 0;
+            }
         }
 
         // Refresh state of F4 display.
@@ -2640,37 +2682,37 @@ class CommandExecute {
         if (timerCategory.equals("template")) {
             switch (infoCategory) {
                 case "remaining_time":
-                    int remainingTime = TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit);
-                    if (remainingTime != -1) {
-                        MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx.timer_read_remaining_time")
-                                        .append(Component.literal(" (" + timerId + "): " + remainingTime + " " + timeUnit))
-                                        .withColor(General.Color.TITLE)
-                        );
-                    }
-                    else {
+                    NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit);
+                    if (nullableRemaining.isNull()) {
                         MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
                         return 0;
                     }
+
+                    int remainingTime = nullableRemaining.get();
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.timer_read_remaining_time")
+                                    .append(Component.literal(" (" + timerId + "): " + remainingTime + " " + timeUnit))
+                                    .withColor(General.Color.TITLE)
+                    );
                     break;
                 case "initial_time":
-                    int initialTime = TimeHolder.getInitialTimeFromTemplate(timerId, timeUnit);
-                    if (initialTime != -1) {
-                        MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx.timer_read_initial_time")
-                                        .append(Component.literal(" (" + timerId + "): " + initialTime + " " + timeUnit))
-                                        .withColor(General.Color.TITLE)
-                        );
-                    }
-                    else {
+                    NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromTemplate(timerId, timeUnit);
+                    if (nullableInitial.isNull()) {
                         MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
                         return 0;
                     }
+
+                    int initialTime = nullableInitial.get();
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.timer_read_initial_time")
+                                    .append(Component.literal(" (" + timerId + "): " + initialTime + " " + timeUnit))
+                                    .withColor(General.Color.TITLE)
+                    );
                     break;
                 case "state":
                     boolean isCounting = TimeHolder.isTemplateTimerCounting(timerId);
 
-                    if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
+                    if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit).isPresent()) {
                         MessagePublisher.sendSystemMessage(context,
                                 Component.translatable("commands.chx.timer_state")
                                         .append(Component.literal(" (" + timerId + "): " + (isCounting? "Counting" : "Stopping")))
@@ -2683,19 +2725,18 @@ class CommandExecute {
                     }
                     break;
                 case "end_behavior":
-                    String titleParameter = TimeHolder.getTemplateTitleParameter(timerId);
-                    String contentParameter = TimeHolder.getTemplateContentParameter(timerId);
+                    NullableValue<String> nullableTitle = TimeHolder.getTemplateTitleParameter(timerId);
+                    NullableValue<String> nullableContent = TimeHolder.getTemplateContentParameter(timerId);
 
-                    if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit) != -1) {
-                        if (titleParameter == null) {
-                            titleParameter = "null";
-                        }
+                    String titleParameter = nullableTitle.getOrElse("null");
+                    String contentParameter = nullableContent.modify(str -> " : " + str).getOrElse("");
 
+                    if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit).isPresent()) {
                         MessagePublisher.sendSystemMessage(context,
                                 Component.translatable("commands.chx.timer_end_behavior")
                                         .append(Component.literal("[HX] (" + timerId + ") <<- "))
                                         .append(titleParameter)
-                                        .append(Component.literal(contentParameter == null? "" : (" : " + contentParameter)))
+                                        .append(contentParameter)
                                         .withColor(General.Color.TITLE)
                         );
                     }
@@ -2714,36 +2755,37 @@ class CommandExecute {
 
             switch (infoCategory) {
                 case "remaining_time":
-                    int remainingTime = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit);
-                    if (remainingTime != -1) {
-                        MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx.timer_read_remaining_time")
-                                        .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " " + timeUnit))
-                                        .withColor(General.Color.TITLE)
-                        );
-                    }
-                    else {
+                    NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
+                    if (nullableRemaining.isNull()) {
                         MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
                         return 0;
                     }
+
+                    int remainingTime = nullableRemaining.get();
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.timer_read_remaining_time")
+                                    .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " " + timeUnit))
+                                    .withColor(General.Color.TITLE)
+                    );
+
                     break;
                 case "initial_time":
-                    int initialTime = TimeHolder.getInitialTimeFromInstance(masterId, timerId, timeUnit);
-                    if (initialTime != -1) {
-                        MessagePublisher.sendSystemMessage(context,
-                                Component.translatable("commands.chx.timer_read_initial_time")
-                                        .append(Component.literal(" (" + timerId + "->" + masterString + "): " + initialTime + " " + timeUnit))
-                                        .withColor(General.Color.TITLE)
-                        );
-                    }
-                    else {
+                    NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromInstance(masterId, timerId, timeUnit);
+                    if (nullableInitial.isNull()) {
                         MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
                         return 0;
                     }
+
+                    int initialTime = nullableInitial.get();
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.timer_read_initial_time")
+                                    .append(Component.literal(" (" + timerId + "->" + masterString + "): " + initialTime + " " + timeUnit))
+                                    .withColor(General.Color.TITLE)
+                    );
                     break;
                 case "state":
                     boolean isCounting = TimeHolder.isInstanceTimerCounting(masterId, timerId);
-                    if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit) != -1) {
+                    if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit).isPresent()) {
                         MessagePublisher.sendSystemMessage(context,
                                 Component.translatable("commands.chx.timer_state")
                                         .append(Component.literal(" (" + timerId + "): " + (isCounting? "Counting" : "Stopping")))
@@ -2756,19 +2798,22 @@ class CommandExecute {
                     }
                     break;
                 case "end_behavior":
-                    String titleParameter = TimeHolder.getInstanceTitleParameter(masterId, timerId);
-                    String contentParameter = TimeHolder.getInstanceContentParameter(masterId, timerId);
+                    NullableValue<String> nullableTitle = TimeHolder.getInstanceTitleParameter(masterId, timerId);
+                    NullableValue<String> nullableContent = TimeHolder.getInstanceContentParameter(masterId, timerId);
+                    if (nullableTitle.isNull() || nullableContent.isNull()) {
+                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        return 0;
+                    }
 
-                    if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit) != -1) {
-                        if (titleParameter == null) {
-                            titleParameter = "null";
-                        }
+                    String titleParameter = nullableTitle.getOrElse("null");
+                    String contentParameter = nullableContent.modify(str -> " : " + str).getOrElse("");
 
+                    if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit).isPresent()) {
                         MessagePublisher.sendSystemMessage(context,
                                 Component.translatable("commands.chx.timer_end_behavior")
                                         .append(Component.literal("[HX] (" + timerId + " -> " + masterString + ") <<- "))
                                         .append(titleParameter)
-                                        .append(Component.literal(contentParameter == null? "" : (" : " + contentParameter)))
+                                        .append(contentParameter)
                                         .withColor(General.Color.TITLE)
                         );
                     }

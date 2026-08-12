@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.api;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.api.solution.NullableValue;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -12,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ScoreHolder;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,7 +23,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Variable System API
+ * <p><b>
+ *     Variable System API
+ * </b></p>
+ * <p>
+ *     Variable system is a light weighted variable storage system for cross system work.
+ *     It contains variable type (As similar to Java class) and variable value.
+ *     You can compare, modify, and operates with scoreboard in Minecraft.
+ * </p>
  * @since 0.5.0 (Internal Development)
  */
 public class VariableHolder {
@@ -214,74 +223,99 @@ public class VariableHolder {
         return allVariableAsString;
     }
 
-    public static String getType(String variableName) {
+    public static @NotNull NullableValue<String> getType(String variableName) {
         if (stringVariables.containsKey(variableName)) {
-            return "string";
+            return NullableValue.ofNotNull("string");
         }
         if (integerVariables.containsKey(variableName)) {
-            return "integer";
+            return NullableValue.ofNotNull("integer");
         }
         if (booleanVariables.containsKey(variableName)) {
-            return "boolean";
+            return NullableValue.ofNotNull("boolean");
         }
         if (floatVariables.containsKey(variableName)) {
-            return "float";
+            return NullableValue.ofNotNull("float");
         }
         if (doubleVariables.containsKey(variableName)) {
-            return "double";
+            return NullableValue.ofNotNull("double");
         }
         if (longVariables.containsKey(variableName)) {
-            return "long";
+            return NullableValue.ofNotNull("long");
         }
-        return null;
+        return NullableValue.none();
     }
 
-    public static String getStringFrom(String variableName) {
+    public static @NotNull NullableValue<String> getStringFrom(String variableName) {
         if (stringVariables.containsKey(variableName)) {
-            return stringVariables.get(variableName);
+            return NullableValue.ofNullable(stringVariables.get(variableName));
         }
         if (integerVariables.containsKey(variableName)) {
-            return Integer.toString(integerVariables.get(variableName));
+            return NullableValue.ofNullable(Integer.toString(integerVariables.get(variableName)));
         }
         if (booleanVariables.containsKey(variableName)) {
-            return Boolean.toString(booleanVariables.get(variableName));
+            return NullableValue.ofNullable(Boolean.toString(booleanVariables.get(variableName)));
         }
         if (floatVariables.containsKey(variableName)) {
-            return Float.toString(floatVariables.get(variableName));
+            return NullableValue.ofNullable(Float.toString(floatVariables.get(variableName)));
         }
         if (doubleVariables.containsKey(variableName)) {
-            return Double.toString(doubleVariables.get(variableName));
+            return NullableValue.ofNullable(Double.toString(doubleVariables.get(variableName)));
         }
         if (longVariables.containsKey(variableName)) {
-            return Long.toString(longVariables.get(variableName));
+            return NullableValue.ofNullable(Long.toString(longVariables.get(variableName)));
         }
-        return null;
+        return NullableValue.none();
     }
 
-    public static Object getObjectFrom(String variableName, String variableType) {
+    public static @NotNull NullableValue<Object> getObjectFrom(String variableName, String variableType) {
         switch (variableType) {
             case "string", "str", "String" -> {
-                return stringVariables.get(variableName);
+                return NullableValue.ofNullable(stringVariables.get(variableName));
             }
             case "integer", "int", "Integer" -> {
-                return integerVariables.get(variableName);
+                return NullableValue.ofNullable(integerVariables.get(variableName));
             }
             case "boolean", "bool", "Boolean" -> {
-                return booleanVariables.get(variableName);
+                return NullableValue.ofNullable(booleanVariables.get(variableName));
             }
             case "float", "Float" -> {
-                return floatVariables.get(variableName);
+                return NullableValue.ofNullable(floatVariables.get(variableName));
             }
             case "double", "Double" -> {
-                return doubleVariables.get(variableName);
+                return NullableValue.ofNullable(doubleVariables.get(variableName));
             }
             case "long", "Long" -> {
-                return longVariables.get(variableName);
+                return NullableValue.ofNullable(longVariables.get(variableName));
             }
-            default -> {
-                return null;
+            case null, default -> {
+                return NullableValue.none();
             }
         }
+    }
+
+    public static @NotNull NullableValue<Object> getObjectFrom(String variableName) {
+        if (!registeredVariables.contains(variableName)) {
+            return NullableValue.none();
+        }
+        if (stringVariables.containsKey(variableName)) {
+            return getObjectFrom(variableName, "string");
+        }
+        if (integerVariables.containsKey(variableName)) {
+            return getObjectFrom(variableName, "integer");
+        }
+        if (booleanVariables.containsKey(variableName)) {
+            return getObjectFrom(variableName, "boolean");
+        }
+        if (floatVariables.containsKey(variableName)) {
+            return getObjectFrom(variableName, "float");
+        }
+        if (doubleVariables.containsKey(variableName)) {
+            return getObjectFrom(variableName, "double");
+        }
+        if (longVariables.containsKey(variableName)) {
+            return getObjectFrom(variableName, "long");
+        }
+        return NullableValue.none();
     }
 
     public static boolean doesExists(String variableName) {
@@ -317,15 +351,9 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
-        if (variableType == null) {
-            throw new NumberFormatException();
-        }
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
-        String value = getStringFrom(variableName);
-        if (value == null) {
-            throw new NullPointerException();
-        }
+        String value = getStringFrom(variableName).getOrThrow(NullPointerException::new);
 
         return value.contains(compareValue);
     }
@@ -336,7 +364,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "string" -> {
@@ -354,7 +382,7 @@ public class VariableHolder {
             case "long" -> {
                 return Long.toString(longVariables.get(variableName)).length() == length;
             }
-            case null, default -> throw new NumberFormatException();
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -364,7 +392,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "string" -> {
@@ -385,7 +413,7 @@ public class VariableHolder {
             case "long" -> {
                 return longVariables.get(variableName) == Long.parseLong(compareValue);
             }
-            case null, default -> throw new NumberFormatException();
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -395,10 +423,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
-        if (variableType == null) {
-            throw new NumberFormatException();
-        }
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         if (variableType.equals("float")) {
             return Math.max(floatVariables.get(variableName), compareValue) - Math.min(floatVariables.get(variableName), compareValue) < bias;
@@ -414,10 +439,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
-        if (variableType == null) {
-            throw new NumberFormatException();
-        }
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         if (variableType.equals("double")) {
             return Math.max(doubleVariables.get(variableName), compareValue) - Math.min(doubleVariables.get(variableName), compareValue) < bias;
@@ -433,7 +455,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "integer" -> {
@@ -468,7 +490,7 @@ public class VariableHolder {
                     return Long.parseLong(compareValue) > longVariables.get(variableName);
                 }
             }
-            case null, default -> throw new NumberFormatException();
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -478,7 +500,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "integer" -> {
@@ -513,7 +535,7 @@ public class VariableHolder {
                     return Long.parseLong(compareValue) < longVariables.get(variableName);
                 }
             }
-            case null, default -> throw new NumberFormatException();
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -535,7 +557,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "integer" -> {
@@ -552,7 +574,7 @@ public class VariableHolder {
             case "long" -> {
                 return longVariables.get(variableName) % Long.parseLong(marginValue) == Long.parseLong(compareValue);
             }
-            case null, default -> throw new NumberFormatException();
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -562,7 +584,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "string" -> {
@@ -580,7 +602,7 @@ public class VariableHolder {
             case "long" -> {
                 return longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).startsWith(startsWithValue);
             }
-            case null, default -> throw new NumberFormatException();
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -590,7 +612,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
         switch (variableType) {
             case "string" -> {
                 return stringVariables.get(variableName) != null && stringVariables.get(variableName).endsWith(endsWithValue);
@@ -607,7 +629,7 @@ public class VariableHolder {
             case "long" -> {
                 return longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).endsWith(endsWithValue);
             }
-            case null, default -> throw new NumberFormatException();
+            default -> throw new NumberFormatException();
         }
     }
 
@@ -617,10 +639,7 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
-        if (variableType == null) {
-            throw new NumberFormatException();
-        }
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "string" -> stringVariables.put(variableName, newValue);
@@ -651,8 +670,8 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
-        if (variableType == null || variableType.equals("string") || variableType.equals("boolean")) {
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        if (variableType.equals("string") || variableType.equals("boolean")) {
             throw new NumberFormatException();
         }
 
@@ -682,8 +701,8 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
-        if (variableType == null || variableType.equals("string") || variableType.equals("boolean")) {
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        if (variableType.equals("string") || variableType.equals("boolean")) {
             throw new NumberFormatException();
         }
 
@@ -728,10 +747,7 @@ public class VariableHolder {
 
         int scoreValue = scoreboard.getOrCreatePlayerScore(scoreHolder, objective).get();
 
-        String variableType = getType(variableName);
-        if (variableType == null) {
-            throw new NumberFormatException();
-        }
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         switch (variableType) {
             case "string" -> {
@@ -784,10 +800,7 @@ public class VariableHolder {
             throw new IllegalArgumentException();
         }
 
-        String variableType = getType(variableName);
-        if (variableType == null) {
-            throw new NumberFormatException();
-        }
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
 
         int scoreValue;
         switch (variableType) {
@@ -809,20 +822,14 @@ public class VariableHolder {
             throw new NullPointerException();
         }
 
-        String variableType = getType(variableName);
-        String referenceType = getType(referenceName);
+        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        String referenceType = getType(referenceName).getOrThrow(NumberFormatException::new);
 
-        if (variableType == null || referenceType == null) {
-            throw new NumberFormatException();
-        }
-        else if (!variableType.equals(referenceType)) {
+        if (!variableType.equals(referenceType)) {
             throw new NumberFormatException();
         }
 
-        String referenceValue = getStringFrom(referenceName);
-        if (referenceValue == null) {
-            throw new NumberFormatException();
-        }
+        String referenceValue = getStringFrom(referenceName).getOrThrow(NullPointerException::new);
 
         switch (variableType) {
             case "string" -> stringVariables.put(variableName, referenceValue);
@@ -855,17 +862,19 @@ public class VariableHolder {
         stringVariables.put(variableName, newString);
     }
 
-    public static void saveAllVariables(ServerLevel level) {
+    public static @NotNull NullableValue<CompoundTag> packAllVariables(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.variables";
         CompoundTag root = new CompoundTag();
         CompoundTag variableTag = new CompoundTag();
 
         for (String variableName : registeredVariables) {
             CompoundTag variable = new CompoundTag();
-            String variableType = getType(variableName);
-            if (variableType == null) {
+
+            NullableValue<String> nullableType = getType(variableName);
+            if (nullableType.isNull()) {
                 continue;
             }
+            String variableType = nullableType.get();
 
             variable.putString("type", variableType);
             switch (variableType) {
@@ -882,13 +891,7 @@ public class VariableHolder {
 
         root.put(headKey, variableTag);
 
-        Path file = FilePath.getModDataPath(level);
-        try {
-            NbtIo.writeCompressed(root, file.toFile().toPath());
-        }
-        catch (IOException e) {
-            CoreHanXu.LOGGER.warn("[HX] Failed to save variables", e);
-        }
+        return NullableValue.ofNotNull(root);
     }
 
     public static void loadAllVariables(ServerLevel level) {

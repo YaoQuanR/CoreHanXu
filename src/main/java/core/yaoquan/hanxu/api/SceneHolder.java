@@ -1,12 +1,15 @@
 package core.yaoquan.hanxu.api;
 
+import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.api.solution.NullableValue;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,55 +21,39 @@ import java.util.Random;
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 /**
- * Scene system API
+ * <p><b>
+ *     Scene system API
+ * </b></p>
+ * <p>
+ *     Scene system provides YAML format for user to easier execute chain commands and dialogs.
+ * </p>
  * @since 0.3.0 (Internal Development)
  */
 public class SceneHolder {
-    public static class Scene {
-        public String id;
-        public String type;
-        public int defaultColor;
-        public int defaultInterval;
-        public boolean defaultBold;
-        public boolean defaultItalic;
-        public boolean defaultUnderlined;
-        public boolean defaultStrikethrough;
-        public boolean defaultObfuscated;
-        public boolean enabledSpeaker;
-        public boolean enabledJsonText;
-        public List<DialogNode> dialogs;
-    }
-
-    public static class DialogNode {
-        public String speaker;
-        public String text;
-        public Integer color;
-        public Integer interval;
-        public Boolean bold;
-        public Boolean italic;
-        public Boolean underlined;
-        public Boolean strikethrough;
-        public Boolean obfuscated;
-        public String execute;
-    }
-
     // Load scene data.
     /**
      * Get the scene data from sub path "scene" for all .yaml documents.
      * @param fileName            The file name of YAML.
-     * @return                    New scene class data: Scene.
+     * @return                    New scene class data: NullableValue<\Scene>.
      */
-    public static Scene loadScene(String fileName) throws IOException {
-        Map<String, Object> sceneData = YamlReader.read("scene", fileName);
+    public static @NotNull NullableValue<Scene> loadScene(String fileName) {
+        try {
+            Map<String, Object> sceneData = YamlReader.read("scene", fileName);
 
-        // Check if the id equals to file name.
-        Scene scene = parseSceneData(sceneData);
-        String yamlFileName = scene.id;
-        if (yamlFileName != null && !yamlFileName.equals(fileName)) {
-            throw new IOException(returnCodeError(CodeError.mismatchFileElement) + fileName + " ≠ " + yamlFileName);
+            // Check if the id equals to file name.
+            Scene scene = parseSceneData(sceneData);
+            String yamlFileName = scene.id;
+            if (yamlFileName != null && !yamlFileName.equals(fileName)) {
+                CoreHanXu.LOGGER.warn("{}{} ≠ {}", returnCodeError(CodeError.mismatchFileElement), fileName, yamlFileName);
+                return NullableValue.none();
+            }
+
+            return NullableValue.ofNullable(scene);
         }
-
-        return scene;
+        catch (IOException e) {
+            CoreHanXu.LOGGER.warn("[HX] Failed to load scene: {} ", fileName, e);
+            return NullableValue.none();
+        }
     }
 
     // Play scene.
@@ -76,11 +63,14 @@ public class SceneHolder {
      * @param sceneName           As same as file name.
      */
     public static void playScene(ServerPlayer player, String sceneName) {
-        try {
-            Scene scene = loadScene(sceneName);
-            startScene(player, scene, 0);
+        NullableValue<Scene> nullableScene = loadScene(sceneName);
+        if (nullableScene.isNull()) {
+            CoreHanXu.LOGGER.warn("[HX] Failed to play scene: {}", sceneName);
+            return;
         }
-        catch (IOException ignored) {}
+
+        Scene scene = nullableScene.get();
+        startScene(player, scene, 0);
     }
 
     /**
@@ -89,13 +79,16 @@ public class SceneHolder {
      * @param sceneName           As same as file name.
      */
     public static void playSceneToEveryone(MinecraftServer server, String sceneName) {
-        try {
-            Scene scene = loadScene(sceneName);
-            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                startScene(player, scene, 0);
-            }
+        NullableValue<Scene> nullableScene = loadScene(sceneName);
+        if (nullableScene.isNull()) {
+            CoreHanXu.LOGGER.warn("[HX] Failed to broadcast scene: {}", sceneName);
+            return;
         }
-        catch (IOException ignored) {}
+
+        Scene scene = nullableScene.get();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            startScene(player, scene, 0);
+        }
     }
 
     /**
@@ -318,7 +311,7 @@ public class SceneHolder {
             if (nextProgress < scene.dialogs.size()) {
                 // Then add a gap time, wait for next dialog display.
                 if (player != null) {
-                    if (TimeHolder.getInstanceId(player.getUUID(), "core_hanxu-scene:" + scene.id) != null) {
+                    if (TimeHolder.getInstanceId(player.getUUID(), "core_hanxu-scene:" + scene.id).isPresent()) {
                         TimeHolder.deleteInstanceTimer(player.getUUID(), "core_hanxu-scene:" + scene.id);
                     }
 
@@ -339,5 +332,33 @@ public class SceneHolder {
             }
         }
         // In the future, other type of scene will be created here.
+    }
+
+    public static class Scene {
+        public String id;
+        public String type;
+        public int defaultColor;
+        public int defaultInterval;
+        public boolean defaultBold;
+        public boolean defaultItalic;
+        public boolean defaultUnderlined;
+        public boolean defaultStrikethrough;
+        public boolean defaultObfuscated;
+        public boolean enabledSpeaker;
+        public boolean enabledJsonText;
+        public List<DialogNode> dialogs;
+    }
+
+    public static class DialogNode {
+        public String speaker;
+        public String text;
+        public Integer color;
+        public Integer interval;
+        public Boolean bold;
+        public Boolean italic;
+        public Boolean underlined;
+        public Boolean strikethrough;
+        public Boolean obfuscated;
+        public String execute;
     }
 }

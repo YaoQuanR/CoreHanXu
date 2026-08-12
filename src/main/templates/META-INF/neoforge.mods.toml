@@ -87,3 +87,6 @@ HanXu Powered Engine for Minecraft 1.21.10
 # stop your mod loading on the server for example.
 #[features.${mod_id}]
 #openGLVersion="[3.2,)"
+
+[[mixins]]
+config = "core_hanxu.mixins.json"

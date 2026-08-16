@@ -16,7 +16,7 @@ public class TestWeather {
 
         Fog blueFog = new Fog("blue_fog", random)
                 .color(0xCBE2F2)
-                .distance(8, 64)
+                .distance(8, 128)
                 .duration(200, 400)
                 .stillness(200, 400)
                 .heightOffset(64f, 2f)
@@ -39,13 +39,10 @@ public class TestWeather {
         }
         ServerLevel level = server.getLevel(ServerLevel.OVERWORLD);
 
-        boolean started = WeatherHolder.startWeather(level, "blue_fog");
-        if (started) {
-            WeatherHolder.displayToInfoPage(player, level, "blue_fog", true);
-            CoreHanXu.LOGGER.info("[HX] Started and displayed: blue_fog.");
+        if (!WeatherHolder.doesWeatherStateExist(level, "blue_fog")) {
+            boolean success = WeatherHolder.restartWeather(level, "blue_fog");
+            CoreHanXu.LOGGER.info("[HX] Started test fog 'blue_fog' {}", success? "successfully." : "failed.");
         }
-        else {
-            CoreHanXu.LOGGER.warn("[HX] Failed to start test fog.");
-        }
+        WeatherHolder.displayToInfoPage(player, level, "blue_fog", true);
     }
 }

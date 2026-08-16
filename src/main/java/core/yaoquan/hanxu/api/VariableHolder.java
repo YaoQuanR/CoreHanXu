@@ -3,7 +3,8 @@ package core.yaoquan.hanxu.api;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.api.define.SaveDat;
+import core.yaoquan.hanxu.util.NullableValue;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -862,8 +863,8 @@ public class VariableHolder {
         stringVariables.put(variableName, newString);
     }
 
-    public static @NotNull NullableValue<CompoundTag> packAllVariables(ServerLevel level) {
-        String headKey = "core.yaoquan.hanxu.variables";
+    public static @NotNull NullableValue<CompoundTag> packAllVariables() {
+        String headKey = SaveDat.HeadKey.variables.get();
         CompoundTag root = new CompoundTag();
         CompoundTag variableTag = new CompoundTag();
 
@@ -895,7 +896,7 @@ public class VariableHolder {
     }
 
     public static void loadAllVariables(ServerLevel level) {
-        String headKey = "core.yaoquan.hanxu.variables";
+        String headKey = SaveDat.HeadKey.variables.get();
         Path file = FilePath.getModDataPath(level);
 
         if (!file.toFile().exists()) {

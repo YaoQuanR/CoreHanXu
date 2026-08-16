@@ -7,7 +7,7 @@ import com.mojang.serialization.JsonOps;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.JsonReader;
 import core.yaoquan.hanxu.util.YamlReader;

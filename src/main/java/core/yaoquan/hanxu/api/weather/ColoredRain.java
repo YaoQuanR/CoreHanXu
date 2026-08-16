@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Random;
 
-/// @since 0.7.0 (Internal Development)
+/// @since 0.7.1 (Internal Development)
 public class ColoredRain implements WeatherHolder.WeatherDefinition {
     // Define what behavior should override when player enter a specific climate (Biome set).
     public enum RainType {

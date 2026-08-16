@@ -2,7 +2,7 @@ package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.network.chat.Component;

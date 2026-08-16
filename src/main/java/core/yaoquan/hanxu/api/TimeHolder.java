@@ -4,7 +4,7 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.TimerCallback;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import core.yaoquan.hanxu.util.Converter;
 import core.yaoquan.hanxu.util.Creator;

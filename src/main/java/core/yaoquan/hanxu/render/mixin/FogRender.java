@@ -66,9 +66,16 @@ public class FogRender {
         float colorR = ((color >> 16) & 0xFF) / 255.0f;
         float colorG = ((color >> 8) & 0xFF) / 255.0f;
         float colorB = (color & 0xFF) / 255.0f;
+        Vector4f fogColor = new Vector4f(colorR, colorG, colorB, 1.0f);
+        Vector4f returnColor = info4f.getReturnValue();
+        if (returnColor != null) {
+            returnColor.x = colorR;
+            returnColor.y = colorG;
+            returnColor.z = colorB;
+            returnColor.w = 1.0f;
+        }
 
         float currentDistance = fog.currentDistance();
-
         float start = currentDistance * 0.15f;
 
         GpuBuffer currentBuffer = this.regularBuffer.currentBuffer();
@@ -76,7 +83,7 @@ public class FogRender {
             this.updateBuffer(
                     mappedView.data(),
                     0,
-                    new Vector4f(colorR, colorG, colorB, 1.0f),
+                    fogColor,
                     start,
                     currentDistance,
                     start,

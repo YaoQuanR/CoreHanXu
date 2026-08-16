@@ -119,8 +119,7 @@ public class ModInfoOverlay {
 
                 if (weatherInfo != null) {
                     WeatherHolder.WeatherPhase phase = weatherInfo.phase();
-                    int nextTicks = phase == WeatherHolder.WeatherPhase.STILLNESS? weatherInfo.stillnessTicks() : weatherInfo.durationTicks();
-                    CoreHanXu.LOGGER.info("[HX] --> weatherid={}, phase={}, nextTicks={}, remaining={}, initial={}", weatherId, phase, nextTicks, weatherInfo.remainingTicks(), weatherInfo.initialTicks());
+                    int nextTicks = phase == WeatherHolder.WeatherPhase.ACTIVE? weatherInfo.stillnessTicks() : weatherInfo.durationTicks();
 
                     displayLines.add("(" + weatherId + " -> " + dimension + ") " + weatherInfo.phase().name().toLowerCase() + " <<< " + weatherInfo.remainingTicks() + " / " + weatherInfo.initialTicks() + " <... " + nextTicks + " (t)");
                 }

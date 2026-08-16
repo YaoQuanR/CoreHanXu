@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu;
 
 import core.yaoquan.hanxu.api.*;
+import core.yaoquan.hanxu.api.define.SaveDat;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.ModDataGenerator;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
@@ -79,21 +80,21 @@ public class CoreHanXu {
         ServerLevel overworld = event.getServer().overworld();
 
         TimeHolder.loadInstanceTimerForGlobal(overworld);
-        LOGGER.info("[HX] Rebuild Procedure: Timer - Global");
+        LOGGER.info("[HX] Rebuild Procedure: Timer - Global.");
 
         AttributeHolder.loadAttributeForGlobal(overworld);
-        LOGGER.info("[HX] Rebuild Procedure: Attribute - Global");
+        LOGGER.info("[HX] Rebuild Procedure: Attribute - Global.");
 
         AttributeHolder.registerAllYamlAttributes();
-        LOGGER.info("[HX] Rebuild Procedure: Attribute - Yaml Attribute Callbacks");
+        LOGGER.info("[HX] Rebuild Procedure: Attribute - Yaml Attribute Callbacks.");
 
         VariableHolder.loadAllVariables(overworld);
-        LOGGER.info("[HX] Rebuild Procedure: Variable - Variables");
-
-        WeatherHolder.initializeAll();
-        CoreHanXu.LOGGER.info("[HX] Initialize Weather States for All Levels");
+        LOGGER.info("[HX] Rebuild Procedure: Variable - Variables.");
 
         TestWeather.testFog();
+
+        WeatherHolder.loadAllLevelStates();
+        LOGGER.info("[HX] Rebuild Procedure: Weather States.");
     }
 
     @SubscribeEvent
@@ -158,8 +159,7 @@ public class CoreHanXu {
         AttributeHolder.saveAttributeToGlobal(overworld);
         LOGGER.info("[HX] Save Procedure: Attribute - Global");
 
-        VariableHolder.packAllVariables(overworld);
-        LOGGER.info("[HX] Save Procedure: Variables");
+        SaveDat.saveToWorld(overworld);
     }
 
     public static void gatherData(GatherDataEvent.Client event) {

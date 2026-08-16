@@ -7,7 +7,7 @@ import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.util.Creator;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;

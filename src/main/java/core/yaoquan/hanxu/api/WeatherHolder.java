@@ -4,10 +4,9 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.api.event.WeatherEndEvent;
-import core.yaoquan.hanxu.api.event.WeatherStartEvent;
-import core.yaoquan.hanxu.api.event.WeatherTickEvent;
-import core.yaoquan.hanxu.api.solution.NullableValue;
+import core.yaoquan.hanxu.api.define.SaveDat;
+import core.yaoquan.hanxu.api.event.*;
+import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import core.yaoquan.hanxu.util.Cast;
 import core.yaoquan.hanxu.util.Creator;
@@ -29,6 +28,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -56,7 +56,7 @@ public class WeatherHolder {
     }
 
     public enum WeatherPhase {
-        ACTIVE, READY, STILLNESS, PAUSE_ACTIVE, IDLE,
+        ACTIVE, READY, STILLNESS, IDLE,
     }
 
     // All registered weather.
@@ -153,11 +153,11 @@ public class WeatherHolder {
         return NullableValue.ofNullable(weatherStates.get(dimension));
     }
 
-    public static boolean startWeather(ServerLevel level, String id, int duration) {
+    public static boolean restartWeather(ServerLevel level, String id, int duration) {
         NullableValue<WeatherDefinition> nullableDefinition = getWeatherDefinition(id);
         // Check if definition completed.
         if (nullableDefinition.isNull()) {
-            CoreHanXu.LOGGER.warn("[HX] Unknown weather definition for start: {}", id);
+            CoreHanXu.LOGGER.warn("[HX] Unknown weather definition for activate: {}", id);
             return false;
         }
         
@@ -167,31 +167,42 @@ public class WeatherHolder {
 
         // Then check if this weather activated.
         if (state.doesActive(definition.getWeatherType())) {
-            CoreHanXu.LOGGER.warn("[HX] Rejected to start a activated weather type: {}", definition.getWeatherType());
+            CoreHanXu.LOGGER.warn("[HX] Rejected to activate a activated weather type: {}", definition.getWeatherType());
             return false;
         }
 
-        Random random = definition.getRandom();
+        // If it is not existed, build new weather.
+        return buildNewWeather(level, state, definition, id, duration);
+    }
 
-        WeatherInstance instance;
-        // Generate the stillness phase value (If specified duration: duration > 0).
-        if (duration > 0) {
-            int stillness = definition.getMinimumStillness() + random.nextInt(definition.getMaximumStillness() - definition.getMinimumStillness() + 1);
-            instance = new WeatherInstance(id, definition.getWeatherType(), duration, stillness, definition);
+    public static boolean restartWeather(ServerLevel level, String id) {
+        return restartWeather(level, id, -1);
+    }
+
+    public static boolean startWeather(ServerLevel level, String id, int duration) {
+        NullableValue<WeatherDefinition> nullableDefinition = getWeatherDefinition(id);
+        if (nullableDefinition.isNull()) {
+            CoreHanXu.LOGGER.warn("[HX] Unknown weather definition for start: {}", id);
+            return false;
         }
-        // Or else use randomized duration and stillness.
-        else {
-            instance = definition.createInstance(random);
+
+        WeatherDefinition definition = nullableDefinition.get();
+        WeatherType type = definition.getWeatherType();
+        WeatherState state = getWeatherStateOrNew(level);
+
+        // Resume the weather if existed.
+        if (state.doesExist(type)) {
+            state.resume(type);
+            CoreHanXu.LOGGER.info("[HX] Resumed weather type from start: {}", type);
+
+            // Post event:
+            WeatherInstance instance = findInstance(level, id).getOrElse(null);
+
+            NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherResumeEvent(level, instance));
+            return true;
         }
 
-        // Set activate.
-        state.setActive(instance);
-
-        // Post event.
-        NeoForge.EVENT_BUS.post(new WeatherStartEvent(level, instance));
-
-        CoreHanXu.LOGGER.info("[HX] Started weather: {} -> {}", id, level.dimension());
-        return true;
+        return buildNewWeather(level, state, definition, id, duration);
     }
 
     public static boolean startWeather(ServerLevel level, String id) {
@@ -241,24 +252,26 @@ public class WeatherHolder {
 
     public static void clearReady(ServerLevel level, WeatherType type) {
         NullableValue<WeatherState> nullableState = getWeatherState(level);
-        if (nullableState.isNull()) {
-            return;
+
+        switch (nullableState.situation()) {
+            case NULL -> {}
+            case VALUE -> {
+                WeatherState state = nullableState.get();
+                state.fallReadyToStillness(type);
+            }
         }
-
-        WeatherState state = nullableState.get();
-
-        state.fallReadyToStillness(type);
     }
 
     public static void clearAllReady(ServerLevel level, WeatherType type) {
         NullableValue<WeatherState> nullableState = getWeatherState(level);
-        if (nullableState.isNull()) {
-            return;
+
+        switch (nullableState.situation()) {
+            case NULL -> {}
+            case VALUE -> {
+                WeatherState state = nullableState.get();
+                state.fallAllReadyToStillness(type, level);
+            }
         }
-
-        WeatherState state = nullableState.get();
-
-        state.fallAllReadyToStillness(type, level);
     }
 
     public static boolean doesActiveWeatherExist(ServerLevel level, WeatherType type) {
@@ -293,29 +306,33 @@ public class WeatherHolder {
 
     public static boolean doesWeatherPaused(ServerLevel level, WeatherType type) {
         NullableValue<WeatherState> nullableState = getWeatherState(level);
-        if (nullableState.isNull()) {
-            return false;
-        }
 
-        WeatherInstance instance = nullableState.get().getActiveInstance(type);
-        return instance != null && instance.doesPauseActive();
+        return switch (nullableState.situation()) {
+            case NULL -> false;
+            case VALUE -> {
+                WeatherInstance instance = nullableState.get().getActiveInstance(type);
+                yield instance != null && nullableState.get().doesPaused(type);
+            }
+        };
     }
 
     public static boolean doesWeatherPaused(ServerLevel level, String id) {
         NullableValue<WeatherState> nullableState = getWeatherState(level);
-        if (nullableState.isNull()) {
-            return false;
-        }
 
-        WeatherState state = nullableState.get();
+        return switch (nullableState.situation()) {
+            case NULL -> false;
+            case VALUE -> {
+                WeatherState state = nullableState.get();
 
-        for (WeatherInstance instance : state.getActiveInstances()) {
-            if (instance.getId().equals(id) && instance.doesPauseActive()) {
-                return true;
+                for (WeatherInstance instance : state.getActiveInstances()) {
+                    if (instance.getId().equals(id) && nullableState.get().doesPaused(instance.getType())) {
+                        yield true;
+                    }
+                }
+
+                yield false;
             }
-        }
-
-        return false;
+        };
     }
 
     public static boolean doesYamlWeatherExist(String fileName) {
@@ -334,6 +351,18 @@ public class WeatherHolder {
 
     public static boolean doesWeatherExist(String id) {
         return commandWeathers.containsKey(id) || apiWeathers.containsKey(id);
+    }
+
+    public static boolean doesWeatherStateExist(ServerLevel level, String id) {
+        NullableValue<WeatherState> nullableState = getWeatherState(level);
+
+        return switch (nullableState.situation()) {
+            case NULL -> false;
+            case VALUE -> {
+                WeatherState state = nullableState.get();
+                yield state.doesActive(id) || state.doesReady(id) || state.doesStillness(id);
+            }
+        };
     }
 
     public static boolean doesWeatherExist(String id, String category) {
@@ -394,11 +423,11 @@ public class WeatherHolder {
             String fileName = file.getFileName().toString().replace(".yaml", "");
 
             NullableValue<WeatherDefinition> nullableDefinition = loadYamlWeather(fileName);
-            if (nullableDefinition.isNull()) {
-                continue;
-            }
 
-            nullableDefinition.ifPresent(WeatherHolder::registerYamlWeather);
+            switch (nullableDefinition.situation()) {
+                case NULL -> {}
+                case VALUE -> nullableDefinition.ifPresent(WeatherHolder::registerYamlWeather);
+            }
         }
     }
 
@@ -474,6 +503,8 @@ public class WeatherHolder {
 
         WeatherState state = getWeatherStateOrNew(level);
 
+        Set<String> recoveredUnclaims = new HashSet<>();
+
         for (String id : weatherTag.keySet()) {
             CompoundTag instanceTag = weatherTag.getCompound(id).orElse(new CompoundTag());
 
@@ -497,6 +528,7 @@ public class WeatherHolder {
 
             NullableValue<WeatherDefinition> nullableDefinition = getWeatherDefinition(id);
             if (nullableDefinition.isNull()) {
+                // Register as unclaimed.
                 unclaimedStates.computeIfAbsent(
                         level.dimension(),
                         k -> ConcurrentHashMap.newKeySet()
@@ -505,21 +537,101 @@ public class WeatherHolder {
                 continue;
             }
 
+            // Else add into recovered list.
+            recoveredUnclaims.add(id);
+
+            // Then rebuild states:
             WeatherDefinition definition = nullableDefinition.get();
 
             WeatherInstance instance = new WeatherInstance(id, type, duration, stillness, definition);
 
-            instance.setRemainingTicks(remaining);
-            instance.setInitialTicks(initial);
-            instance.phase = phase;
+            instance.rebuild(phase, remaining, initial);
 
             switch (phase) {
-                case ACTIVE, PAUSE_ACTIVE -> state.putActiveInstance(type, instance);
+                case ACTIVE -> state.putActiveInstance(type, instance);
                 case READY -> state.putReadyInstance(type, instance);
                 case STILLNESS -> state.putStillnessInstance(type, instance);
                 default -> {}
             }
         }
+
+        // Then try to remove recovered states from map.
+        if (!recoveredUnclaims.isEmpty()) {
+            unclaimedStates.computeIfPresent(level.dimension(), (key, set) -> {
+                set.removeAll(recoveredUnclaims);
+                return set.isEmpty()? null : set;
+            });
+        }
+    }
+
+    public static void loadAllLevelStates(@Nullable Set<String> pickupIds) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) {
+            return;
+        }
+
+        Path file = FilePath.getModDataPath(server.overworld());
+        if (!file.toFile().exists()) {
+            return;
+        }
+
+        // Try to read tags.
+        CompoundTag root;
+        try {
+            NbtAccounter accounter = General.Standard.newNbtAccounter();
+            root = NbtIo.readCompressed(file, accounter);
+        }
+        catch (IOException e) {
+            CoreHanXu.LOGGER.warn("[HX] Failed to load weather level states", e);
+            return;
+        }
+
+        String headKey = SaveDat.HeadKey.weathers.get();
+        CompoundTag weathersTag = root.getCompound(headKey).orElse(new CompoundTag());
+
+        for (String dimensionKey : weathersTag.keySet()) {
+            ResourceKey<Level> dimension = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(dimensionKey));
+            ServerLevel level = server.getLevel(dimension);
+            if (level == null) {
+                continue;
+            }
+
+            CompoundTag weatherTag = weathersTag.getCompound(dimensionKey).orElse(new CompoundTag());
+
+            if (pickupIds != null) {
+                CompoundTag pickupTag = new CompoundTag();
+                for (String id : pickupIds) {
+                    weatherTag.getCompound(id).ifPresent(tag -> pickupTag.put(id, tag));
+                }
+
+                if (!pickupTag.keySet().isEmpty()) {
+                    loadSingleLevelStates(level, pickupTag);
+                }
+            }
+            else {
+                loadSingleLevelStates(level, weatherTag);
+            }
+        }
+    }
+
+    public static void loadAllLevelStates() {
+        loadAllLevelStates(null);
+    }
+
+    public static void pickupUnclaimedStates() {
+        if (unclaimedStates.isEmpty()) {
+            return;
+        }
+
+        Set<String> unclaimedIds = new HashSet<>();
+        for (Set<String> ids : unclaimedStates.values()) {
+            unclaimedIds.addAll(ids);
+        }
+        if (unclaimedIds.isEmpty()) {
+            return;
+        }
+
+        loadAllLevelStates(unclaimedIds);
     }
 
     // Display out to F4 page (info page).
@@ -576,21 +688,21 @@ public class WeatherHolder {
 
     public static @NotNull NullableValue<WeatherInstance> findInstance(ServerLevel level, String id) {
         NullableValue<WeatherState> nullableState = getWeatherState(level);
-        if (nullableState.isNull()) {
-            return NullableValue.none();
-        }
 
-        return findInstance(nullableState.get(), id);
+        return switch (nullableState.situation()) {
+            case NULL -> NullableValue.none();
+            case VALUE -> findInstance(nullableState.get(), id);
+        };
     }
 
     public static @NotNull NullableValue<WeatherInstance> findInstance(String dimension, String id) {
         ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(dimension));
         NullableValue<WeatherState> nullableState = getWeatherState(dimensionKey);
-        if (nullableState.isNull()) {
-            return NullableValue.none();
-        }
 
-        return findInstance(nullableState.get(), id);
+        return switch (nullableState.situation()) {
+            case NULL -> NullableValue.none();
+            case VALUE -> findInstance(nullableState.get(), id);
+        };
     }
 
     // Update display every 5 ticks.
@@ -671,10 +783,14 @@ public class WeatherHolder {
                 continue;
             }
 
+            if (state.doesPaused(instance.getType())) {
+                continue;
+            }
+
             instance.tickCount();
 
             if (tickCounter % 5 == 0) {
-                NeoForge.EVENT_BUS.post(new WeatherTickEvent(level, instance));
+                NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherTickEvent(level, instance));
             }
 
             if (instance.doesStageChange()) {
@@ -684,10 +800,14 @@ public class WeatherHolder {
         }
 
         for (WeatherInstance instance : state.getStillnessInstances()) {
+            if (state.doesPaused(instance.getType())) {
+                continue;
+            }
+
             instance.tickCount();
 
             if (tickCounter % 5 == 0) {
-                NeoForge.EVENT_BUS.post(new WeatherTickEvent(level, instance));
+                NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherTickEvent(level, instance));
             }
 
             if (instance.doesStageChange()) {
@@ -770,20 +890,30 @@ public class WeatherHolder {
             case "stop" -> {
                 WeatherInstance instance = null;
                 if (type == null) {
-                    state.pauseActive(id);
-
                     for (WeatherInstance targetInstance : state.getActiveInstances()) {
                         if (targetInstance.getId().equals(id)) {
+                            state.pause(targetInstance.getType());
                             instance = targetInstance;
+                            break;
+                        }
+                    }
+
+                    if (instance == null) {
+                        for (WeatherInstance targetInstance : state.getStillnessInstances()) {
+                            if (targetInstance.getId().equals(id)) {
+                                state.pause(targetInstance.getType());
+                                instance = targetInstance;
+                                break;
+                            }
                         }
                     }
                 }
                 else {
-                    state.pauseActive(type);
-                    instance = state.getActiveInstance(type);
+                    state.pause(type);
+                    instance = state.doesActive(type)? state.getActiveInstance(type) : state.getStillnessInstance(type);
                 }
 
-                NeoForge.EVENT_BUS.post(new WeatherEndEvent(level, instance));
+                NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherPauseEvent(level, instance));
 
                 CoreHanXu.LOGGER.info("[HX] Stopped weather: {} -> {}", id, level.dimension().location());
                 return true;
@@ -804,7 +934,7 @@ public class WeatherHolder {
                     instance = state.getStillnessInstance(type);
                 }
 
-                NeoForge.EVENT_BUS.post(new WeatherEndEvent(level, instance));
+                NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherEndEvent(level, instance));
 
                 CoreHanXu.LOGGER.info("[HX] Killed weather: {} -> {}", id, level.dimension().location());
                 return true;
@@ -833,7 +963,6 @@ public class WeatherHolder {
             case "active" -> WeatherPhase.ACTIVE;
             case "ready" -> WeatherPhase.READY;
             case "stillness" -> WeatherPhase.STILLNESS;
-            case "pause_active" -> WeatherPhase.PAUSE_ACTIVE;
             case null, default -> WeatherPhase.IDLE;
         };
     }
@@ -848,6 +977,30 @@ public class WeatherHolder {
         tag.putString("phase", instance.getPhase().name().toLowerCase());
 
         return tag;
+    }
+
+    private static boolean buildNewWeather(ServerLevel level, WeatherState state, WeatherDefinition definition, String id, int duration) {
+        Random random = definition.getRandom();
+
+        WeatherInstance instance;
+        // Generate the stillness phase value (If specified duration: duration > 0).
+        if (duration > 0) {
+            int stillness = definition.getMinimumStillness() + random.nextInt(definition.getMaximumStillness() - definition.getMinimumStillness() + 1);
+            instance = new WeatherInstance(id, definition.getWeatherType(), duration, stillness, definition);
+        }
+        // Or else use randomized duration and stillness.
+        else {
+            instance = definition.createInstance(random);
+        }
+
+        // Set activate.
+        state.setActive(instance);
+
+        // Post event.
+        NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherStartEvent(level, instance));
+
+        CoreHanXu.LOGGER.info("[HX] Started weather: {} -> {}", id, level.dimension());
+        return true;
     }
 
     /**
@@ -915,22 +1068,19 @@ public class WeatherHolder {
             this.stillnessTicks = newTicks;
         }
 
-        public void pause() {
-            if (this.phase == WeatherPhase.ACTIVE) {
-                this.phase = WeatherPhase.PAUSE_ACTIVE;
-            }
-        }
-
-        public void resume() {
-            this.phase = WeatherPhase.ACTIVE;
-        }
-
         public void idle() {
             this.phase = WeatherPhase.IDLE;
         }
 
         public void reset() {
             this.remainingTicks = this.initialTicks;
+        }
+
+        public void rebuild(WeatherPhase phase, int remainingTicks, int initialTicks) {
+            this.phase = phase;
+            this.remainingTicks = remainingTicks;
+            this.initialTicks = initialTicks;
+            // Duration and stillness in register.
         }
 
         public void tickCount() {
@@ -1005,10 +1155,6 @@ public class WeatherHolder {
             return phase == WeatherPhase.READY;
         }
 
-        public boolean doesPauseActive() {
-            return phase == WeatherPhase.PAUSE_ACTIVE;
-        }
-
         public boolean doesIdle() {
             return phase == WeatherPhase.IDLE;
         }
@@ -1018,6 +1164,7 @@ public class WeatherHolder {
         private final Map<WeatherType, WeatherInstance> activeInstances = new ConcurrentHashMap<>();
         private final Map<WeatherType, WeatherInstance> readyInstances = new ConcurrentHashMap<>();
         private final Map<WeatherType, WeatherInstance> stillnessInstances = new ConcurrentHashMap<>();
+        private final Set<WeatherType> pausedTypes = ConcurrentHashMap.newKeySet();
 
         public void onActiveEnd(WeatherType type, ServerLevel level) {
             WeatherInstance instance = activeInstances.get(type);
@@ -1030,6 +1177,8 @@ public class WeatherHolder {
             activeInstances.remove(type);
 
             tryActivateReady(type, level);
+
+            NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherEndEvent(level, instance));
         }
 
         public void onStillnessEnd(WeatherType type, ServerLevel level) {
@@ -1099,6 +1248,10 @@ public class WeatherHolder {
                 return;
             }
 
+            if (doesPaused(type)) {
+                return;
+            }
+
             WeatherInstance instance = readyInstances.get(type);
             if (instance == null) {
                 return;
@@ -1111,6 +1264,8 @@ public class WeatherHolder {
             instance.activate();
             activeInstances.put(type, instance);
             readyInstances.remove(type);
+
+            NeoForge.EVENT_BUS.post(new WeatherEvents.WeatherStartEvent(level, instance));
         }
 
         public void setActive(WeatherInstance instance) {
@@ -1135,34 +1290,14 @@ public class WeatherHolder {
             readyInstances.put(instance.getType(), instance);
         }
 
-        public void pauseActive(WeatherType type) {
-            WeatherInstance instance = activeInstances.get(type);
-            if (instance != null) {
-                instance.pause();
-            }
+        public void pause(WeatherType type) {
+            pausedTypes.add(type);
+            CoreHanXu.LOGGER.info("[HX] Paused weather type: {}", type.toString().toLowerCase());
         }
 
-        public void resumeActive(WeatherType type) {
-            WeatherInstance instance = activeInstances.get(type);
-            if (instance != null) {
-                instance.resume();
-            }
-        }
-
-        public void pauseActive(String id) {
-            for (WeatherInstance instance : activeInstances.values()) {
-                if (instance.getId().equals(id)) {
-                    instance.pause();
-                }
-            }
-        }
-
-        public void resumeActive(String id) {
-            for (WeatherInstance instance : activeInstances.values()) {
-                if (instance.getId().equals(id)) {
-                    instance.resume();
-                }
-            }
+        public void resume(WeatherType type) {
+            pausedTypes.remove(type);
+            CoreHanXu.LOGGER.info("[HX] Resumed weather type: {}", type.toString().toLowerCase());
         }
 
         public void putActiveInstance(WeatherType type, WeatherInstance instance) {
@@ -1213,6 +1348,10 @@ public class WeatherHolder {
             return stillnessInstances.get(type) != null;
         }
 
+        public boolean doesExist(WeatherType type) {
+            return doesActive(type) || doesReady(type) || doesStillness(type);
+        }
+
         public boolean doesActive(String id) {
             for (WeatherInstance instance : activeInstances.values()) {
                 if (instance.getId().equals(id)) {
@@ -1261,6 +1400,10 @@ public class WeatherHolder {
 
         public boolean doesStillnessOrIdle(String id) {
             return !doesPrepareOrUsing(id);
+        }
+
+        public boolean doesPaused(WeatherType type) {
+            return pausedTypes.contains(type);
         }
     }
 }

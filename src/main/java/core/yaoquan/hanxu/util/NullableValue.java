@@ -1,4 +1,6 @@
-package core.yaoquan.hanxu.api.solution;
+package core.yaoquan.hanxu.util;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
@@ -39,7 +41,7 @@ public class NullableValue<T> {
     private final T value;
     private final Type type;
 
-    private enum Type {
+    public enum Type {
         NULL, VALUE,
     }
 
@@ -50,11 +52,13 @@ public class NullableValue<T> {
 
     private static final NullableValue<?> instances = new NullableValue<>(null, Type.NULL);
 
+    @NotNull
     @SuppressWarnings("unchecked")
     public static <T> NullableValue<T> none() {
         return (NullableValue<T>) instances;
     }
 
+    @NotNull
     public static <T> NullableValue<T> ofNotNull(T value) throws NoSuchElementException {
         if (value == null) {
             throw new NoSuchElementException("Nullable value is null.");
@@ -63,6 +67,7 @@ public class NullableValue<T> {
         return new NullableValue<>(value, Type.VALUE);
     }
 
+    @NotNull
     public static <T> NullableValue<T> ofNullable(T value) {
         if (value == null) {
             return none();
@@ -79,6 +84,7 @@ public class NullableValue<T> {
         return type == Type.NULL;
     }
 
+    @NotNull
     public T get() throws NoSuchElementException {
         if (isNull()) {
             throw new NoSuchElementException("Nullable value is null.");
@@ -101,6 +107,21 @@ public class NullableValue<T> {
         return value;
     }
 
+
+    public NullableValue<T> getOrOther(NullableValue<? extends T> other) {
+        if (isNull()) {
+            @SuppressWarnings("unchecked")
+            NullableValue<T> result = (NullableValue<T>) other;
+            return result;
+        }
+        return this;
+    }
+
+    @NotNull
+    public NullableValue.Type situation() {
+        return type;
+    }
+
     public <R> NullableValue<R> modify(Function<? super T, ? extends R> mapper) {
         if (isNull()) {
             return none();
@@ -108,6 +129,7 @@ public class NullableValue<T> {
         return ofNullable(mapper.apply(value));
     }
 
+    @NotNull
     public NullableValue<T> ifPresent(Consumer<? super T> consumer) {
         if (isPresent()) {
             consumer.accept(value);
@@ -115,18 +137,10 @@ public class NullableValue<T> {
         return this;
     }
 
+    @NotNull
     public NullableValue<T> ifNull(Runnable runnable) {
         if (isNull()) {
             runnable.run();
-        }
-        return this;
-    }
-
-    public NullableValue<T> getOrOther(NullableValue<? extends T> other) {
-        if (isNull()) {
-            @SuppressWarnings("unchecked")
-            NullableValue<T> result = (NullableValue<T>) other;
-            return result;
         }
         return this;
     }

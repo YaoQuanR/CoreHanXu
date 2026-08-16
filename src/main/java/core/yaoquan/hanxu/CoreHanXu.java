@@ -112,7 +112,7 @@ public class CoreHanXu {
                     .contains("core.yaoquan.hanxu.player_permission_level");
 
             // Changeable from config.
-            int autoLevel = GeneralConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
+            int autoLevel = GeneralConfig.setAutoPermissionLevelAuthorize.getAsInt();
 
             if (!hasPermissionLevel) {
                 player.getPersistentData()

@@ -18,12 +18,12 @@ public class CommandBuilder {
                 // Subcommands.
                 .then(
                     Commands.literal("help")
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionHelp.getAsInt()))
                         .executes(CommandExecute::executeHelp)
                 )
                 .then(
                     Commands.literal("detail")
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_DETAIL.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionDetail.getAsInt()))
                         .executes(CommandExecute::executeDetail)
                 )
                 .then(
@@ -42,7 +42,7 @@ public class CommandBuilder {
                             Commands.literal("state")
                                 .then(
                                     Commands.argument("player_id", StringArgumentType.string())
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_LICENSE_ADVANCED_STATE.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionLicenseAdvancedState.getAsInt()))
                                         .suggests(CommandSuggest::suggestPlayer)
                                         .executes(CommandExecute::executeAdvancedLicense_State)
                                 )
@@ -77,13 +77,13 @@ public class CommandBuilder {
                             Commands.literal("player_first_grant")
                                 .executes(cs -> CommandExecute.executePermission_Check(cs, "player_first_grant"))
                         )
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_PERMISSION_LEVEL.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionPermissionLevel.getAsInt()))
                 )
                 .then(
                     Commands.literal("timer")
                         .then(
                             Commands.literal("help")
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_HELP.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerHelp.getAsInt()))
                                 .executes(CommandExecute::executeTimer_Help)
                         )
                         .then(
@@ -194,7 +194,7 @@ public class CommandBuilder {
                                     Commands.literal("list")
                                         .executes(CommandExecute::executeTimer_Template_List)
                                 )
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_TEMPLATE.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerTemplate.getAsInt()))
                         )
                         .then(
                             Commands.literal("instance")
@@ -204,7 +204,7 @@ public class CommandBuilder {
                                             Commands.argument("template_timer_id", StringArgumentType.word())
                                                 .then(
                                                     Commands.argument("apply_target", StringArgumentType.word())
-                                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_CREATE.getAsInt()))
+                                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerInstanceCreate.getAsInt()))
                                                         .suggests(CommandSuggest::suggestUUIDOwner)
                                                         .executes(CommandExecute::executeTimer_Instance_Apply)
                                                 )
@@ -249,7 +249,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
                                         )
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_CREATE.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerInstanceCreate.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("create_range")
@@ -292,7 +292,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestTemplateTimer)
                                         )
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_CREATE.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerInstanceCreate.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("start")
@@ -305,7 +305,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_RUN.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerInstanceRun.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("stop")
@@ -318,7 +318,7 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_RUN.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerInstanceRun.getAsInt()))
                                 )
                                 .then(
                                     Commands.literal("reset")
@@ -440,9 +440,9 @@ public class CommandBuilder {
                                                 )
                                                 .suggests(CommandSuggest::suggestUUIDOwner)
                                         )
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_F4.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerF4.getAsInt()))
                                 )
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_INSTANCE_OTHERS.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerInstanceOthers.getAsInt()))
                         )
                         .then(
                             Commands.literal("test")
@@ -473,14 +473,14 @@ public class CommandBuilder {
                                 )
                                 .requires(TestHolder::hasPrivateTestPermission)
                         )
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_TIMER_HELP.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionTimerHelp.getAsInt()))
                         .executes(CommandExecute::executeTimer)
                 )
                 .then(
                     Commands.literal("scene")
                         .then(
                             Commands.literal("help")
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_HELP.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionSceneHelp.getAsInt()))
                                 .executes(CommandExecute::executeScene_Help)
                         )
                         .then(
@@ -496,7 +496,7 @@ public class CommandBuilder {
                                                 .suggests(CommandSuggest::suggestPlayer)
                                                 .executes(CommandExecute::executeScene_Play)
                                         )
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_PLAY.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionScenePlay.getAsInt()))
                                         .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Play)
                                 )
@@ -505,7 +505,7 @@ public class CommandBuilder {
                             Commands.literal("broadcast")
                                 .then(
                                     Commands.argument("scene_name", StringArgumentType.string())
-                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_PLAY.getAsInt()))
+                                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionScenePlay.getAsInt()))
                                         .suggests(CommandSuggest::suggestScene)
                                         .executes(CommandExecute::executeScene_Broadcast)
                                 )
@@ -538,14 +538,14 @@ public class CommandBuilder {
                                         .executes(CommandExecute::executeScene_Create)
                                 )
                         )
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_SCENE_OTHERS.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionSceneOthers.getAsInt()))
                         .executes(CommandExecute::executeScene)
                 )
                 .then(
                     Commands.literal("attribute")
                         .then(
                             Commands.literal("help")
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_HELP.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionAttributeHelp.getAsInt()))
                                 .executes(CommandExecute::executeAttribute_Help)
                         )
                         .then(
@@ -576,7 +576,7 @@ public class CommandBuilder {
                                         )
                                         .suggests(CommandSuggest::suggestYamlAttribute)
                                 )
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_CREATE.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionAttributeCreate.getAsInt()))
                         )
                         .then(
                             Commands.literal("define")
@@ -609,7 +609,7 @@ public class CommandBuilder {
                                         )
                                         .suggests(CommandSuggest::suggestYamlAttribute)
                                 )
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_CREATE.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionAttributeCreate.getAsInt()))
                         )
                         .then(
                             Commands.literal("delete")
@@ -777,7 +777,7 @@ public class CommandBuilder {
                                         )
                                         .suggests(CommandSuggest::suggestAllAttribute)
                                 )
-                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_F4.getAsInt()))
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionAttributeF4.getAsInt()))
                         )
                         .then(
                             Commands.literal("test")
@@ -798,7 +798,7 @@ public class CommandBuilder {
                                 )
                                 .requires(TestHolder::hasPrivateTestPermission)
                         )
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_ATTRIBUTE_OTHERS.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionAttributeOthers.getAsInt()))
                         .executes(CommandExecute::executeAttribute)
                 )
                 .then(
@@ -1078,7 +1078,7 @@ public class CommandBuilder {
                                         .suggests(CommandSuggest::suggestAllVariable)
                                 )
                         )
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_VARIABLE_OPERATIONS.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionVariableOperations.getAsInt()))
                         .executes(CommandExecute::executeVariable)
                 )
                 .then(
@@ -1233,10 +1233,10 @@ public class CommandBuilder {
                             Commands.literal("template")
                                 .executes(CommandExecute::executeLoot_Template)
                         )
-                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_LOOT_OPERATIONS.getAsInt()))
+                        .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionLootOperations.getAsInt()))
                         .executes(CommandExecute::executeLoot)
                 )
-                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.SET_PERMISSION_HELP.getAsInt()))
+                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionHelp.getAsInt()))
                 .executes(CommandExecute::executeBare)
         );
     }

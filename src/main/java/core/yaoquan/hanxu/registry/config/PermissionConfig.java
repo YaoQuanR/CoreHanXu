@@ -5,101 +5,101 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class PermissionConfig {
     private static final ModConfigSpec.Builder CONFIG = new ModConfigSpec.Builder();
 
-    private static final String PERMISSION_SET_COMMENT_H = " Permission define '/chx help' requirement.";
-    private static final String PERMISSION_SET_COMMENT_D = " Permission define '/chx detail' requirement.";
-    private static final String PERMISSION_SET_COMMENT_L = " Permission define '/chx license state [player id]' requirement.";
-    private static final String PERMISSION_SET_COMMENT_P = " Permission define '/chx permission ...' requirement.";
-    private static final String PERMISSION_SET_COMMENT_TH = " Permission define '/chx timer help' requirement.";
-    private static final String PERMISSION_SET_COMMENT_TT = " Permission define '/chx timer template ...' requirement.";
-    private static final String PERMISSION_SET_COMMENT_TIC = " Permission define '/chx timer instance' at create requirement.";
-    private static final String PERMISSION_SET_COMMENT_TIS = " Permission define '/chx timer instance' at start/stop requirement.";
-    private static final String PERMISSION_SET_COMMENT_TIO = " Permission define '/chx timer instance' at other modification requirement.";
-    private static final String PERMISSION_SET_COMMENT_TID = " Permission define '/chx timer instance display' requirement.";
-    private static final String PERMISSION_SET_COMMENT_SH = " Permission define '/chx scene help' requirement.";
-    private static final String PERMISSION_SET_COMMENT_SPB = " Permission define '/chx scene' at play/broadcast requirement.";
-    private static final String PERMISSION_SET_COMMENT_SO = " Permission define '/chx scene' at other modification requirement.";
-    private static final String PERMISSION_SET_COMMENT_AH = " Permission define '/chx attribute help' requirement.";
-    private static final String PERMISSION_SET_COMMENT_AC = " Permission define '/chx attribute' at create/define requirement.";
-    private static final String PERMISSION_SET_COMMENT_AO = " Permission define '/chx attribute' at other modification requirement.";
-    private static final String PERMISSION_SET_COMMENT_AD = " Permission define '/chx attribute display' requirement.";
-    private static final String PERMISSION_SET_COMMENT_V = " Permission define '/chx variable' entire system requirement.";
-    private static final String PERMISSION_SET_COMMENT_LOOT = " Permission define '/chx loot' entire system requirement.";
+    private static final String comment_h = " Permission define '/chx help' requirement.";
+    private static final String comment_d = " Permission define '/chx detail' requirement.";
+    private static final String comment_l = " Permission define '/chx license state [player id]' requirement.";
+    private static final String comment_p = " Permission define '/chx permission ...' requirement.";
+    private static final String comment_th = " Permission define '/chx timer help' requirement.";
+    private static final String comment_tt = " Permission define '/chx timer template ...' requirement.";
+    private static final String comment_tic = " Permission define '/chx timer instance' at create requirement.";
+    private static final String comment_tis = " Permission define '/chx timer instance' at start/stop requirement.";
+    private static final String comment_tio = " Permission define '/chx timer instance' at other modification requirement.";
+    private static final String comment_tid = " Permission define '/chx timer instance display' requirement.";
+    private static final String comment_sh = " Permission define '/chx scene help' requirement.";
+    private static final String comment_spb = " Permission define '/chx scene' at play/broadcast requirement.";
+    private static final String comment_so = " Permission define '/chx scene' at other modification requirement.";
+    private static final String comment_ah = " Permission define '/chx attribute help' requirement.";
+    private static final String comment_ac = " Permission define '/chx attribute' at create/define requirement.";
+    private static final String comment_ao = " Permission define '/chx attribute' at other modification requirement.";
+    private static final String comment_ad = " Permission define '/chx attribute display' requirement.";
+    private static final String comment_v = " Permission define '/chx variable' entire system requirement.";
+    private static final String comment_lt = " Permission define '/chx loot' entire system requirement.";
 
     // Permission set list config:
-    public static final ModConfigSpec.IntValue SET_PERMISSION_HELP = CONFIG
-            .comment(PERMISSION_SET_COMMENT_H)
+    public static final ModConfigSpec.IntValue setPermissionHelp = CONFIG
+            .comment(comment_h)
             .defineInRange("permission_help", 0, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_DETAIL = CONFIG
-            .comment(PERMISSION_SET_COMMENT_D)
+    public static final ModConfigSpec.IntValue setPermissionDetail = CONFIG
+            .comment(comment_d)
             .defineInRange("permission_detail", 0, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_LICENSE_ADVANCED_STATE = CONFIG
-            .comment(PERMISSION_SET_COMMENT_L)
+    public static final ModConfigSpec.IntValue setPermissionLicenseAdvancedState = CONFIG
+            .comment(comment_l)
             .defineInRange("permission_license_advanced_state", 1, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_PERMISSION_LEVEL = CONFIG
-            .comment(PERMISSION_SET_COMMENT_P)
+    public static final ModConfigSpec.IntValue setPermissionPermissionLevel = CONFIG
+            .comment(comment_p)
             .defineInRange("permission_level", 10, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_TIMER_HELP = CONFIG
-            .comment(PERMISSION_SET_COMMENT_TH)
+    public static final ModConfigSpec.IntValue setPermissionTimerHelp = CONFIG
+            .comment(comment_th)
             .defineInRange("permission_timer_help", 1, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_TIMER_TEMPLATE = CONFIG
-            .comment(PERMISSION_SET_COMMENT_TT)
+    public static final ModConfigSpec.IntValue setPermissionTimerTemplate = CONFIG
+            .comment(comment_tt)
             .defineInRange("permission_timer_template", 1, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_TIMER_INSTANCE_CREATE = CONFIG
-            .comment(PERMISSION_SET_COMMENT_TIC)
+    public static final ModConfigSpec.IntValue setPermissionTimerInstanceCreate = CONFIG
+            .comment(comment_tic)
             .defineInRange("permission_timer_instance_create", 2, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_TIMER_INSTANCE_RUN = CONFIG
-            .comment(PERMISSION_SET_COMMENT_TIS)
+    public static final ModConfigSpec.IntValue setPermissionTimerInstanceRun = CONFIG
+            .comment(comment_tis)
             .defineInRange("permission_timer_instance_run", 2, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_TIMER_INSTANCE_OTHERS = CONFIG
-            .comment(PERMISSION_SET_COMMENT_TIO)
+    public static final ModConfigSpec.IntValue setPermissionTimerInstanceOthers = CONFIG
+            .comment(comment_tio)
             .defineInRange("permission_timer_instance_others", 2, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_TIMER_F4 = CONFIG
-            .comment(PERMISSION_SET_COMMENT_TID)
+    public static final ModConfigSpec.IntValue setPermissionTimerF4 = CONFIG
+            .comment(comment_tid)
             .defineInRange("permission_timer_instance_f4", 3, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_SCENE_HELP = CONFIG
-            .comment(PERMISSION_SET_COMMENT_SH)
+    public static final ModConfigSpec.IntValue setPermissionSceneHelp = CONFIG
+            .comment(comment_sh)
             .defineInRange("permission_scene_help", 1, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_SCENE_PLAY = CONFIG
-            .comment(PERMISSION_SET_COMMENT_SPB)
+    public static final ModConfigSpec.IntValue setPermissionScenePlay = CONFIG
+            .comment(comment_spb)
             .defineInRange("permission_scene_play", 1, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_SCENE_OTHERS = CONFIG
-            .comment(PERMISSION_SET_COMMENT_SO)
+    public static final ModConfigSpec.IntValue setPermissionSceneOthers = CONFIG
+            .comment(comment_so)
             .defineInRange("permission_scene_others", 2, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_ATTRIBUTE_HELP = CONFIG
-            .comment(PERMISSION_SET_COMMENT_AH)
+    public static final ModConfigSpec.IntValue setPermissionAttributeHelp = CONFIG
+            .comment(comment_ah)
             .defineInRange("permission_attribute_help", 1, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_ATTRIBUTE_CREATE = CONFIG
-            .comment(PERMISSION_SET_COMMENT_AC)
+    public static final ModConfigSpec.IntValue setPermissionAttributeCreate = CONFIG
+            .comment(comment_ac)
             .defineInRange("permission_attribute_create", 2, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_ATTRIBUTE_OTHERS = CONFIG
-            .comment(PERMISSION_SET_COMMENT_AO)
+    public static final ModConfigSpec.IntValue setPermissionAttributeOthers = CONFIG
+            .comment(comment_ao)
             .defineInRange("permission_attribute_others", 2, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_ATTRIBUTE_F4 = CONFIG
-            .comment(PERMISSION_SET_COMMENT_AD)
+    public static final ModConfigSpec.IntValue setPermissionAttributeF4 = CONFIG
+            .comment(comment_ad)
             .defineInRange("permission_attribute_f4", 3, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_VARIABLE_OPERATIONS = CONFIG
-            .comment(PERMISSION_SET_COMMENT_V)
+    public static final ModConfigSpec.IntValue setPermissionVariableOperations = CONFIG
+            .comment(comment_v)
             .defineInRange("permission_variable_operations", 2, 0, 10);
 
-    public static final ModConfigSpec.IntValue SET_PERMISSION_LOOT_OPERATIONS = CONFIG
-            .comment(PERMISSION_SET_COMMENT_LOOT)
+    public static final ModConfigSpec.IntValue setPermissionLootOperations = CONFIG
+            .comment(comment_lt)
             .defineInRange("permission_loot_operations", 2, 0, 10);
 
     public static final ModConfigSpec SPEC_PERMISSION = CONFIG.build();

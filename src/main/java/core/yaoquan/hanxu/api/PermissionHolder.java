@@ -1,9 +1,7 @@
 package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
-import core.yaoquan.hanxu.util.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 
@@ -124,7 +122,7 @@ public class PermissionHolder {
                 // Get player permission level.
                 int currentPlayerLevel = player.getPersistentData()
                         .getInt("core.yaoquan.hanxu.player_permission_level")
-                        .orElse(GeneralConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt());
+                        .orElse(GeneralConfig.setAutoPermissionLevelAuthorize.getAsInt());
 
                 // Non admin must agree license for command use.
                 boolean agreedLicense = player.getPersistentData()

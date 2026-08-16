@@ -2,7 +2,7 @@ package core.yaoquan.hanxu.registry.event.payload;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.render.data.WeatherRender;
+import core.yaoquan.hanxu.render.data.WeatherClient;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -45,7 +45,7 @@ public class WeatherPayload {
 
         public static void handleClient(FogPacket packet, IPayloadContext context) {
             context.enqueueWork(() -> {
-                WeatherRender.updateFog(packet);
+                WeatherClient.updateFog(packet);
             }).exceptionally(e -> {
                 CoreHanXu.LOGGER.error("[HX] Failed to handle fog packet: ", e);
                 return null;

@@ -226,7 +226,7 @@ class CommandExecute {
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + commandblockPermissionLevel).withColor(General.Color.TITLE));
             }
             case "player_first_grant" -> {
-                int autoAuthorizedPermissionLevel = GeneralConfig.SET_AUTO_AUTHORIZED_PERMISSION_LEVEL.getAsInt();
+                int autoAuthorizedPermissionLevel = GeneralConfig.setAutoPermissionLevelAuthorize.getAsInt();
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + autoAuthorizedPermissionLevel).withColor(General.Color.TITLE));
             }
             default -> {
@@ -269,7 +269,7 @@ class CommandExecute {
             return 0;
         }
 
-        boolean editable = GeneralConfig.SET_PLAYER_PERMISSION_EDITABLE.getAsBoolean();
+        boolean editable = GeneralConfig.setEditablePlayerPermission.getAsBoolean();
 
         if (!editable) {
             MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uneditablePlayerPermission));

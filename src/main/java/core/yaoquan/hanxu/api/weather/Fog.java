@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu.api.weather;
 
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -84,7 +85,7 @@ public class Fog implements WeatherHolder.WeatherDefinition {
             return;
         }
 
-        float transition = 0.1f;
+        float transition = ((Number) GeneralConfig.setFogTransitionRatio.getAsDouble()).floatValue();
 
         float progress = (float) instance.getRemainingTicks() / instance.getInitialTicks();
         float currentDistance;
@@ -94,15 +95,15 @@ public class Fog implements WeatherHolder.WeatherDefinition {
         switch (instance.getPhase()) {
             case ACTIVE -> {
                 float activeProgress = 1.0f - progress;
-                if (activeProgress < 0.1f) {
+                if (activeProgress < transition) {
                     float ratio = activeProgress / transition;
                     currentDistance = maximumDistance - (maximumDistance - minimumDistance) * ratio;
                 }
-                else if (activeProgress < 0.9f) {
+                else if (activeProgress < (1.0f - transition)) {
                     currentDistance = minimumDistance;
                 }
                 else {
-                    float ratio = (activeProgress - 0.9f) / transition;
+                    float ratio = (activeProgress - (1.0f - transition)) / transition;
                     currentDistance = minimumDistance + (maximumDistance - minimumDistance) * ratio;
                 }
             }

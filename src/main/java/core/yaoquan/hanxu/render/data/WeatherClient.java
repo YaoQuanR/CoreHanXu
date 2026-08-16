@@ -6,7 +6,7 @@ import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class WeatherRender {
+public class WeatherClient {
     private static final Map<String, FogInfo> fogCache = new ConcurrentHashMap<>();
     private static final Map<String, ColoredRainInfo> coloredRainCache = new ConcurrentHashMap<>();
     private static final Map<String, WindInfo> windCache = new ConcurrentHashMap<>();

@@ -1,11 +1,9 @@
 package core.yaoquan.hanxu.render.mixin;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import core.yaoquan.hanxu.CoreHanXu;
-import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.render.data.WeatherRender;
+import core.yaoquan.hanxu.render.data.WeatherClient;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -56,7 +54,7 @@ public class FogRender {
             ClientLevel level,
             CallbackInfoReturnable<Vector4f> info4f) {
         String dimension = level.dimension().location().toString();
-        WeatherRender.FogInfo fog = WeatherRender.getFog(dimension);
+        WeatherClient.FogInfo fog = WeatherClient.getFog(dimension);
 
         if (fog == null || fog.currentDistance() < 0) {
             return;

@@ -4,16 +4,14 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import core.yaoquan.hanxu.api.AttributeHolder;
-import core.yaoquan.hanxu.api.LootHolder;
-import core.yaoquan.hanxu.api.TimeHolder;
-import core.yaoquan.hanxu.api.VariableHolder;
+import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.util.Resolver;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
@@ -308,6 +306,38 @@ class CommandSuggest {
                     case "z" -> builder.suggest(position.getZ());
                 }
             }
+        }
+
+        return builder.buildFuture();
+    }
+
+    // For weather suggestion.
+    static CompletableFuture<Suggestions> suggestWeather(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        for (String id : WeatherHolder.getApiWeatherDefinitions().keySet()) {
+            builder.suggest(id);
+        }
+
+        for (String id : WeatherHolder.getCommandWeatherDefinitions().keySet()) {
+            builder.suggest(id);
+        }
+
+        return builder.buildFuture();
+    }
+
+    // For dimension suggestion.
+    static CompletableFuture<Suggestions> suggestDimension(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        MinecraftServer server = context.getSource().getServer();
+        for (ServerLevel level : server.getAllLevels()) {
+            builder.suggest("\"" + level.dimension().location() + "\"");
+        }
+
+        return builder.buildFuture();
+    }
+
+    // For weather type suggestion.
+    static CompletableFuture<Suggestions> suggestWeatherType(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        for (WeatherHolder.WeatherType type : WeatherHolder.WeatherType.values()) {
+            builder.suggest(type.name().toLowerCase());
         }
 
         return builder.buildFuture();

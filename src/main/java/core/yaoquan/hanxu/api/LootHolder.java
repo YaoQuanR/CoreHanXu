@@ -69,7 +69,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static core.yaoquan.hanxu.api.define.Error.returnCodeError;
+import static core.yaoquan.hanxu.api.define.Error.errorString;
 
 /**
  * Loot system API
@@ -133,7 +133,7 @@ public class LootHolder {
         LootTableData data = parseLootTableData(rawData);
 
         if (data.id == null || !data.id.equals(fileName)) {
-            CoreHanXu.LOGGER.warn("{}{} ≠ {}", returnCodeError(Error.CodeError.mismatchFileElement), fileName, data.id);
+            CoreHanXu.LOGGER.warn("{}{} ≠ {}", errorString(Error.CodeError.mismatchFileElement), fileName, data.id);
             return NullableValue.none();
         }
 
@@ -576,7 +576,7 @@ public class LootHolder {
      * @param tableId               Loot table id from registered or file table.
      * @return                      The component list of details: List<\Component>.
      */
-    public static List<Component> readLootTable(String tableId) {
+    public static @NotNull List<Component> readLootTable(String tableId) {
         List<Component> lines = new ArrayList<>();
 
         NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
@@ -687,7 +687,7 @@ public class LootHolder {
      * @param tableId               Loot table id from registered or file table.
      * @return                      The string of details: String.
      */
-    public static String readLootTableAsTranslatedString(String tableId) {
+    public static @NotNull String readLootTableAsTranslatedString(String tableId) {
         List<Component> lines = readLootTable(tableId);
         StringBuilder stringPackage = new StringBuilder();
 
@@ -704,7 +704,7 @@ public class LootHolder {
      * @param tableId               Loot table id from registered or file table.
      * @return                      The string of details: String.
      */
-    public static String readLootTableAsString(String tableId) {
+    public static @NotNull String readLootTableAsString(String tableId) {
         StringBuilder stringPackage = new StringBuilder();
 
         NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);

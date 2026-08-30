@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import static core.yaoquan.hanxu.api.define.Error.returnGeneralError;
+import static core.yaoquan.hanxu.api.define.Error.errorComponent;
 
 public class Creator {
     /**
@@ -42,12 +42,12 @@ public class Creator {
             case "e", "execute":
                 // Pass create only if selector used @r/a/e, @p will replace by player id.
                 if (contentParameter.contains("@s")) {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(Error.GeneralError.invalidSelectorUsed));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.invalidSelectorUsed));
                     return null;
                 }
                 else if (contentParameter.contains("@p")) {
                     if (context != null) {
-                        MessagePublisher.sendFailureMessage(context, returnGeneralError(Error.GeneralError.selectorToNearestUsed));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.selectorToNearestUsed));
                     }
                 }
 
@@ -252,8 +252,14 @@ public class Creator {
         switch (type) {
             case FOG -> {
                 int color = Cast.toInteger(parameters, "color", WeatherHolder.DefaultColor.FOG);
-                float minimumDistance = Cast.toFloat(parameters, "minimum_distance", 4f);
-                float maximumDistance = Cast.toFloat(parameters, "maximum_distance", 64f);
+                float minimumDistance = 4f;
+                float maximumDistance = 64f;
+
+                Object distanceObject = parameters.get("distance");
+                if (distanceObject instanceof Map<?, ?> distanceMap) {
+                    minimumDistance = Cast.toFloat(distanceMap.get("min"), minimumDistance);
+                    maximumDistance = Cast.toFloat(distanceMap.get("max"), maximumDistance);
+                }
 
                 Fog fog = new Fog(id, random)
                         .color(color)

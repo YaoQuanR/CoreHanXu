@@ -4,6 +4,7 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.TimerCallback;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.registry.QuickSendPacket;
 import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import core.yaoquan.hanxu.util.Converter;
@@ -426,6 +427,16 @@ public class TimeHolder {
         return instantiatedData.keySet().toArray(new String[0]);
     }
 
+    // Count the total amount of instance timer.
+    public static int getTotalInstanceCount() {
+        int count = 0;
+        for (Map<String, TimerData> map : instantiatedTimer.values()) {
+            count += map.size();
+        }
+
+        return count;
+    }
+
     // Display out to F4 page (info page).
     public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state) {
         if (masterId == null) {
@@ -451,6 +462,8 @@ public class TimeHolder {
         PacketDistributor.sendToPlayer(
                 player, new GeneralPayload.TimerF4Packet(masterId, timerId, state, remainingTicks, isCounting, masterName)
         );
+
+        QuickSendPacket.sendRegisteredTermPacket(player);
     }
 
     // Check if required to refresh the F4 timer display.

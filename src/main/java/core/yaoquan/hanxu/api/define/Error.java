@@ -55,6 +55,18 @@ public class Error {
         failedToDelete,
     }
 
+    public enum WeatherError {
+        emptyWeather,
+        notFound,
+        alreadyActivated,
+        onReadyOrNotFound,
+        alreadyExist,
+        failedToSave,
+        tryToModifyApiTarget,
+        sameNameFound,
+        failedToDelete,
+    }
+
     public enum GeneralError {
         licenseAlreadyAgreed,
         uneditablePlayerPermission,
@@ -76,6 +88,7 @@ public class Error {
         invalidFieldForName,
         unexpected,
         notContainer,
+        unknownDimension,
     }
 
     public enum CodeError {
@@ -87,7 +100,7 @@ public class Error {
         missingNecessaryField,
     }
 
-    public static Component returnTimerError(TimerError timerError) {
+    public static Component errorComponent(TimerError timerError) {
         return switch (timerError) {
             case alreadyExist -> Component.translatable("commands.chx.timer_already_exist");
             case notExist -> Component.translatable("commands.chx.timer_not_exist");
@@ -101,7 +114,7 @@ public class Error {
         };
     }
 
-    public static Component returnSceneError(SceneError sceneError) {
+    public static Component errorComponent(SceneError sceneError) {
         return switch (sceneError) {
             case notFound -> Component.translatable("commands.chx.scene_not_found");
             case playFailed -> Component.translatable("commands.chx.scene_play_failed");
@@ -113,7 +126,7 @@ public class Error {
         };
     }
 
-    public static Component returnAttributeError(AttributeError attributeError) {
+    public static Component errorComponent(AttributeError attributeError) {
         return switch (attributeError) {
             case tryToModifyApiTarget -> Component.translatable("commands.chx.attribute_try_to_modify_api_target");
             case notFound -> Component.translatable("commands.chx.attribute_not_found");
@@ -131,7 +144,7 @@ public class Error {
         };
     }
 
-    public static Component returnVariableError(VariableError variableError) {
+    public static Component errorComponent(VariableError variableError) {
         return switch (variableError) {
             case alreadyExist -> Component.translatable("commands.chx.variable_already_exist");
             case invalidType -> Component.translatable("commands.chx.variable_invalid_type");
@@ -142,7 +155,7 @@ public class Error {
         };
     }
 
-    public static Component returnLootError(LootError lootError) {
+    public static Component errorComponent(LootError lootError) {
         return switch (lootError) {
             case emptyTable -> Component.translatable("commands.chx.loot_empty_table");
             case tableNotExist -> Component.translatable("commands.chx.loot_table_not_exist");
@@ -154,7 +167,22 @@ public class Error {
         };
     }
 
-    public static Component returnGeneralError(GeneralError generalError) {
+    public static Component errorComponent(WeatherError weatherError) {
+        return switch (weatherError) {
+            case emptyWeather -> Component.translatable("commands.chx.weather_empty_weather");
+            case notFound -> Component.translatable("commands.chx.weather_not_found");
+            case alreadyActivated -> Component.translatable("commands.chx.weather_already_activated");
+            case onReadyOrNotFound -> Component.translatable("commands.chx.weather_on_ready_or_not_found");
+            case alreadyExist -> Component.translatable("commands.chx.weather_already_exist");
+            case failedToSave -> Component.translatable("commands.chx.weather_failed_to_save");
+            case tryToModifyApiTarget -> Component.translatable("commands.chx.weather_try_to_modify_api_target");
+            case sameNameFound -> Component.translatable("commands.chx.weather_same_name_found");
+            case failedToDelete -> Component.translatable("commands.chx.weather_failed_to_delete");
+            default -> Component.translatable("commands.core_hanxu.undefined_error_type");
+        };
+    }
+
+    public static Component errorComponent(GeneralError generalError) {
         return switch (generalError) {
             case licenseAlreadyAgreed -> Component.translatable("commands.core_hanxu.license_already_agreed");
             case uneditablePlayerPermission -> Component.translatable("commands.core_hanxu.uneditable_player_permission");
@@ -176,11 +204,12 @@ public class Error {
             case invalidFieldForName -> Component.translatable("commands.core_hanxu.invalid_field_for_name");
             case unexpected -> Component.translatable("commands.core_hanxu.unexpected");
             case notContainer -> Component.translatable("commands.core_hanxu.not_container");
+            case unknownDimension -> Component.translatable("commands.core_hanxu.unknown_dimension");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }
 
-    public static String returnCodeError(CodeError codeError) {
+    public static String errorString(CodeError codeError) {
         return switch (codeError) {
             case yamlFileNotFound -> "[HX] Yaml file not found: ";
             case jsonFileNotFound -> "[HX] Json file not found: ";

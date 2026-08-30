@@ -1236,6 +1236,200 @@ public class CommandBuilder {
                         .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionLootOperations.getAsInt()))
                         .executes(CommandExecute::executeLoot)
                 )
+                .then(
+                    Commands.literal("weather")
+                        .then(
+                            Commands.literal("help")
+                        )
+                        .then(
+                            Commands.literal("list")
+                                .executes(CommandExecute::executeWeather_List)
+                        )
+                        .then(
+                            Commands.literal("read")
+                                .then(
+                                    Commands.argument("weather_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("level", StringArgumentType.string())
+                                                .suggests(CommandSuggest::suggestDimension)
+                                                .executes(CommandExecute::executeWeather_Read)
+                                        )
+                                        .suggests(CommandSuggest::suggestWeather)
+                                        .executes(CommandExecute::executeWeather_Read)
+                                )
+                        )
+                        .then(
+                            Commands.literal("start")
+                                .then(
+                                    Commands.argument("weather_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("level", StringArgumentType.string())
+                                                .suggests(CommandSuggest::suggestDimension)
+                                                .executes(CommandExecute::executeWeather_Start)
+                                        )
+                                        .suggests(CommandSuggest::suggestWeather)
+                                        .executes(CommandExecute::executeWeather_Start)
+                                )
+                        )
+                        .then(
+                            Commands.literal("resume")
+                                .then(
+                                    Commands.literal("id")
+                                        .then(
+                                            Commands.argument("weather_id", StringArgumentType.string())
+                                                .then(
+                                                    Commands.argument("level", StringArgumentType.string())
+                                                        .suggests(CommandSuggest::suggestDimension)
+                                                        .executes(CommandExecute::executeWeather_ResumeId)
+                                                )
+                                                .suggests(CommandSuggest::suggestWeather)
+                                                .executes(CommandExecute::executeWeather_ResumeId)
+                                        )
+                                )
+                                .then(
+                                    Commands.literal("type")
+                                        .then(
+                                            Commands.argument("weather_type", StringArgumentType.word())
+                                                .then(
+                                                    Commands.argument("level", StringArgumentType.string())
+                                                        .suggests(CommandSuggest::suggestDimension)
+                                                        .executes(CommandExecute::executeWeather_ResumeType)
+                                                )
+                                                .suggests(CommandSuggest::suggestWeatherType)
+                                                .executes(CommandExecute::executeWeather_ResumeType)
+                                        )
+                                )
+                        )
+                        .then(
+                            Commands.literal("pause")
+                                .then(
+                                    Commands.literal("id")
+                                        .then(
+                                            Commands.argument("weather_id", StringArgumentType.string())
+                                                .then(
+                                                    Commands.argument("level", StringArgumentType.string())
+                                                        .suggests(CommandSuggest::suggestDimension)
+                                                        .executes(CommandExecute::executeWeather_PauseId)
+                                                )
+                                                .suggests(CommandSuggest::suggestWeather)
+                                                .executes(CommandExecute::executeWeather_PauseId)
+                                        )
+                                )
+                                .then(
+                                    Commands.literal("type")
+                                        .then(
+                                            Commands.argument("weather_type", StringArgumentType.word())
+                                                .then(
+                                                    Commands.argument("level", StringArgumentType.string())
+                                                        .suggests(CommandSuggest::suggestDimension)
+                                                        .executes(CommandExecute::executeWeather_PauseType)
+                                                )
+                                                .suggests(CommandSuggest::suggestWeatherType)
+                                                .executes(CommandExecute::executeWeather_PauseType)
+                                        )
+                                )
+                        )
+                        .then(
+                            Commands.literal("restart")
+                                .then(
+                                    Commands.argument("weather_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("level", StringArgumentType.string())
+                                                .suggests(CommandSuggest::suggestDimension)
+                                                .executes(CommandExecute::executeWeather_Restart)
+                                        )
+                                        .suggests(CommandSuggest::suggestWeather)
+                                        .executes(CommandExecute::executeWeather_Restart)
+                                )
+                        )
+                        .then(
+                            Commands.literal("ready")
+                                .then(
+                                    Commands.argument("weather_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("level", StringArgumentType.string())
+                                                .suggests(CommandSuggest::suggestDimension)
+                                                .executes(CommandExecute::executeWeather_Ready)
+                                        )
+                                        .suggests(CommandSuggest::suggestWeather)
+                                        .executes(CommandExecute::executeWeather_Ready)
+                                )
+                        )
+                        .then(
+                            Commands.literal("kill")
+                                .then(
+                                    Commands.argument("weather_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("level", StringArgumentType.string())
+                                                .suggests(CommandSuggest::suggestDimension)
+                                                .executes(CommandExecute::executeWeather_Kill)
+                                        )
+                                        .suggests(CommandSuggest::suggestWeather)
+                                        .executes(CommandExecute::executeWeather_Kill)
+                                )
+                        )
+                        .then(
+                            Commands.literal("reload")
+                                .executes(CommandExecute::executeWeather_Reload)
+                        )
+                        .then(
+                            Commands.literal("create")
+                                .then(
+                                    Commands.argument("to_path", StringArgumentType.word())
+                                        .suggests(CommandSuggest::suggestSavePath)
+                                        .executes(CommandExecute::executeWeather_Create)
+                                )
+                        )
+                        .then(
+                            Commands.literal("delete")
+                                .then(
+                                    Commands.argument("weather_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.literal("world")
+                                                .executes(cs -> CommandExecute.executeWeather_Delete(cs, "world"))
+                                        )
+                                        .then(
+                                            Commands.literal("global")
+                                                .executes(cs -> CommandExecute.executeWeather_Delete(cs, "global"))
+                                        )
+                                        .suggests(CommandSuggest::suggestWeather)
+                                        .executes(cs -> CommandExecute.executeWeather_Delete(cs, "try"))
+                                )
+                        )
+                        .then(
+                            Commands.literal("template")
+                                .then(
+                                    Commands.literal("fog")
+                                        .executes(cs -> CommandExecute.executeWeather_Template(cs, "fog"))
+                                )
+                        )
+                        .then(
+                            Commands.literal("display")
+                                .then(
+                                    Commands.argument("weather_id", StringArgumentType.string())
+                                        .then(
+                                            Commands.argument("level", StringArgumentType.string())
+                                                .then(
+                                                    Commands.literal("true")
+                                                        .executes(cs -> CommandExecute.executeWeather_Display(cs, true))
+                                                )
+                                                .then(
+                                                    Commands.literal("false")
+                                                        .executes(cs -> CommandExecute.executeWeather_Display(cs, false))
+                                                )
+                                                .suggests(CommandSuggest::suggestDimension)
+                                                .executes(cs -> CommandExecute.executeWeather_Display(cs, true))
+                                        )
+                                        .suggests(CommandSuggest::suggestWeather)
+                                        .executes(cs -> CommandExecute.executeWeather_Display(cs, true))
+                                )
+                        )
+                        .then(
+                            Commands.literal("test")
+                                .requires(cs -> PermissionHolder.Verify.hasPermission(cs, 10))
+                                .executes(TestHolder::executeTest_Weather)
+                        )
+                )
                 .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.setPermissionHelp.getAsInt()))
                 .executes(CommandExecute::executeBare)
         );

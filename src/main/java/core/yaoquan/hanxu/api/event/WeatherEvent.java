@@ -29,4 +29,3 @@ public abstract class WeatherEvent extends Event {
         return weatherInstance.getType();
     }
 }
-

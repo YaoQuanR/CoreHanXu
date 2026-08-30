@@ -41,8 +41,9 @@ public class NullableValue<T> {
     private final T value;
     private final Type type;
 
+    /// A type that enums null or not null (some).
     public enum Type {
-        NULL, VALUE,
+        NULL, SOME,
     }
 
     private NullableValue(T value, Type type) {
@@ -64,7 +65,7 @@ public class NullableValue<T> {
             throw new NoSuchElementException("Nullable value is null.");
         }
 
-        return new NullableValue<>(value, Type.VALUE);
+        return new NullableValue<>(value, Type.SOME);
     }
 
     @NotNull
@@ -73,17 +74,18 @@ public class NullableValue<T> {
             return none();
         }
 
-        return new NullableValue<>(value, Type.VALUE);
+        return new NullableValue<>(value, Type.SOME);
     }
 
     public boolean isPresent() {
-        return type == Type.VALUE;
+        return type == Type.SOME;
     }
 
     public boolean isNull() {
         return type == Type.NULL;
     }
 
+    /// Use this method to get a value that ensures the value has been checked.
     @NotNull
     public T get() throws NoSuchElementException {
         if (isNull()) {
@@ -92,14 +94,17 @@ public class NullableValue<T> {
         return value;
     }
 
+    /// Use this method to get a value or use default value if this value is null.
     public T getOrElse(T defaultValue) {
         return isPresent()? value : defaultValue;
     }
 
+    /// Use this method to get a value or execute a function if this value is null.
     public T getOrDo(Supplier<? extends T> supplier) {
         return isPresent()? value : supplier.get();
     }
 
+    /// Use this method to get a value or throw a {@link Throwable} if this value is null.
     public <E extends Throwable> T getOrThrow(Supplier<? extends E> exceptionSupplier) throws E {
         if (isNull()) {
             throw exceptionSupplier.get();
@@ -107,7 +112,7 @@ public class NullableValue<T> {
         return value;
     }
 
-
+    /// Use this method to get a value or provide another nullable value.
     public NullableValue<T> getOrOther(NullableValue<? extends T> other) {
         if (isNull()) {
             @SuppressWarnings("unchecked")
@@ -117,11 +122,13 @@ public class NullableValue<T> {
         return this;
     }
 
+    /// Returns enum {@link NullableValue.Type} for switch case.
     @NotNull
     public NullableValue.Type situation() {
         return type;
     }
 
+    /// A method that modify the return value by mapper for further use.
     public <R> NullableValue<R> modify(Function<? super T, ? extends R> mapper) {
         if (isNull()) {
             return none();
@@ -129,6 +136,7 @@ public class NullableValue<T> {
         return ofNullable(mapper.apply(value));
     }
 
+    /// Execute function that if the value is not null.
     @NotNull
     public NullableValue<T> ifPresent(Consumer<? super T> consumer) {
         if (isPresent()) {
@@ -137,6 +145,7 @@ public class NullableValue<T> {
         return this;
     }
 
+    /// Execute function that if the value is null.
     @NotNull
     public NullableValue<T> ifNull(Runnable runnable) {
         if (isNull()) {
@@ -145,6 +154,7 @@ public class NullableValue<T> {
         return this;
     }
 
+    /// A predicate that accept boolean for selecting target value.
     public NullableValue<T> passOrDrop(Predicate<? super T> predicate) {
         if (isPresent()) {
             return predicate.test(value)? this : none();
@@ -152,10 +162,12 @@ public class NullableValue<T> {
         return this;
     }
 
-    public <R> R matching(Function<? super T, ? extends R> valueMapper, Supplier<? extends R> noneMapper) {
-        return isPresent()? valueMapper.apply(value) : noneMapper.get();
+    /// A method that requires to handle both null and not null situations. Receiving two functions.
+    public <R> R matching(Function<? super T, ? extends R> someMapper, Supplier<? extends R> noneMapper) {
+        return isPresent()? someMapper.apply(value) : noneMapper.get();
     }
 
+    /// A method that modify and ensured to return single level of NullableValue.
     public <R> NullableValue<R> unzipModify(Function<? super T, ? extends NullableValue<? extends R>> valueMapper) {
         if (isNull()) {
             return none();

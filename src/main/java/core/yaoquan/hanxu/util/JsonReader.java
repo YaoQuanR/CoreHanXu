@@ -44,7 +44,7 @@ public class JsonReader {
         }
         // throw IOException.
         catch (JsonSyntaxException e) {
-            throw new IOException(returnCodeError(CodeError.jsonFileNotFound) + path.getFileName().toString(), e);
+            throw new IOException(errorString(CodeError.jsonFileNotFound) + path.getFileName().toString(), e);
         }
     }
 
@@ -78,7 +78,7 @@ public class JsonReader {
         }
 
         // Else just throw nothing.
-        throw new FileNotFoundException(returnCodeError(CodeError.jsonFileNotFound) + subPath + "\\" + fileName);
+        throw new FileNotFoundException(errorString(CodeError.jsonFileNotFound) + subPath + "\\" + fileName);
     }
 
     /// Check if file existed at specific path.
@@ -109,7 +109,7 @@ public class JsonReader {
     public static void delete(String subPath, String fileName, TargetPath targetPath) throws IOException {
         Path targetRootPath = targetPath == TargetPath.TO_WORLD? FilePath.getWorldPath() : FilePath.getGlobalPath();
         if (targetRootPath == null) {
-            throw new FileNotFoundException(returnCodeError(CodeError.jsonFileNotFound) + subPath + "\\" + fileName);
+            throw new FileNotFoundException(errorString(CodeError.jsonFileNotFound) + subPath + "\\" + fileName);
         }
 
         Path file = targetRootPath.resolve(subPath).resolve(fileName + ".json");

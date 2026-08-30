@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.registry.event;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.api.define.General;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID, value = Dist.CLIENT)
-public class ModInfoOverlay {
+public class InfoOverlay {
     private static boolean isShownInfo = false;
 
     // Listen to the key pressed:
@@ -28,11 +29,11 @@ public class ModInfoOverlay {
         if (mc.player == null) return;
 
         // Switch stage when pressed key.
-        while (ModKey.INFO_KEY.get().consumeClick()) {
+        while (KeyBinding.INFO_KEY.get().consumeClick()) {
             isShownInfo = !isShownInfo;
         }
 
-        ModNetwork.TimerF4Client.tick();
+        NetworkData.TimerF4Client.tick();
     }
 
     @SubscribeEvent
@@ -46,21 +47,28 @@ public class ModInfoOverlay {
         // Information of ready to show:
         List<String> displayLines = new ArrayList<>();
         displayLines.add("-= Core HanXu Information =-");
-        displayLines.add("Loaded.");
+        displayLines.add("HanXu (Core) Powered Engine, License under License.txt & Assistant.txt.");
+        displayLines.add("Loaded version: " + General.Version.getCoreVersion());
 
         int maximumDisplay = 10;
 
         int displayedTimer = 0;
         int displayedAttribute = 0;
         int displayedWeather = 0;
+
+        // Count of registered term.
+        int timerCount = NetworkData.RegisteredTermClient.getTimerCount();
+        int attributeCount = NetworkData.RegisteredTermClient.getAttributeCount();
+        int weatherCount = NetworkData.RegisteredTermClient.getWeatherCount();
+
         displayLines.add("");
-        displayLines.add("-> Timer");
-        for (String key : ModNetwork.TimerF4Client.getAllInfoKeys()) {
+        displayLines.add("-> Timer (Registered: " + timerCount + ")");
+        for (String key : NetworkData.TimerF4Client.getAllInfoKeys()) {
             if (displayedTimer < maximumDisplay) {
                 String[] parts = key.split(":", 2);
                 String timerId = parts[1];
 
-                ModNetwork.TimerF4Client.TimerInfo timerInfo = ModNetwork.TimerF4Client.getTimerInfo(key);
+                NetworkData.TimerF4Client.TimerInfo timerInfo = NetworkData.TimerF4Client.getTimerInfo(key);
                 int remainingTime = timerInfo.remainingTicks();
                 String masterName = timerInfo.masterName();
 
@@ -85,12 +93,12 @@ public class ModInfoOverlay {
         }
 
         displayLines.add("");
-        displayLines.add("-> Attribute");
-        for (String key : ModNetwork.AttributeF4Client.getAllInfoKeys()) {
+        displayLines.add("-> Attribute (Registered: " + attributeCount + ")");
+        for (String key : NetworkData.AttributeF4Client.getAllInfoKeys()) {
             if (displayedAttribute < maximumDisplay) {
                 String[] parts = key.split(":", 2);
                 String attributeId = parts[1];
-                ModNetwork.AttributeF4Client.AttributeInfo attributeInfo = ModNetwork.AttributeF4Client.getAttributeInfo(key);
+                NetworkData.AttributeF4Client.AttributeInfo attributeInfo = NetworkData.AttributeF4Client.getAttributeInfo(key);
 
                 String displayValue = String.format("%.2f", attributeInfo.value());
 
@@ -109,15 +117,15 @@ public class ModInfoOverlay {
         }
 
         displayLines.add("");
-        displayLines.add("-> Weather");
-        for (String key : ModNetwork.WeatherF4Client.getAllInfoKeys()) {
+        displayLines.add("-> Weather (Registered: " + weatherCount + ")");
+        for (String key : NetworkData.WeatherF4Client.getAllInfoKeys()) {
             if (displayedWeather < maximumDisplay) {
                 String[] parts = key.split(":", 3);
                 String dimension = parts[0] + ":" + parts[1];
                 String weatherId = parts[2];
-                ModNetwork.WeatherF4Client.WeatherInfo weatherInfo = ModNetwork.WeatherF4Client.getWeatherInfo(key);
+                NetworkData.WeatherF4Client.WeatherInfo weatherInfo = NetworkData.WeatherF4Client.getWeatherInfo(key);
 
-                if (weatherInfo != null) {
+                if (weatherInfo != null && weatherInfo.type() != WeatherHolder.WeatherType.NULL) {
                     WeatherHolder.WeatherPhase phase = weatherInfo.phase();
                     int nextTicks = phase == WeatherHolder.WeatherPhase.ACTIVE? weatherInfo.stillnessTicks() : weatherInfo.durationTicks();
 

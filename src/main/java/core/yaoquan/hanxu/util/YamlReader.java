@@ -90,7 +90,7 @@ public class YamlReader {
         }
 
         // Else just throw nothing.
-        throw new FileNotFoundException(returnCodeError(CodeError.yamlFileNotFound) + subPath + "\\" + fileName);
+        throw new FileNotFoundException(errorString(CodeError.yamlFileNotFound) + subPath + "\\" + fileName);
     }
 
     // Read YAML from Minecraft book.
@@ -142,7 +142,7 @@ public class YamlReader {
     public static void delete(String subPath, String fileName, TargetPath targetPath) throws IOException {
         Path targetRootPath = targetPath == TargetPath.TO_WORLD? FilePath.getWorldPath() : FilePath.getGlobalPath();
         if (targetRootPath == null) {
-            throw new FileNotFoundException(returnCodeError(CodeError.yamlFileNotFound) + subPath + "\\" + fileName);
+            throw new FileNotFoundException(errorString(CodeError.yamlFileNotFound) + subPath + "\\" + fileName);
         }
 
         Path file = targetRootPath.resolve(subPath).resolve(fileName + ".yaml");
@@ -223,11 +223,11 @@ public class YamlReader {
             targetRootPath = FilePath.getGlobalPath();
         }
         else {
-            throw new IOException(returnCodeError(CodeError.unexceptedTarget) + targetPath.toString());
+            throw new IOException(errorString(CodeError.unexceptedTarget) + targetPath.toString());
         }
 
         if (targetRootPath == null) {
-            throw new IOException(returnCodeError(CodeError.unavailableTargetPath));
+            throw new IOException(errorString(CodeError.unavailableTargetPath));
         }
 
         Path targetFile = targetRootPath.resolve(subPath).resolve(fileName + ".yaml");

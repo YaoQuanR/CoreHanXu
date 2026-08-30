@@ -44,7 +44,7 @@ public class SceneHolder {
             Scene scene = parseSceneData(sceneData);
             String yamlFileName = scene.id;
             if (yamlFileName != null && !yamlFileName.equals(fileName)) {
-                CoreHanXu.LOGGER.warn("{}{} ≠ {}", returnCodeError(CodeError.mismatchFileElement), fileName, yamlFileName);
+                CoreHanXu.LOGGER.warn("{}{} ≠ {}", errorString(CodeError.mismatchFileElement), fileName, yamlFileName);
                 return NullableValue.none();
             }
 

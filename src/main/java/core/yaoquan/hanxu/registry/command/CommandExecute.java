@@ -7,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
+import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.NullableValue;
@@ -15,7 +16,10 @@ import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.ServerLevel;
@@ -26,10 +30,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WritableBookContent;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ScoreHolder;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -113,11 +119,11 @@ class CommandExecute {
                     .putBoolean("core.yaoquan.hanxu.agreed_license", true);
             }
             else {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.licenseAlreadyAgreed));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.licenseAlreadyAgreed));
             }
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
         }
         return 1;
     }
@@ -135,7 +141,7 @@ class CommandExecute {
         String playerId = StringArgumentType.getString(context, "player_id");
         UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
         if (playerUUID == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
         else {
@@ -145,7 +151,7 @@ class CommandExecute {
             }
             ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
             if (player == null) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
             boolean state = PermissionHolder.Storage.getLicenseState(player);
@@ -203,7 +209,7 @@ class CommandExecute {
             case "player" -> {
                 UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
                 if (playerUUID == null) {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                     return 0;
                 }
                 else {
@@ -213,7 +219,7 @@ class CommandExecute {
                     }
                     ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
                     if (player == null) {
-                        MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                        MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                         return 0;
                     }
 
@@ -230,7 +236,7 @@ class CommandExecute {
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + autoAuthorizedPermissionLevel).withColor(General.Color.TITLE));
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
                 return 0;
             }
         }
@@ -247,7 +253,7 @@ class CommandExecute {
                 player = context.getSource().getPlayer();
             }
             else {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
                 return 0;
             }
         }
@@ -257,7 +263,7 @@ class CommandExecute {
         else {
             player = server.getPlayerList().getPlayerByName(playerId);
             if (player == null) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
         }
@@ -265,14 +271,14 @@ class CommandExecute {
         int newLevel = IntegerArgumentType.getInteger(context, "level");
 
         if (newLevel > 10) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.exceedMaximumPermissionLevel));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.exceedMaximumPermissionLevel));
             return 0;
         }
 
         boolean editable = GeneralConfig.setEditablePlayerPermission.getAsBoolean();
 
         if (!editable) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uneditablePlayerPermission));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.uneditablePlayerPermission));
             return 0;
         }
 
@@ -370,7 +376,7 @@ class CommandExecute {
                             .withColor(General.Color.TITLE)
             );
         } else {
-            MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
         }
 
         return 1;
@@ -438,7 +444,7 @@ class CommandExecute {
         // Determine if target exist.
         if (targetUUID == null) {
             MessagePublisher.sendFailureMessage(context,
-                    returnGeneralError(GeneralError.targetNotExist)
+                    Error.errorComponent(GeneralError.targetNotExist)
             );
             return 0;
         }
@@ -452,7 +458,7 @@ class CommandExecute {
             );
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExistOrAlreadyInstantiated));
+            MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExistOrAlreadyInstantiated));
             return 0;
         }
 
@@ -572,7 +578,7 @@ class CommandExecute {
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -599,7 +605,7 @@ class CommandExecute {
                     return 1;
                 }
                 else {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                     return 0;
                 }
             default:
@@ -630,7 +636,7 @@ class CommandExecute {
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -645,7 +651,7 @@ class CommandExecute {
 
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -711,7 +717,7 @@ class CommandExecute {
 
         // Then list out.
         if (displayList.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.notFound));
         }
         else {
             displaySceneIdList(context, displayList);
@@ -731,7 +737,7 @@ class CommandExecute {
         catch (IllegalArgumentException ignored) {}
 
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -739,7 +745,7 @@ class CommandExecute {
 
         // Check if existed.
         if (!SceneHolder.doesSceneExist(sceneName)) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.notFound));
             return 0;
         }
 
@@ -751,7 +757,7 @@ class CommandExecute {
             SceneHolder.playScene(player, sceneName);
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.playFailed));
             return 0;
         }
 
@@ -763,7 +769,7 @@ class CommandExecute {
 
         // Check if existed.
         if (!SceneHolder.doesSceneExist(sceneName)) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.notFound));
             return 0;
         }
 
@@ -775,7 +781,7 @@ class CommandExecute {
             SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.playFailed));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.playFailed));
             return 0;
         }
 
@@ -790,7 +796,7 @@ class CommandExecute {
             boolean worldSceneExist = SceneHolder.doesSceneExist(sceneName, YamlReader.TargetPath.TO_WORLD);
             boolean globalSceneExist = SceneHolder.doesSceneExist(sceneName, YamlReader.TargetPath.TO_GLOBAL);
             if (worldSceneExist && globalSceneExist) {
-                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.sameNameFound));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.sameNameFound));
                 return 0;
             }
             else if (worldSceneExist) {
@@ -800,7 +806,7 @@ class CommandExecute {
                 specifiedPath = "global";
             }
             else {
-                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.notFound));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.notFound));
                 return 0;
             }
         }
@@ -812,7 +818,7 @@ class CommandExecute {
                                     .withColor(General.Color.CONTENT));
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.failedToDelete));
                 return 0;
             case "global":
                 if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_GLOBAL)) {
@@ -821,7 +827,7 @@ class CommandExecute {
                                     .withColor(General.Color.CONTENT));
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.failedToDelete));
                 return 0;
         }
 
@@ -831,7 +837,7 @@ class CommandExecute {
     static int executeScene_Template(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -856,21 +862,21 @@ class CommandExecute {
     static int executeScene_Create(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
         String toPath = StringArgumentType.getString(context, "to_path");
 
         if (!toPath.equals("world") && !toPath.equals("global")) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedSavePath));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedSavePath));
             return 0;
         }
 
         // Then read book from player's main hand.
         ItemStack book = player.getMainHandItem();
         if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.mainHandItemNotTarget));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.mainHandItemNotTarget));
             return 0;
         }
 
@@ -885,25 +891,25 @@ class CommandExecute {
 
         String yamlContent = YamlReader.read(book);
         if (yamlContent == null || yamlContent.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.noContentFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.noContentFound));
             return 0;
         }
 
         String sceneId = YamlReader.readSpecificField(yamlContent, "id");
         if (sceneId.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.missingIdField));
             return 0;
         }
 
         YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
 
         if (SceneHolder.doesSceneExist(sceneId, targetPath)) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.alreadyExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.alreadyExist));
             return 0;
         }
 
         if (!yamlContent.contains("type:") || !yamlContent.contains("dialogs:")) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uncompletedContent));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.uncompletedContent));
             return 0;
         }
 
@@ -918,7 +924,7 @@ class CommandExecute {
             );
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, returnSceneError(SceneError.failedToSave));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(SceneError.failedToSave));
             return 0;
         }
 
@@ -1030,14 +1036,14 @@ class CommandExecute {
                 callbackId = StringArgumentType.getString(context, "callback_id");
             }
             catch (IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.missingIdField));
                 return 0;
             }
         }
 
         NullableValue<AttributeHolder.CustomAttribute> nullableAttribute = AttributeHolder.getCommandAttribute(attributeId);
         if (nullableAttribute.isNull()) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1075,7 +1081,7 @@ class CommandExecute {
                 finalCallbackId = callbackId;
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationId));
                 return 0;
             }
         }
@@ -1094,16 +1100,16 @@ class CommandExecute {
         String attributeId = StringArgumentType.getString(context, "attribute_id");
 
         if (AttributeHolder.getApiAttributes().containsKey(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.tryToModifyApiTarget));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.tryToModifyApiTarget));
             return 0;
         }
 
         if (!AttributeHolder.doesYamlAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
         if (!AttributeHolder.doesAttributeExist(attributeId, "command")) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1112,7 +1118,7 @@ class CommandExecute {
             boolean globalAttributeExist = AttributeHolder.doesYamlAttributeExist(attributeId, YamlReader.TargetPath.TO_GLOBAL);
 
             if (worldAttributeExist && globalAttributeExist) {
-                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.sameNameFound));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.sameNameFound));
                 return 0;
             }
             else if (worldAttributeExist) {
@@ -1132,7 +1138,7 @@ class CommandExecute {
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.failedToDelete));
                 return 0;
             case "global":
                 if (AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_GLOBAL)) {
@@ -1142,7 +1148,7 @@ class CommandExecute {
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.failedToDelete));
                 return 0;
         }
 
@@ -1153,7 +1159,7 @@ class CommandExecute {
         String attributeId = StringArgumentType.getString(context, "attribute_id");
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1170,7 +1176,7 @@ class CommandExecute {
             isApiAttribute = true;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationId));
             return 0;
         }
 
@@ -1180,7 +1186,7 @@ class CommandExecute {
                 AttributeHolder.getCommandAttribute(attributeId);
 
         if (nullableAttribute.isNull()) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1191,7 +1197,7 @@ class CommandExecute {
                 Map<Float, String> thresholds = attribute.getThresholdCallbacks();
 
                 if (thresholds.isEmpty()) {
-                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noThreshold));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.noThreshold));
                     return 0;
                 }
 
@@ -1207,14 +1213,14 @@ class CommandExecute {
                 Map<Float, String> thresholds = attribute.getThresholdCallbacks();
 
                 if (thresholds.isEmpty()) {
-                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noThreshold));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.noThreshold));
                     return 0;
                 }
 
                 float value = FloatArgumentType.getFloat(context, "threshold_value");
 
                 if (!thresholds.containsKey(value)) {
-                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noSpecificThreshold));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.noSpecificThreshold));
                     return 0;
                 }
 
@@ -1224,7 +1230,7 @@ class CommandExecute {
             case "zero" -> {
                 String zeroId = attribute.getZeroCallbackId();
                 if (zeroId == null) {
-                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noZero));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.noZero));
                     return 0;
                 }
 
@@ -1237,7 +1243,7 @@ class CommandExecute {
             case "recovery" -> {
                 String recoveryId = attribute.getRecoveryCurveId();
                 if (recoveryId == null) {
-                    MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noRecovery));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.noRecovery));
                     return 0;
                 }
 
@@ -1273,13 +1279,13 @@ class CommandExecute {
                         playerId = context.getSource().getPlayer().getName().toString();
                     }
                     else {
-                        MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.noIdFieldProvidedByNonPlayer));
+                        MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.noIdFieldProvidedByNonPlayer));
                         return 0;
                     }
                 }
 
                 if ((playerId.equals("-me") || playerId.equals("-m")) && context.getSource().getPlayer() == null) {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.invalidMeFieldUsed));
                     return 0;
                 }
 
@@ -1309,7 +1315,7 @@ class CommandExecute {
                 }
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationId));
                 return 0;
             }
         }
@@ -1333,7 +1339,7 @@ class CommandExecute {
         UUID masterId = Resolver.resolveTargetUUID(context, playerId);
 
         if (masterId == null && !(playerId.equals("-all") || playerId.equals("-a"))) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -1343,12 +1349,12 @@ class CommandExecute {
         }
 
         if (player == null && !(playerId.equals("-all") || playerId.equals("-a"))) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1444,7 +1450,7 @@ class CommandExecute {
             return 1;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
     }
@@ -1454,7 +1460,7 @@ class CommandExecute {
         String finalCallbackId;
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1462,7 +1468,7 @@ class CommandExecute {
 
         NullableValue<AttributeHolder.CustomAttribute> nullableAttribute = AttributeHolder.getAttributeDefinition(attributeId, isApiAttribute);
         if (nullableAttribute.isNull()) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1470,7 +1476,7 @@ class CommandExecute {
 
         if (category.equals("simple")) {
             if (attribute.doesRecoveryRegistered() && isApiAttribute) {
-                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.tryToOverrideApiRecovery));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.tryToOverrideApiRecovery));
                 return 0;
             }
 
@@ -1512,7 +1518,7 @@ class CommandExecute {
                 case "m", "minute" -> interval *= (20 * 60);
                 case "h", "hour" -> interval *= (20 * 3600);
                 default -> {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidUnitArgument));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.invalidUnitArgument));
                     return 0;
                 }
             }
@@ -1536,7 +1542,7 @@ class CommandExecute {
             String callbackId = StringArgumentType.getString(context, "callback_id");
 
             if (!BehaviorRegistry.isRegistered(callbackId)) {
-                MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.tryToRegisterUnExistApiRecovery));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.tryToRegisterUnExistApiRecovery));
                 return 0;
             }
 
@@ -1556,7 +1562,7 @@ class CommandExecute {
             finalCallbackId = callbackId;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
             return 0;
         }
 
@@ -1573,7 +1579,7 @@ class CommandExecute {
     static int executeAttribute_Display(CommandContext<CommandSourceStack> context, boolean state) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -1581,7 +1587,7 @@ class CommandExecute {
         String masterId = StringArgumentType.getString(context, "master_id");
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -1637,7 +1643,7 @@ class CommandExecute {
             Set<String> variableNames = VariableHolder.getAllRegisteredVariables();
 
             if (variableNames.isEmpty()) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.emptyVariable));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.emptyVariable));
                 return 0;
             }
 
@@ -1649,7 +1655,7 @@ class CommandExecute {
         else if (category.equals("values")) {
             Map<String, String> allVariables = VariableHolder.getAllVariableAsString();
             if (allVariables.isEmpty()) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.emptyVariable));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.emptyVariable));
                 return 0;
             }
 
@@ -1666,7 +1672,7 @@ class CommandExecute {
         String variableName = StringArgumentType.getString(context, "variable_name");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
 
@@ -1688,27 +1694,27 @@ class CommandExecute {
         String variableValue = StringArgumentType.getString(context, "variable_value");
 
         if (VariableHolder.doesExists(variableName) && !override) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.alreadyExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.alreadyExist));
             return 0;
         }
 
         if (override) {
             NullableValue<String> nullableType = VariableHolder.getType(variableName);
             if (nullableType.isNull()) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
                 return 0;
             }
 
             String actualType = nullableType.get();
 
             if (!actualType.equals(variableType)) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
                 return 0;
             }
         }
 
         if (variableName.startsWith("-") || variableName.startsWith("@")) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidFieldForName));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.invalidFieldForName));
             return 0;
         }
 
@@ -1720,7 +1726,7 @@ class CommandExecute {
             );
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
             return 0;
         }
 
@@ -1744,7 +1750,7 @@ class CommandExecute {
                 );
             }
             else {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
                 return 0;
             }
         }
@@ -1758,7 +1764,7 @@ class CommandExecute {
         String scoreName = StringArgumentType.getString(context, "score_name");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
 
@@ -1772,7 +1778,7 @@ class CommandExecute {
         }
 
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -1781,15 +1787,15 @@ class CommandExecute {
                 VariableHolder.copyVariableFromScore(variableName, player.getScoreboardName(), scoreName);
             }
             catch (NumberFormatException e) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
                 return 0;
             }
             catch (NullPointerException | IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
             catch (IllegalStateException e) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.unexpected));
                 return 0;
             }
 
@@ -1804,15 +1810,15 @@ class CommandExecute {
                 VariableHolder.copyScoreFromVariable(variableName, player.getScoreboardName(), scoreName);
             }
             catch (NumberFormatException e) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
                 return 0;
             }
             catch (NullPointerException | IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
             catch (IllegalStateException e) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.unexpected));
                 return 0;
             }
 
@@ -1832,7 +1838,7 @@ class CommandExecute {
         String compareValue = StringArgumentType.getString(context, "compare_value");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
 
@@ -1855,16 +1861,16 @@ class CommandExecute {
                 case "starts_with" -> success = VariableHolder.doesStartsWith(variableName, compareValue);
                 case "ends_with" -> success = VariableHolder.doesEndsWith(variableName, compareValue);
                 default -> {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
                     return 0;
                 }
             }
         }
         catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         } catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
             return 0;
         }
 
@@ -1887,7 +1893,7 @@ class CommandExecute {
         ServerScoreboard scoreboard = server.getScoreboard();
         Objective objective = scoreboard.getObjective(scoreName);
         if (objective == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.unexpected));
             return 0;
         }
 
@@ -1914,16 +1920,16 @@ class CommandExecute {
                 case "starts_with" -> success = String.valueOf(scoreValue).startsWith(String.valueOf(compareValue));
                 case "ends_with" -> success = String.valueOf(scoreValue).endsWith(String.valueOf(compareValue));
                 default -> {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
                     return 0;
                 }
             }
         }
         catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         } catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
             return 0;
         }
 
@@ -1942,7 +1948,7 @@ class CommandExecute {
         String compareValue = StringArgumentType.getString(context, "compare_value");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
 
@@ -1952,11 +1958,11 @@ class CommandExecute {
             success = VariableHolder.doesMarginEquals(variableName, marginValue, compareValue);
         }
         catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
         catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
             return 0;
         }
 
@@ -1977,13 +1983,13 @@ class CommandExecute {
                 case "to_lower" -> VariableHolder.stringToLowerCase(variableName);
                 case "to_upper" -> VariableHolder.stringToUpperCase(variableName);
                 default -> {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
                     return 0;
                 }
             }
         }
         catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
 
@@ -2002,13 +2008,13 @@ class CommandExecute {
         String newValue = StringArgumentType.getString(context, "new_value");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
 
         NullableValue<String> nullableType = VariableHolder.getType(variableName);
         if (nullableType.isNull()) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
             return 0;
         }
 
@@ -2026,17 +2032,17 @@ class CommandExecute {
                     VariableHolder.toSameValue(variableName, newValue);
                 }
                 default -> {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
                     return 0;
                 }
             }
         }
         catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
             return 0;
         }
         catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
             return 0;
         }
 
@@ -2118,7 +2124,7 @@ class CommandExecute {
         Set<String> tableIds = LootHolder.getRegisteredTableIds();
 
         if (tableIds.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.emptyTable));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.emptyTable));
             return 0;
         }
 
@@ -2158,7 +2164,7 @@ class CommandExecute {
         ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayerByName(playerId);
 
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -2173,7 +2179,7 @@ class CommandExecute {
 
 
         if (!success) {
-            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.tableNotExist));
             return 0;
         }
 
@@ -2197,7 +2203,7 @@ class CommandExecute {
 
         BlockEntity blockEntity = level.getBlockEntity(position);
         if (!(blockEntity instanceof Container)) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notContainer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notContainer));
             return 0;
         }
 
@@ -2223,7 +2229,7 @@ class CommandExecute {
         success = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem, guaranteed);
 
         if (!success) {
-            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.tableNotExist));
             return 0;
         }
 
@@ -2239,7 +2245,7 @@ class CommandExecute {
     static int executeLoot_Template(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
         
@@ -2262,43 +2268,43 @@ class CommandExecute {
     static int executeLoot_Create(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
         String toPath = StringArgumentType.getString(context, "to_path");
         if (!toPath.equals("world") && !toPath.equals("global")) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedSavePath));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedSavePath));
             return 0;
         }
 
         ItemStack book = player.getMainHandItem();
         if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.mainHandItemNotTarget));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.mainHandItemNotTarget));
             return 0;
         }
 
         String yamlContent = YamlReader.read(book);
         if (yamlContent == null || yamlContent.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.noContentFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.noContentFound));
             return 0;
         }
 
         String tableId = YamlReader.readSpecificField(yamlContent, "id");
         if (tableId.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.missingIdField));
             return 0;
         }
 
         YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
 
         if (LootHolder.doesFileLootTableExists(tableId, targetPath)) {
-            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.alreadyExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.alreadyExist));
             return 0;
         }
 
         if (!yamlContent.contains("pools:")) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.uncompletedContent));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.uncompletedContent));
             return 0;
         }
 
@@ -2312,7 +2318,7 @@ class CommandExecute {
             );
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, returnLootError(LootError.failedToSave));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.failedToSave));
             return 0;
         }
 
@@ -2340,7 +2346,7 @@ class CommandExecute {
             }
 
             if (worldTableExist && globalTableExist) {
-                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.sameNameFound));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.sameNameFound));
                 return 0;
             }
             else if (worldTableExist) {
@@ -2350,7 +2356,7 @@ class CommandExecute {
                 specifiedPath = "global";
             }
             else {
-                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.tableNotExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.tableNotExist));
                 return 0;
             }
         }
@@ -2364,7 +2370,7 @@ class CommandExecute {
                     break;
                 }
 
-                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.failedToDelete));
                 return 0;
             case "global":
                 if (yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_GLOBAL) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_GLOBAL)) {
@@ -2374,7 +2380,399 @@ class CommandExecute {
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, returnLootError(LootError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(LootError.failedToDelete));
+                return 0;
+        }
+
+        return 1;
+    }
+
+    static int executeWeather_List(CommandContext<CommandSourceStack> context) {
+        Map<String, WeatherHolder.WeatherDefinition> apiDefinitions = WeatherHolder.getApiWeatherDefinitions();
+        Map<String, WeatherHolder.WeatherDefinition> commandDefinitions = WeatherHolder.getCommandWeatherDefinitions();
+
+        String[] apiWeatherList = apiDefinitions.keySet().toArray(new String[0]);
+        String[] commandWeatherList = commandDefinitions.keySet().toArray(new String[0]);
+
+        return displayWeatherIdList(context, commandWeatherList, apiWeatherList);
+    }
+
+    static int executeWeather_Read(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        List<Component> lines = WeatherHolder.readWeatherInstance(level, weatherId);
+
+        for (Component line : lines) {
+            MessagePublisher.sendSystemMessage(context, line);
+        }
+
+        return 1;
+    }
+
+    static int executeWeather_Start(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        boolean success = WeatherHolder.startWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_started").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.notFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_ResumeId(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        boolean success = WeatherHolder.resumeWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_resumed").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.notFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_ResumeType(CommandContext<CommandSourceStack> context) {
+        String weatherType = StringArgumentType.getString(context, "weather_type");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        WeatherHolder.WeatherType type = WeatherHolder.parseStringToType(weatherType);
+
+        boolean success = WeatherHolder.resumeWeather(level, type);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_type_resumed").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.notFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_PauseId(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        boolean success = WeatherHolder.pauseWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_paused").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.onReadyOrNotFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_PauseType(CommandContext<CommandSourceStack> context) {
+        String weatherType = StringArgumentType.getString(context, "weather_type");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        WeatherHolder.WeatherType type = WeatherHolder.parseStringToType(weatherType);
+
+        boolean success = WeatherHolder.pauseWeather(level, type);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_type_resumed").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.onReadyOrNotFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_Restart(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        if (!WeatherHolder.doesWeatherDefinitionExist(weatherId)) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.notFound));
+            return 0;
+        }
+
+        boolean success = WeatherHolder.restartWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_restarted").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.alreadyActivated));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_Ready(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        if (!WeatherHolder.doesWeatherDefinitionExist(weatherId)) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.notFound));
+            return 0;
+        }
+
+        boolean success = WeatherHolder.prepareWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_ready").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.alreadyActivated));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_Kill(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        boolean success = WeatherHolder.killWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_killed").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.onReadyOrNotFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    static int executeWeather_Reload(CommandContext<CommandSourceStack> context) {
+        WeatherHolder.registerAllYamlWeathers();
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_reloaded").withColor(General.Color.CONTENT));
+
+        if (WeatherHolder.pickupUnclaimedStates()) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_pickup").withColor(General.Color.CONTENT));
+        }
+        else {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_non_unclaims").withColor(General.Color.CONTENT));
+        }
+
+        return 1;
+    }
+
+    static int executeWeather_Display(CommandContext<CommandSourceStack> context, boolean state) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        ServerPlayer player = context.getSource().getPlayer();
+
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
+            return 0;
+        }
+
+        WeatherHolder.displayToInfoPage(player, level, weatherId, state);
+        MessagePublisher.sendSystemMessage(context,
+                Component.literal("[HX] " + level + " -> " + weatherId + " ")
+                        .append(Component.translatable("commands.core_hanxu.has_changed_to"))
+                        .append(Component.literal(" " + state))
+                        .withColor(General.Color.SUCCESS)
+        );
+
+        return 1;
+    }
+
+    static int executeWeather_Template(CommandContext<CommandSourceStack> context, String templateType) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
+            return 0;
+        }
+
+        ItemStack book = new ItemStack(Items.WRITABLE_BOOK);
+
+        String bookTemplate = weatherTemplate(templateType);
+
+        WritableBookContent content = new WritableBookContent(List.of(Filterable.passThrough(bookTemplate)));
+        book.set(DataComponents.WRITABLE_BOOK_CONTENT, content);
+
+        if (!player.getInventory().add(book)) {
+            player.drop(book, false);
+        }
+
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_template").append(" " + templateType).withColor(General.Color.SUCCESS));
+
+        return 1;
+    }
+
+    static int executeWeather_Create(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
+            return 0;
+        }
+
+        String toPath = StringArgumentType.getString(context, "to_path");
+        if (!toPath.equals("world") && !toPath.equals("global")) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedSavePath));
+            return 0;
+        }
+
+        ItemStack book = player.getMainHandItem();
+        if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.mainHandItemNotTarget));
+            return 0;
+        }
+
+        String yamlContent = YamlReader.read(book);
+        if (yamlContent == null || yamlContent.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.noContentFound));
+            return 0;
+        }
+
+        String weatherId = YamlReader.readSpecificField(yamlContent, "id");
+        if (weatherId.isEmpty()) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.missingIdField));
+            return 0;
+        }
+
+        YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
+
+        if (WeatherHolder.doesWeatherExist(weatherId)) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.alreadyExist));
+            return 0;
+        }
+
+        if (!yamlContent.contains("type:")) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.uncompletedContent));
+            return 0;
+        }
+
+        try {
+            Map<String, Object> yamlMap = YamlReader.stringToMap(yamlContent);
+            YamlReader.save("weather", weatherId, yamlMap, targetPath);
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.weather_created")
+                            .append(" " + weatherId + " -> " + targetPath)
+                            .withColor(General.Color.SUCCESS)
+            );
+
+            WeatherHolder.registerYamlWeather(weatherId);
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.failedToSave));
+            return 0;
+        }
+
+        return 1;
+    }
+
+    static int executeWeather_Delete(CommandContext<CommandSourceStack> context, String specificPath) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        if (WeatherHolder.doesWeatherExist(weatherId, "api")) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.tryToModifyApiTarget));
+            return 0;
+        }
+
+        if (!WeatherHolder.doesWeatherExist(weatherId)) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.notFound));
+            return 0;
+        }
+
+        if (specificPath.equals("try")) {
+            boolean worldWeatherExist, globalWeatherExist;
+            worldWeatherExist = WeatherHolder.doesYamlWeatherExist(weatherId, YamlReader.TargetPath.TO_WORLD);
+            globalWeatherExist = WeatherHolder.doesYamlWeatherExist(weatherId, YamlReader.TargetPath.TO_GLOBAL);
+
+            if (worldWeatherExist && globalWeatherExist) {
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.sameNameFound));
+                return 0;
+            }
+            else if (worldWeatherExist) {
+                specificPath = "world";
+            }
+            else if (globalWeatherExist) {
+                specificPath = "global";
+            }
+            else {
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.notFound));
+                return 0;
+            }
+        }
+
+        switch (specificPath) {
+            case "world":
+                if (WeatherHolder.unregisterAndDelete(weatherId, YamlReader.TargetPath.TO_WORLD)) {
+                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_deleted").withColor(General.Color.SUCCESS));
+                    break;
+                }
+
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.failedToDelete));
+                return 0;
+            case "global":
+                if (WeatherHolder.unregisterAndDelete(weatherId, YamlReader.TargetPath.TO_GLOBAL)) {
+                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_deleted").withColor(General.Color.SUCCESS));
+                    break;
+                }
+
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.failedToDelete));
                 return 0;
         }
 
@@ -2406,7 +2804,7 @@ class CommandExecute {
                                                   String titleParameter, String contentParameter) {
         // Reject invalid "-me" field used by non player source.
         if ((masterString.equals("-me") || masterString.equals("-m")) && context.getSource().getPlayer() == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.invalidMeFieldUsed));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.invalidMeFieldUsed));
             return 0;
         }
 
@@ -2426,7 +2824,7 @@ class CommandExecute {
                 // Then register if timer not yet created.
                 if (!TimeHolder.createInstanceTimer(masterId, timerId, timeAmount, timeUnit, callback, titleParameter, contentParameter, "core_hanxu-command")) {
                     MessagePublisher.sendFailureMessage(context,
-                            returnTimerError(TimerError.alreadyExist)
+                            errorComponent(TimerError.alreadyExist)
                     );
                     return 0;
                 }
@@ -2447,7 +2845,7 @@ class CommandExecute {
 
         // Check if target master existed.
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -2455,7 +2853,7 @@ class CommandExecute {
             case "start" -> {
                 // Then start.
                 if (!TimeHolder.startInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToStart));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToStart));
                     return 0;
                 }
 
@@ -2463,7 +2861,7 @@ class CommandExecute {
                 NullableValue<Integer> nullableStarting = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                 NullableValue<String> nullableTitle = TimeHolder.getInstanceTitleParameter(masterId, timerId);
                 if (nullableStarting.isNull() || nullableTitle.isNull()) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                     return 0;
                 }
 
@@ -2481,14 +2879,14 @@ class CommandExecute {
             case "stop" -> {
                 // Then stop.
                 if (!TimeHolder.stopInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToStop));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToStop));
                     return 0;
                 }
 
                 // Send success message.
                 NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                 if (nullableRemaining.isNull()) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                     return 0;
                 }
 
@@ -2504,14 +2902,14 @@ class CommandExecute {
             case "reset" -> {
                 // Then reset.
                 if (!TimeHolder.resetInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToReset));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToReset));
                     return 0;
                 }
 
                 // Send success message.
                 NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
                 if (nullableInitial.isNull()) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                     return 0;
                 }
 
@@ -2526,7 +2924,7 @@ class CommandExecute {
             }
             case "restart" -> {
                 if (!TimeHolder.restartInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToRestart));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToRestart));
                     return 0;
                 }
 
@@ -2534,7 +2932,7 @@ class CommandExecute {
                 NullableValue<Integer> nullableRestart = TimeHolder.getInitialTimeFromInstance(masterId, timerId, "tick");
                 NullableValue<String> nullableTitle = TimeHolder.getInstanceTitleParameter(masterId, timerId);
                 if (nullableRestart.isNull() || nullableTitle.isNull()) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                     return 0;
                 }
 
@@ -2552,7 +2950,7 @@ class CommandExecute {
             case "delete" -> {
                 // Then delete.
                 if (!TimeHolder.deleteInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.unableToDeleteInstance));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToDeleteInstance));
                 }
 
                 // Send success message.
@@ -2566,7 +2964,7 @@ class CommandExecute {
                 );
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
                 return 0;
             }
         }
@@ -2609,12 +3007,12 @@ class CommandExecute {
 
             if (getPlayerByContext) {
                 if (targetPlayerId == null) {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.missingIdField));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.missingIdField));
                     return 0;
                 }
                 targetPlayerId = Resolver.resolveTargetPlayerName(context, targetPlayerId);
                 if (targetPlayerId == null) {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                     return 0;
                 }
             }
@@ -2622,14 +3020,14 @@ class CommandExecute {
             // For special case.
             if (targetVariableName.equals("-self") || targetVariableName.equals("-s")) {
                 if (variableName == null) {
-                    MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.selfFieldInScoreIf));
+                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.selfFieldInScoreIf));
                     return 0;
                 }
                 targetVariableName = variableName;
             }
 
             if (!VariableHolder.doesExists(targetVariableName)) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
 
@@ -2654,19 +3052,19 @@ class CommandExecute {
                 }
             }
             catch (NullPointerException e) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.notExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
                 return 0;
             }
             catch (NumberFormatException e) {
-                MessagePublisher.sendFailureMessage(context, returnVariableError(VariableError.invalidType));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
                 return 0;
             }
             catch (IllegalStateException e) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.unexpected));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.unexpected));
                 return 0;
             }
             catch (IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
 
@@ -2684,7 +3082,7 @@ class CommandExecute {
                 case "remaining_time":
                     NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit);
                     if (nullableRemaining.isNull()) {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
 
@@ -2698,7 +3096,7 @@ class CommandExecute {
                 case "initial_time":
                     NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromTemplate(timerId, timeUnit);
                     if (nullableInitial.isNull()) {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
 
@@ -2720,7 +3118,7 @@ class CommandExecute {
                         );
                     }
                     else {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
                     break;
@@ -2741,7 +3139,7 @@ class CommandExecute {
                         );
                     }
                     else {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
                     break;
@@ -2757,7 +3155,7 @@ class CommandExecute {
                 case "remaining_time":
                     NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                     if (nullableRemaining.isNull()) {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
 
@@ -2772,7 +3170,7 @@ class CommandExecute {
                 case "initial_time":
                     NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromInstance(masterId, timerId, timeUnit);
                     if (nullableInitial.isNull()) {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
 
@@ -2793,7 +3191,7 @@ class CommandExecute {
                         );
                     }
                     else {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
                     break;
@@ -2801,7 +3199,7 @@ class CommandExecute {
                     NullableValue<String> nullableTitle = TimeHolder.getInstanceTitleParameter(masterId, timerId);
                     NullableValue<String> nullableContent = TimeHolder.getInstanceContentParameter(masterId, timerId);
                     if (nullableTitle.isNull() || nullableContent.isNull()) {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
 
@@ -2818,7 +3216,7 @@ class CommandExecute {
                         );
                     }
                     else {
-                        MessagePublisher.sendFailureMessage(context, returnTimerError(TimerError.notExist));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
                     break;
@@ -2828,7 +3226,7 @@ class CommandExecute {
             return 1;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationCategory));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
             return 0;
         }
     }
@@ -2876,7 +3274,7 @@ class CommandExecute {
         }
     }
 
-    static void displaySceneIdList(CommandContext<CommandSourceStack> context, List<Component> displayList) {
+    private static void displaySceneIdList(CommandContext<CommandSourceStack> context, List<Component> displayList) {
         MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.scene_list_title").withColor(General.Color.TITLE));
         for (Component line : displayList) {
             MessagePublisher.sendSystemMessage(context, line);
@@ -2915,7 +3313,7 @@ class CommandExecute {
             );
         }
         else {
-            MessagePublisher.sendFailureMessage(context, returnAttributeError(AttributeError.sameNameFound));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.sameNameFound));
         }
     }
 
@@ -2941,5 +3339,100 @@ class CommandExecute {
                   - condition: random_chance
                     chance: 0.5
             """;
+    }
+
+    private static int displayWeatherIdList(CommandContext<CommandSourceStack> context, String[] yamlList, String[] apiList) {
+        if (yamlList.length == 0 && apiList.length == 0) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.emptyWeather));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_yaml_list_title").withColor(General.Color.TITLE));
+
+        if (yamlList.length == 0) {
+            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.fixed.empty"));
+        }
+        else {
+            for (String id : yamlList) {
+                MessagePublisher.sendSystemMessage(context, Component.literal(id).withColor(General.Color.CONTENT));
+            }
+        }
+
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_api_list_title").withColor(General.Color.TITLE));
+
+        if (apiList.length == 0) {
+            MessagePublisher.sendFailureMessage(context, Component.translatable("commands.chx.fixed.empty"));
+        }
+        else {
+            for (String id : apiList) {
+                MessagePublisher.sendSystemMessage(context, Component.literal(id).withColor(General.Color.CONTENT));
+            }
+        }
+
+        return 1;
+    }
+
+    private static @NotNull NullableValue<ServerLevel> findServerLevel(@NotNull CommandContext<CommandSourceStack> context) {
+        String levelString;
+        ServerLevel level;
+        try {
+            levelString = StringArgumentType.getString(context, "level");
+            if (levelString.startsWith("\"") || levelString.endsWith("\"")) {
+                levelString = levelString.substring(1, levelString.length() - 1);
+            }
+        }
+        catch (IllegalArgumentException e) {
+            levelString = null;
+        }
+
+        if (levelString == null) {
+            level = context.getSource().getLevel();
+        }
+        else {
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+            ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(levelString));
+            if (server == null) {
+                return NullableValue.none();
+            }
+
+            level = server.getLevel(dimensionKey);
+            if (level == null) {
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.unknownDimension));
+                return NullableValue.none();
+            }
+        }
+
+        return NullableValue.ofNotNull(level);
+    }
+
+    private static String weatherTemplate(String templateType) {
+        return switch (templateType) {
+            case "fog" -> """
+                # The register name of a weather.
+                id: "SIMPLE_FOG"
+                # Base on the support of weather type.
+                # Vanilla mod support: fog | colored_rain | wind | ...
+                type: fog
+                
+                # General arguments.
+                duration:
+                  min: 200
+                  max: 400
+                stillness:
+                  min: 200
+                  max: 400
+                
+                # Special arguments for fog weather.
+                color: 0xD95D5D
+                distance:
+                  min: 8
+                  max: 128
+                height_offset:
+                  64: 2
+                  128: 1
+                  192: 0.5
+                """;
+            default -> "";
+        };
     }
 }

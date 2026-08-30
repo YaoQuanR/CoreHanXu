@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static core.yaoquan.hanxu.api.define.Error.returnGeneralError;
+import static core.yaoquan.hanxu.api.define.Error.errorComponent;
 
 public class Resolver {
     public static UUID resolveTargetUUID(CommandContext<CommandSourceStack> context, String targetString) {
@@ -167,7 +167,7 @@ public class Resolver {
         switch (playerId) {
             case "-me", "-m" -> {
                 if (context.getSource().getPlayer() == null) {
-                    MessagePublisher.sendFailureMessage(context, returnGeneralError(Error.GeneralError.invalidMeFieldUsed));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.invalidMeFieldUsed));
                     break;
                 }
                 result = context.getSource().getPlayer().getName().getString();

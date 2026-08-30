@@ -4,6 +4,7 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.registry.QuickSendPacket;
 import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import core.yaoquan.hanxu.util.Creator;
@@ -353,7 +354,7 @@ public class AttributeHolder {
             Attribute attribute = parseAttributeData(attributeData);
             String yamlFileName = attribute.id;
             if (yamlFileName != null && !yamlFileName.equals(fileName)) {
-                CoreHanXu.LOGGER.warn("{}{} ≠ {}", returnCodeError(CodeError.mismatchFileElement), fileName, yamlFileName);
+                CoreHanXu.LOGGER.warn("{}{} ≠ {}", errorString(CodeError.mismatchFileElement), fileName, yamlFileName);
                 return NullableValue.none();
             }
 
@@ -439,6 +440,8 @@ public class AttributeHolder {
         PacketDistributor.sendToPlayer(
                 player, new GeneralPayload.AttributeF4Packet(masterId, attributeId, state, value, isApiAttribute, masterName)
         );
+
+        QuickSendPacket.sendRegisteredTermPacket(player);
     }
 
     // Check if required to refresh the F4 attribute display.

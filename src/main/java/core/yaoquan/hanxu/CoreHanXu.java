@@ -2,6 +2,7 @@ package core.yaoquan.hanxu;
 
 import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.api.define.SaveDat;
+import core.yaoquan.hanxu.registry.QuickSendPacket;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.ModDataGenerator;
 import core.yaoquan.hanxu.registry.command.CommandBuilder;
@@ -91,10 +92,13 @@ public class CoreHanXu {
         VariableHolder.loadAllVariables(overworld);
         LOGGER.info("[HX] Rebuild Procedure: Variable - Variables.");
 
-        TestWeather.testFog();
+        WeatherHolder.registerAllYamlWeathers();
+        LOGGER.info("[HX] Rebuild Procedure: Weather - Yaml Definitions.");
 
         WeatherHolder.loadAllLevelStates();
         LOGGER.info("[HX] Rebuild Procedure: Weather States.");
+
+        WeatherHolder.pickupUnclaimedStates();
     }
 
     @SubscribeEvent
@@ -129,7 +133,7 @@ public class CoreHanXu {
             AttributeHolder.loadAttributeForPlayer(serverPlayer);
             LOGGER.info("[HX] Load Procedure: Attribute - Player: {}", serverPlayer.getName().getString());
 
-            TestWeather.displayTestFog();
+            QuickSendPacket.sendRegisteredTermPacket(serverPlayer);
         }
     }
 

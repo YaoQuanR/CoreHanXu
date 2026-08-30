@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
+import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.util.Creator;
@@ -46,7 +47,7 @@ public class TestHolder {
         int testId = IntegerArgumentType.getInteger(context, "test_id");
 
         if (!(context.getSource().getEntity() instanceof ServerPlayer serverPlayer)) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -265,7 +266,7 @@ public class TestHolder {
 
                 break;
             default:
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationId));
                 return 0;
         }
 
@@ -278,7 +279,7 @@ public class TestHolder {
         String timerId = StringArgumentType.getString(context, "timer_id");
 
         if (!(context.getSource().getEntity() instanceof ServerPlayer serverPlayer)) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -296,7 +297,7 @@ public class TestHolder {
         int testId = IntegerArgumentType.getInteger(context, "test_id");
 
         if (!(context.getSource().getEntity() instanceof ServerPlayer serverPlayer)) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -458,7 +459,7 @@ public class TestHolder {
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Execute attribute test 3 and build recovery.").withColor(General.Color.TEST));
                 break;
             default:
-                MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.undefinedOperationId));
+                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationId));
                 return 0;
         }
 
@@ -469,9 +470,10 @@ public class TestHolder {
         if (context.getSource().getPlayer() == null) {
             return 0;
         }
+
         MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Now display all attributes to F4 debugging page.").withColor(General.Color.TEST));
         if (AttributeHolder.getCommandAttributes().isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, returnGeneralError(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
         }
         else {
             // Then display.
@@ -493,6 +495,18 @@ public class TestHolder {
             }
         }
 
+        return 1;
+    }
+
+    public static int executeTest_Weather(CommandContext<CommandSourceStack> context) {
+        if (context.getSource().getPlayer() == null) {
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Not register test weather and show in F4 page.").withColor(General.Color.TEST));
+
+        TestWeather.testFog();
+        TestWeather.displayTestFog();
         return 1;
     }
 }

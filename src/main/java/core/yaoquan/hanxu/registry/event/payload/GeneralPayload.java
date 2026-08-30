@@ -2,7 +2,7 @@ package core.yaoquan.hanxu.registry.event.payload;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.registry.event.ModNetwork;
+import core.yaoquan.hanxu.registry.event.NetworkData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -14,8 +14,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class GeneralPayload {
-    public record TimerF4Packet(UUID masterId, String timerId, boolean isVisible, int remainingTicks, boolean isCounting, String masterName)
-            implements CustomPacketPayload {
+    public record TimerF4Packet(
+            UUID masterId,
+            String timerId,
+            boolean isVisible,
+            int remainingTicks,
+            boolean isCounting,
+            String masterName
+    ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<TimerF4Packet> TYPE =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "timer_f4_packet"));
 
@@ -37,10 +43,10 @@ public class GeneralPayload {
         public static void handleClient(TimerF4Packet packet, IPayloadContext context) {
             context.enqueueWork(() -> {
                 if (packet.isVisible()) {
-                    ModNetwork.TimerF4Client.add(packet);
+                    NetworkData.TimerF4Client.add(packet);
                 }
                 else {
-                    ModNetwork.TimerF4Client.remove(packet.masterId(), packet.timerId());
+                    NetworkData.TimerF4Client.remove(packet.masterId(), packet.timerId());
                 }
             }).exceptionally(e -> {
                 CoreHanXu.LOGGER.error("[HX] Failed to update F4 list to timer system: ", e);
@@ -49,8 +55,13 @@ public class GeneralPayload {
         }
     }
 
-    public record AttributeF4Packet(UUID masterId, String attributeId, boolean isVisible, float value, boolean isApiAttribute, String masterName)
-            implements CustomPacketPayload {
+    public record AttributeF4Packet(UUID masterId,
+                                    String attributeId,
+                                    boolean isVisible,
+                                    float value,
+                                    boolean isApiAttribute,
+                                    String masterName
+    ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<AttributeF4Packet> TYPE =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "attribute_f4_packet"));
 
@@ -72,10 +83,10 @@ public class GeneralPayload {
         public static void handleClient(AttributeF4Packet packet, IPayloadContext context) {
             context.enqueueWork(() -> {
                 if (packet.isVisible()) {
-                    ModNetwork.AttributeF4Client.add(packet);
+                    NetworkData.AttributeF4Client.add(packet);
                 }
                 else {
-                    ModNetwork.AttributeF4Client.remove(packet.masterId(), packet.attributeId());
+                    NetworkData.AttributeF4Client.remove(packet.masterId(), packet.attributeId());
                 }
             }).exceptionally(e -> {
                 CoreHanXu.LOGGER.error("[HX] Failed to update F4 list to attribute system: ", e);
@@ -84,8 +95,17 @@ public class GeneralPayload {
         }
     }
 
-    public record WeatherF4Packet(String weatherId, WeatherHolder.WeatherType weatherType, WeatherHolder.WeatherPhase phase, int remainingTicks, int initialTicks, int durationTicks, int stillnessTicks, boolean isVisible, String dimension)
-            implements CustomPacketPayload {
+    public record WeatherF4Packet(
+            String weatherId,
+            WeatherHolder.WeatherType weatherType,
+            WeatherHolder.WeatherPhase phase,
+            int remainingTicks,
+            int initialTicks,
+            int durationTicks,
+            int stillnessTicks,
+            boolean isVisible,
+            String dimension
+    ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<WeatherF4Packet> TYPE =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "weather_f4_packet"));
 
@@ -128,15 +148,42 @@ public class GeneralPayload {
         public static void handleClient(WeatherF4Packet packet, IPayloadContext context) {
             context.enqueueWork(() -> {
                 if (packet.isVisible()) {
-                    ModNetwork.WeatherF4Client.add(packet);
+                    NetworkData.WeatherF4Client.add(packet);
                 }
                 else {
-                    ModNetwork.WeatherF4Client.remove(packet.dimension(), packet.weatherId());
+                    NetworkData.WeatherF4Client.remove(packet.dimension(), packet.weatherId());
                 }
             }).exceptionally(e -> {
                 CoreHanXu.LOGGER.error("[HX] Failed to update F4 list to weather system: ", e);
                 return null;
             });
+        }
+    }
+
+    public record RegisteredTermPacket(
+            int timerCount,
+            int attributeCount,
+            int weatherCount
+    ) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<RegisteredTermPacket> TYPE =
+                new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "registered_term_packet"));
+
+        public static final StreamCodec<ByteBuf, RegisteredTermPacket> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, RegisteredTermPacket::timerCount,
+                ByteBufCodecs.INT, RegisteredTermPacket::attributeCount,
+                ByteBufCodecs.INT, RegisteredTermPacket::weatherCount,
+                RegisteredTermPacket::new
+        );
+
+        @Override
+        public @NotNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+
+        public static void handleClient(RegisteredTermPacket packet, IPayloadContext context) {
+            context.enqueueWork(() ->
+                    NetworkData.RegisteredTermClient.setTermCount(packet.timerCount(), packet.attributeCount(), packet.weatherCount())
+            );
         }
     }
 }

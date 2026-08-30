@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ModNetwork {
+public class NetworkData {
     public static class TimerF4Client {
         private static final Map<String, TimerInfo> localInfoDisplayTimer = new ConcurrentHashMap<>();
 
@@ -149,6 +149,30 @@ public class ModNetwork {
         ) {}
     }
 
+    public static class RegisteredTermClient {
+        private static int timerCount = 0;
+        private static int attributeCount = 0;
+        private static int weatherCount = 0;
+
+        public static void setTermCount(int timer, int attribute, int weather) {
+            timerCount = timer;
+            attributeCount = attribute;
+            weatherCount = weather;
+        }
+
+        public static int getTimerCount() {
+            return timerCount;
+        }
+
+        public static int getAttributeCount() {
+            return attributeCount;
+        }
+
+        public static int getWeatherCount() {
+            return weatherCount;
+        }
+    }
+
     @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
     public static class RegisterNetworking {
         @SubscribeEvent
@@ -189,6 +213,12 @@ public class ModNetwork {
                     WeatherPayload.WindPacket.TYPE,
                     WeatherPayload.WindPacket.STREAM_CODEC,
                     WeatherPayload.WindPacket::handleClient
+            );
+
+            registrar.playToClient(
+                    GeneralPayload.RegisteredTermPacket.TYPE,
+                    GeneralPayload.RegisteredTermPacket.STREAM_CODEC,
+                    GeneralPayload.RegisteredTermPacket::handleClient
             );
         }
     }

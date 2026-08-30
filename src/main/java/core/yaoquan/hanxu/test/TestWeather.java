@@ -24,6 +24,7 @@ public class TestWeather {
                 .heightOffset(192f, 0.5f);
 
         WeatherHolder.register(blueFog);
+        WeatherHolder.pickupUnclaimedStates();
 
         CoreHanXu.LOGGER.info("[HX] Registered test fog: blue_fog.");
     }

@@ -8,7 +8,7 @@ public class PermissionConfig {
         /// Define command: Help, license, origin, bare...
         public static class Guide {
             public final ModConfigSpec.IntValue general;
-            public final ModConfigSpec.IntValue generalAdvanced;
+            public final ModConfigSpec.IntValue licenseAdvanced;
             public final ModConfigSpec.IntValue timer;
             public final ModConfigSpec.IntValue scene;
             public final ModConfigSpec.IntValue attribute;
@@ -17,9 +17,11 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weather;
 
             Guide(ModConfigSpec.Builder builder) {
-                builder.push("guide");
+                builder.translation("config.core_hanxu.permission.guide")
+                        .comment(" Define command: Help, license, origin, bare...")
+                        .push("guide");
                 general = define(builder, "general", 0);
-                generalAdvanced = define(builder, "general_advanced", 2);
+                licenseAdvanced = define(builder, "license_advanced", 2);
                 timer = define(builder, "timer", 1);
                 scene = define(builder, "scene", 1);
                 attribute = define(builder, "attribute", 1);
@@ -36,16 +38,20 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue timer;
             public final ModConfigSpec.IntValue scene;
             public final ModConfigSpec.IntValue attribute;
+            public final ModConfigSpec.IntValue attributeApi;
             public final ModConfigSpec.IntValue variable;
             public final ModConfigSpec.IntValue loot;
             public final ModConfigSpec.IntValue weather;
 
             Information(ModConfigSpec.Builder builder) {
-                builder.push("information");
+                builder.translation("config.core_hanxu.permission.information")
+                        .comment(" Define command: List, read, state...")
+                        .push("information");
                 general = define(builder, "general", 0);
                 timer = define(builder, "timer", 1);
                 scene = define(builder, "scene", 1);
                 attribute = define(builder, "attribute", 1);
+                attributeApi = define(builder, "attribute_api", 10);
                 variable = define(builder, "variable", 1);
                 loot = define(builder, "loot", 1);
                 weather = define(builder, "weather", 1);
@@ -55,11 +61,13 @@ public class PermissionConfig {
 
         /// Define command: agree.
         public static class Confirmation {
-            public final ModConfigSpec.IntValue general;
+            public final ModConfigSpec.IntValue license;
 
             Confirmation(ModConfigSpec.Builder builder) {
-                builder.push("confirmation");
-                general = define(builder, "general", 0);
+                builder.translation("config.core_hanxu.permission.confirmation")
+                        .comment(" Define command: agree.")
+                        .push("confirmation");
+                license = define(builder, "license", 0);
                 builder.pop();
             }
         }
@@ -75,9 +83,11 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weather;
 
             Create(ModConfigSpec.Builder builder) {
-                builder.push("create");
-                timerApply = define(builder, "timer_apply", 0);
-                timerCreate = define(builder, "timer_create", 1);
+                builder.translation("config.core_hanxu.permission.create")
+                        .comment(" Define command: create.")
+                        .push("create");
+                timerApply = define(builder, "timer_apply", 2);
+                timerCreate = define(builder, "timer_create", 2);
                 scene = define(builder, "scene", 2);
                 attribute = define(builder, "attribute", 2);
                 variable = define(builder, "variable", 2);
@@ -97,7 +107,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weather;
 
             Delete(ModConfigSpec.Builder builder) {
-                builder.push("delete");
+                builder.translation("config.core_hanxu.permission.delete")
+                        .comment(" Define command: delete.")
+                        .push("delete");
                 timer = define(builder, "timer", 2);
                 scene = define(builder, "scene", 2);
                 attribute = define(builder, "attribute", 2);
@@ -119,7 +131,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weatherResume;
 
             Run(ModConfigSpec.Builder builder) {
-                builder.push("run");
+                builder.translation("config.core_hanxu.permission.run")
+                        .comment(" Define command: start, play, give, fill, broadcast, resume...")
+                        .push("run");
                 timer = define(builder, "timer", 2);
                 scenePlay = define(builder, "scene_play", 1);
                 sceneBroadcast = define(builder, "scene_broadcast", 2);
@@ -137,14 +151,16 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weather;
 
             Stop(ModConfigSpec.Builder builder) {
-                builder.push("stop");
+                builder.translation("config.core_hanxu.permission.stop")
+                        .comment(" Define command: stop, pause...")
+                        .push("stop");
                 timer = define(builder, "timer", 2);
                 weather = define(builder, "weather", 2);
                 builder.pop();
             }
         }
 
-        /// Define command: reset, restart, ready, kill, silence...
+        /// Define command: reset, restart, ready, kill...
         public static class Status {
             public final ModConfigSpec.IntValue timerReset;
             public final ModConfigSpec.IntValue timerRestart;
@@ -153,7 +169,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weatherKill;
 
             Status(ModConfigSpec.Builder builder) {
-                builder.push("status");
+                builder.translation("config.core_hanxu.permission.status")
+                        .comment(" Define command: reset, restart, ready, kill...")
+                        .push("status");
                 timerReset = define(builder, "timer_reset", 2);
                 timerRestart = define(builder, "timer_restart", 2);
                 weatherRestart = define(builder, "weather_restart", 2);
@@ -170,7 +188,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weather;
 
             Display(ModConfigSpec.Builder builder) {
-                builder.push("display");
+                builder.translation("config.core_hanxu.permission.display")
+                        .comment(" Define command: display.")
+                        .push("display");
                 timer = define(builder, "timer", 3);
                 attribute = define(builder, "attribute", 3);
                 weather = define(builder, "weather", 3);
@@ -185,7 +205,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weather;
 
             Template(ModConfigSpec.Builder builder) {
-                builder.push("template");
+                builder.translation("config.core_hanxu.permission.template")
+                        .comment(" Define command: template.")
+                        .push("template");
                 scene = define(builder, "scene", 2);
                 loot = define(builder, "loot", 2);
                 weather = define(builder, "weather", 2);
@@ -198,17 +220,23 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue timerModify;
             public final ModConfigSpec.IntValue attributeModify;
             public final ModConfigSpec.IntValue attributeRecovery;
+            public final ModConfigSpec.IntValue attributeRecoveryApi;
             public final ModConfigSpec.IntValue attributeDefine;
+            public final ModConfigSpec.IntValue attributeDefineApi;
             public final ModConfigSpec.IntValue variableModify;
             public final ModConfigSpec.IntValue variableString;
             public final ModConfigSpec.IntValue variableCopy;
 
             Modification(ModConfigSpec.Builder builder) {
-                builder.push("modification");
+                builder.translation("config.core_hanxu.permission.modification")
+                        .comment(" Define command: modify (set, add, reduce), string, recovery, copy...")
+                        .push("modification");
                 timerModify = define(builder, "timer_modify", 2);
                 attributeModify = define(builder, "attribute_modify", 2);
                 attributeRecovery = define(builder, "attribute_recovery", 2);
+                attributeRecoveryApi = define(builder, "attribute_recovery_api", 10);
                 attributeDefine = define(builder, "attribute_define", 2);
+                attributeDefineApi = define(builder, "attribute_define_api", 10);
                 variableModify = define(builder, "variable_modify", 2);
                 variableString = define(builder, "variable_string", 2);
                 variableCopy = define(builder, "variable_copy", 2);
@@ -221,7 +249,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue variable;
 
             Condition(ModConfigSpec.Builder builder) {
-                builder.push("condition");
+                builder.translation("config.core_hanxu.permission.condition")
+                        .comment(" Define command: if (value, margin, score).")
+                        .push("condition");
                 variable = define(builder, "variable", 2);
                 builder.pop();
             }
@@ -232,7 +262,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue weather;
 
             Reload(ModConfigSpec.Builder builder) {
-                builder.push("reload");
+                builder.translation("config.core_hanxu.permission.reload")
+                        .comment(" Define command: reload.")
+                        .push("reload");
                 weather = define(builder, "weather", 2);
                 builder.pop();
             }
@@ -243,7 +275,9 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue general;
 
             Permission(ModConfigSpec.Builder builder) {
-                builder.push("permission");
+                builder.translation("config.core_hanxu.permission.permission")
+                        .comment(" Define command: Set of permissions.")
+                        .push("permission");
                 general = define(builder, "general", 10);
                 builder.pop();
             }

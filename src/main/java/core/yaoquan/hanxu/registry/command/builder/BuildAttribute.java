@@ -24,7 +24,7 @@ public class BuildAttribute {
                 Commands.literal("list")
                     .then(
                         Commands.literal("api")
-                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs,10))
+                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs,PermissionConfig.VALUE.information.attributeApi.get()))
                             .executes(ExecuteInformation::executeAdvancedAttribute_List)
                     )
                     .requires(cs -> PermissionHolder.Verify.hasPermission(cs,PermissionConfig.VALUE.information.attribute.get()))
@@ -128,7 +128,7 @@ public class BuildAttribute {
                                                 Commands.argument("callback_id", StringArgumentType.string())
                                                     .executes(cs -> ExecuteModification.executeAttribute_Define(cs, "api"))
                                             )
-                                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs,10))
+                                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs,PermissionConfig.VALUE.modification.attributeDefineApi.get()))
                                     )
                             )
                             .suggests(CommandSuggest::suggestYamlAttribute)
@@ -227,7 +227,7 @@ public class BuildAttribute {
                                 Commands.literal("api")
                                     .then(
                                         Commands.argument("callback_id", StringArgumentType.string())
-                                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs, 10))
+                                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.modification.attributeRecoveryApi.get()))
                                             .executes(cs -> ExecuteModification.executeAttribute_Recovery(cs, "api"))
                                     )
                             )

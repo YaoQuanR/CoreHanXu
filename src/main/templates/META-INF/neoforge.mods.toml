@@ -30,7 +30,7 @@ displayName="${mod_name}" #mandatory
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
 
 # A file id (in the root of the mod JAR) containing a logo for display
-#logoFile="examplemod.png" #optional
+logoFile="Logo-CoreHanXu-11L.png"
 
 # A text field displayed in the mod UI
 #credits="" #optional
@@ -40,7 +40,110 @@ authors="YaoQuanR"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-HanXu Powered Engine for Minecraft 1.21.10
+HanXu (Core) Powered Engine for Minecraft 1.21.10
+
+Thanks for depending on this mod for game mechanics.
+If you wish to see more details, please view the documentation from the source code library for detailed operations.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+License (Updated: 2026/8/31)
+
+HanXu (Core) Powered Engine for Minecraft
+Copyright (C) 2026 YaoQuanR (YaoQuan)
+Contact by 3501226176@qq.com or 3648711935@qq.com
+Reserves the right to final interpretation.
+
+For all documents and codes should follow this license.
+
+General requirements:
+This program is under the terms of GNU Affero General Public License (AGPL).
+You are advised to check the original document by:
+    CN: https://gnu.ac.cn/licenses/agpl-3.0.html
+    EN: https://www.gnu.org/licenses/agpl-3.0.en.html
+
+Textures and sounds are under the terms of CC BY-NC-ND.
+You are advised to check the original document by:
+    CN: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.zh-hans
+    EN: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.en
+-> Exclusion:
+You are permitted to use textures and sounds at recording, live-streaming, and screenshotting
+without separately authorization or signature.
+This exclusion applies ONLY when the resources are used as an integral part of this mod
+during normal gameplay or mod-related showcasing.
+
+Extra requirements:
+1. If you modified this mod, you are required to sign in your name (Game id/ Nick name/ Real name) in to:
+- Mod name
+- Mod description page
+- Public page when publishing mod
+
+You are encouraged to have a name into the contribution list,
+it is also for the mod distinction between original author and mod author.
+
+2. If this mod is prerequisite to your own code,
+you are required to license your work under an OSI-approved open source license.
+(Examples: MIT, Apache, LGPL, GPL, AGPL, BSD...)
+No permitted to use non-open-source licenses.
+
+You are welcomed to join and contribute to the community;
+thus, you are permitted to act on the mod within the terms of this license.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Assistant (Updated: 2026/8/31)
+
+HanXu (Core) Powered Engine for Minecraft
+Copyright (C) 2026 YaoQuanR (YaoQuan)
+
+This document extends the definitions and procedures outlined in license.txt.
+
+Covered language translation and platform migration scenarios.
+
+Translation work:
+Translation is considered as "adaptation". Any unauthorized republishing of a translation will be treated as copyright infringement.
+If you seek authorization to translation:
+1. Republish:
+    - You are required to send the author a formal request email, which includes a brief introduction about yourself and your intended scope.
+    - You should wait for the author's reply of acceptance before proceeding.
+    - You should clearly display proof of your authorization includes time & name on the publication page.
+    - When you republish work is done, email the author a list of links.
+    - Usually, you must license your work under AGPL and includes your name as required by license.txt.
+    - Also, your translation work is considered a derivative version.
+    - Unless authorization revoke due to valid complaints, you remain responsible for the translation.
+
+2. Co-work:
+    - You are required to send the author a formal request email, which includes a brief introduction about yourself,
+      a list of responsible members, and your intended scope.
+    - You may submit your translated language file in the request email, or other possible download link.
+    - You will receive a reply of acceptance, and may receive further update message for your translation work.
+    - In further publish, your member list will be announced to be responsible member for handling request.
+    - Unless authorization revoke due to valid complaints, you remain responsible for the translation.
+
+Migration work:
+Under the license of CC BY-NC-ND, any work that includes textures/sounds without clearly authorization is considered infringement.
+If you seek authorization to migration:
+1. Platform migration to other Minecraft Java Edition version:
+    - Your work is considered a derivative version.
+      Thus, you are required to license your program under the license of AGPL.
+    - You should not modify the original resources, or otherwise constitutes infringement.
+    - Notifying the author is optional, but you must include your name as required by license.txt.
+
+2. Platform migration to Minecraft Bedrock Edition version or/and
+   Minecraft NetEase (Chinese) Edition version included modified Java/Bedrock Edition:
+    - Your work is considered a derivative version.
+    - You are required to send the author a formal request email, which includes a brief introduction about yourself and your intended scope.
+    - You should wait for the author's reply of acceptance before proceeding.
+    - You should clearly display proof of your authorization includes time & name on the publication page.
+    - When you republish work is done, email the author a list of links.
+    - Usually, you must license your work under AGPL and includes your name as required by license.txt.
+    - This procedure is to ensure you authorized to use CC BY-NC-ND resources to other platform.
+      Otherwise, your work will be treated as copyright infringement.
+    - *For NetEase (Chinese) Edition version only:
+        All additional package that depend on this version must also be licensed under an OSI-approved license.
+
+Further explanation:
+- Derivative work: Derivative and adaptation is an end use type that requires authorization.
+- Assistant: Republish (any platform)/ Modification (any%)/ Reuse CC BY-NC-ND resources (any%)/ Translation (any%).
+
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.

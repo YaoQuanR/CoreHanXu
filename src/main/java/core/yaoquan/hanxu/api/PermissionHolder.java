@@ -122,7 +122,7 @@ public class PermissionHolder {
                 // Get player permission level.
                 int currentPlayerLevel = player.getPersistentData()
                         .getInt("core.yaoquan.hanxu.player_permission_level")
-                        .orElse(GeneralConfig.setAutoPermissionLevelAuthorize.getAsInt());
+                        .orElse(GeneralConfig.setAutoAuthorizePermissionLevel.getAsInt());
 
                 // Non admin must agree license for command use.
                 boolean agreedLicense = player.getPersistentData()

@@ -30,19 +30,19 @@ public class BuildGeneral {
         return Commands.literal("license")
             .then(
                 Commands.literal("agree")
-                    .requires(cs -> PermissionHolder.Verify.hasPermission(cs,0))
+                    .requires(cs -> PermissionHolder.Verify.hasPermission(cs,PermissionConfig.VALUE.confirmation.license.get()))
                     .executes(ExecuteConfirmation::executeLicense_Agree)
             )
             .then(
                 Commands.literal("origin")
-                    .requires(cs -> PermissionHolder.Verify.hasPermission(cs,0))
+                    .requires(cs -> PermissionHolder.Verify.hasPermission(cs,PermissionConfig.VALUE.guide.general.get()))
                     .executes(ExecuteGuide::executeLicense_Origin)
             )
             .then(
                 Commands.literal("state")
                     .then(
                         Commands.argument("player_id", StringArgumentType.string())
-                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.guide.generalAdvanced.get()))
+                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.guide.licenseAdvanced.get()))
                             .suggests(CommandSuggest::suggestPlayer)
                             .executes(ExecuteInformation::executeAdvancedLicense_State)
                     )

@@ -1,4 +1,24 @@
 {
+  "config.core_hanxu.set_auto_authorize_permission_level": "Set Auto Authorize Permission Level",
+  "config.core_hanxu.set_editable_player_permission": "Set Editable Player Permission",
+  "config.core_hanxu.set_enable_deployer_sound": "Set Enable Deploy Sound",
+  "config.core_hanxu.set_fog_transition_ratio": "Set Transition Ratio of Fog (Weather)",
+
+  "config.core_hanxu.permission.guide": "Permission Group: Guide",
+  "config.core_hanxu.permission.information": "Permission Group: Information",
+  "config.core_hanxu.permission.confirmation": "Permission Group: Confirmation",
+  "config.core_hanxu.permission.create": "Permission Group: Create",
+  "config.core_hanxu.permission.delete": "Permission Group: Delete",
+  "config.core_hanxu.permission.run": "Permission Group: Run",
+  "config.core_hanxu.permission.stop": "Permission Group: Stop",
+  "config.core_hanxu.permission.status": "Permission Group: Status",
+  "config.core_hanxu.permission.display": "Permission Group: Display",
+  "config.core_hanxu.permission.template": "Permission Group: Template",
+  "config.core_hanxu.permission.modification": "Permission Group: Modification",
+  "config.core_hanxu.permission.condition": "Permission Group: Condition",
+  "config.core_hanxu.permission.reload": "Permission Group: Reload",
+  "config.core_hanxu.permission.permission": "Permission Group: Permission",
+
   "key.core_hanxu.info_key": "Show Info of Core HanXu",
   "key.category.core_hanxu.category": "Core HanXu",
 

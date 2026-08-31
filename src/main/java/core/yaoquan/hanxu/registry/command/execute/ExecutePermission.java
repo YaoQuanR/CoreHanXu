@@ -60,7 +60,7 @@ public class ExecutePermission {
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + commandblockPermissionLevel).withColor(General.Color.TITLE));
             }
             case "player_first_grant" -> {
-                int autoAuthorizedPermissionLevel = GeneralConfig.setAutoPermissionLevelAuthorize.getAsInt();
+                int autoAuthorizedPermissionLevel = GeneralConfig.setAutoAuthorizePermissionLevel.getAsInt();
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + autoAuthorizedPermissionLevel).withColor(General.Color.TITLE));
             }
             default -> {

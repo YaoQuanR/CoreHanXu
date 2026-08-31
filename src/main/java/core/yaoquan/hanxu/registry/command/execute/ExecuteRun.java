@@ -1,0 +1,247 @@
+package core.yaoquan.hanxu.registry.command.execute;
+
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.LootHolder;
+import core.yaoquan.hanxu.api.SceneHolder;
+import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.api.define.Error;
+import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.util.MessagePublisher;
+import core.yaoquan.hanxu.util.NullableValue;
+import core.yaoquan.hanxu.util.Resolver;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.level.block.entity.BlockEntity;
+
+import java.util.UUID;
+
+public class ExecuteRun {
+    public static int executeTimer_Instance_Start(CommandContext<CommandSourceStack> context) {
+        String masterString = StringArgumentType.getString(context, "master_id");
+        String timerId = StringArgumentType.getString(context, "timer_id");
+
+        return CommandUtils.commandOperateInstanceTimer(context, timerId, masterString, "start");
+    }
+
+    public static int executeScene_Play(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+
+        try {
+            String playerId = StringArgumentType.getString(context, "player_id");
+            UUID playerUUID = Resolver.resolveTargetUUID(context, playerId);
+            player = Resolver.resolveTargetPlayer(playerUUID);
+        }
+        catch (IllegalArgumentException ignored) {}
+
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.notPlayer));
+            return 0;
+        }
+
+        String sceneName = StringArgumentType.getString(context, "scene_name");
+
+        // Check if existed.
+        if (!SceneHolder.doesSceneExist(sceneName)) {
+            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.SceneError.notFound));
+            return 0;
+        }
+
+        try {
+            MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.scene_now_playing")
+                    .append(Component.literal(": " + sceneName))
+                    .withColor(General.Color.CONTENT));
+            SceneHolder.playScene(player, sceneName);
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.playFailed));
+            return 0;
+        }
+
+        return 1;
+    }
+
+    public static int executeScene_Broadcast(CommandContext<CommandSourceStack> context) {
+        String sceneName = StringArgumentType.getString(context, "scene_name");
+
+        // Check if existed.
+        if (!SceneHolder.doesSceneExist(sceneName)) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.notFound));
+            return 0;
+        }
+
+        try {
+            MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.scene_now_playing_to_everyone")
+                    .append(Component.literal(": " + sceneName))
+                    .withColor(General.Color.CONTENT));
+            SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
+        }
+        catch (Exception e) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.playFailed));
+            return 0;
+        }
+
+        return 1;
+    }
+
+    public static int executeLoot_Give(CommandContext<CommandSourceStack> context, String category) {
+        String playerId = StringArgumentType.getString(context, "player_id");
+        String tableId = StringArgumentType.getString(context, "table_id");
+
+        // Resolve special cases.
+        playerId = Resolver.resolveTargetPlayerName(context, playerId);
+
+        ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayerByName(playerId);
+
+        if (player == null) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            return 0;
+        }
+
+        boolean success;
+        if (category.equals("ignore")) {
+            String ignoreItem = StringArgumentType.getString(context, "ignore_item");
+            success = LootHolder.sendItemToPlayerWithIgnoreItem(player, tableId, ignoreItem, false);
+        } else {
+            CoreHanXu.LOGGER.info("[HX] --> guaranteed: {}", category.equals("guaranteed"));
+            success = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("first_item"), category.equals("guaranteed"));
+        }
+
+
+        if (!success) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.tableNotExist));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.loot_give")
+                        .append(Component.literal(" " + tableId + " -> " + playerId))
+                        .withColor(General.Color.SUCCESS));
+        return 1;
+    }
+
+    public static int executeLoot_Fill(CommandContext<CommandSourceStack> context, boolean ignoreCondition, String category) {
+        int containerX = IntegerArgumentType.getInteger(context, "container_x");
+        int containerY = IntegerArgumentType.getInteger(context, "container_y");
+        int containerZ = IntegerArgumentType.getInteger(context, "container_z");
+        String tableId = StringArgumentType.getString(context, "table_id");
+
+        String ignoreItem = null;
+
+        BlockPos position = new BlockPos(containerX, containerY, containerZ);
+        ServerLevel level = context.getSource().getLevel();
+
+        BlockEntity blockEntity = level.getBlockEntity(position);
+        if (!(blockEntity instanceof Container)) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notContainer));
+            return 0;
+        }
+
+        boolean success;
+        boolean isSorted = false, guaranteed = false;
+
+        switch (category) {
+            case "sorted":
+                isSorted = true;
+                break;
+            case "ignore":
+                ignoreItem = StringArgumentType.getString(context, "ignore_item");
+                break;
+            case "sorted-ignore":
+                isSorted = true;
+                ignoreItem = StringArgumentType.getString(context, "ignore_item");
+                break;
+            case "guaranteed":
+                guaranteed = true;
+                break;
+        }
+
+        success = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem, guaranteed);
+
+        if (!success) {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.tableNotExist));
+            return 0;
+        }
+
+        MessagePublisher.sendSystemMessage(context,
+                Component.translatable("commands.chx.loot_fill")
+                        .append(Component.literal(" " + tableId + " -> " + "[" + containerX + ", " + containerY + ", " + containerZ + "]"))
+                        .withColor(General.Color.SUCCESS)
+        );
+
+        return 1;
+    }
+
+    public static int executeWeather_Start(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        boolean success = WeatherHolder.startWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_started").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    public static int executeWeather_ResumeId(CommandContext<CommandSourceStack> context) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+
+        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        boolean success = WeatherHolder.resumeWeather(level, weatherId);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_resumed").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+        }
+
+        return success? 1 : 0;
+    }
+
+    public static int executeWeather_ResumeType(CommandContext<CommandSourceStack> context) {
+        String weatherType = StringArgumentType.getString(context, "weather_type");
+
+        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        WeatherHolder.WeatherType type = WeatherHolder.parseStringToType(weatherType);
+
+        boolean success = WeatherHolder.resumeWeather(level, type);
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_type_resumed").withColor(General.Color.SUCCESS));
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+        }
+
+        return success? 1 : 0;
+    }
+}

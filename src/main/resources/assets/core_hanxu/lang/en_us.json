@@ -194,6 +194,7 @@
   "commands.chx.loot_help_innertext9": "/chx loot template: Receive a book contains YAML loot table template.",
   "commands.chx.loot_help_functions_title": "[HX] Loot -> Help (Functions) <AI Concludes>",
   "commands.chx.loot_help_functions_introduction": "Functions of loot system is used for post-processing items.",
+  "commands.chx.weather": "[HX] Please execute '/chx weather help' for more information.",
 
   "commands.chx.timer_already_exist": "[HX] Timer has already exist!",
   "commands.chx.timer_not_exist": "[HX] Timer does not exist!",

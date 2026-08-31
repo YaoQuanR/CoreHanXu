@@ -1,6 +1,5 @@
 package core.yaoquan.hanxu;
 
-import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -25,7 +24,6 @@ public class CoreHanXuClient {
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
         // Some client setup code
-        CoreHanXu.LOGGER.info("HELLO FROM CLIENT SETUP");
-        CoreHanXu.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+        CoreHanXu.LOGGER.info("[HX] Client setup.");
     }
 }

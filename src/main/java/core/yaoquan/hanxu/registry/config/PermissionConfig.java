@@ -1,106 +1,302 @@
 package core.yaoquan.hanxu.registry.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class PermissionConfig {
-    private static final ModConfigSpec.Builder CONFIG = new ModConfigSpec.Builder();
+    public static class Value {
+        /// Define command: Help, license, origin, bare...
+        public static class Guide {
+            public final ModConfigSpec.IntValue general;
+            public final ModConfigSpec.IntValue generalAdvanced;
+            public final ModConfigSpec.IntValue timer;
+            public final ModConfigSpec.IntValue scene;
+            public final ModConfigSpec.IntValue attribute;
+            public final ModConfigSpec.IntValue variable;
+            public final ModConfigSpec.IntValue loot;
+            public final ModConfigSpec.IntValue weather;
 
-    private static final String comment_h = " Permission define '/chx help' requirement.";
-    private static final String comment_d = " Permission define '/chx detail' requirement.";
-    private static final String comment_l = " Permission define '/chx license state [player id]' requirement.";
-    private static final String comment_p = " Permission define '/chx permission ...' requirement.";
-    private static final String comment_th = " Permission define '/chx timer help' requirement.";
-    private static final String comment_tt = " Permission define '/chx timer template ...' requirement.";
-    private static final String comment_tic = " Permission define '/chx timer instance' at create requirement.";
-    private static final String comment_tis = " Permission define '/chx timer instance' at start/stop requirement.";
-    private static final String comment_tio = " Permission define '/chx timer instance' at other modification requirement.";
-    private static final String comment_tid = " Permission define '/chx timer instance display' requirement.";
-    private static final String comment_sh = " Permission define '/chx scene help' requirement.";
-    private static final String comment_spb = " Permission define '/chx scene' at play/broadcast requirement.";
-    private static final String comment_so = " Permission define '/chx scene' at other modification requirement.";
-    private static final String comment_ah = " Permission define '/chx attribute help' requirement.";
-    private static final String comment_ac = " Permission define '/chx attribute' at create/define requirement.";
-    private static final String comment_ao = " Permission define '/chx attribute' at other modification requirement.";
-    private static final String comment_ad = " Permission define '/chx attribute display' requirement.";
-    private static final String comment_v = " Permission define '/chx variable' entire system requirement.";
-    private static final String comment_lt = " Permission define '/chx loot' entire system requirement.";
+            Guide(ModConfigSpec.Builder builder) {
+                builder.push("guide");
+                general = define(builder, "general", 0);
+                generalAdvanced = define(builder, "general_advanced", 2);
+                timer = define(builder, "timer", 1);
+                scene = define(builder, "scene", 1);
+                attribute = define(builder, "attribute", 1);
+                variable = define(builder, "variable", 1);
+                loot = define(builder, "loot", 1);
+                weather = define(builder, "weather", 1);
+                builder.pop();
+            }
+        }
 
-    // Permission set list config:
-    public static final ModConfigSpec.IntValue setPermissionHelp = CONFIG
-            .comment(comment_h)
-            .defineInRange("permission_help", 0, 0, 10);
+        /// Define command: List, read, state...
+        public static class Information {
+            public final ModConfigSpec.IntValue general;
+            public final ModConfigSpec.IntValue timer;
+            public final ModConfigSpec.IntValue scene;
+            public final ModConfigSpec.IntValue attribute;
+            public final ModConfigSpec.IntValue variable;
+            public final ModConfigSpec.IntValue loot;
+            public final ModConfigSpec.IntValue weather;
 
-    public static final ModConfigSpec.IntValue setPermissionDetail = CONFIG
-            .comment(comment_d)
-            .defineInRange("permission_detail", 0, 0, 10);
+            Information(ModConfigSpec.Builder builder) {
+                builder.push("information");
+                general = define(builder, "general", 0);
+                timer = define(builder, "timer", 1);
+                scene = define(builder, "scene", 1);
+                attribute = define(builder, "attribute", 1);
+                variable = define(builder, "variable", 1);
+                loot = define(builder, "loot", 1);
+                weather = define(builder, "weather", 1);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionLicenseAdvancedState = CONFIG
-            .comment(comment_l)
-            .defineInRange("permission_license_advanced_state", 1, 0, 10);
+        /// Define command: agree.
+        public static class Confirmation {
+            public final ModConfigSpec.IntValue general;
 
-    public static final ModConfigSpec.IntValue setPermissionPermissionLevel = CONFIG
-            .comment(comment_p)
-            .defineInRange("permission_level", 10, 0, 10);
+            Confirmation(ModConfigSpec.Builder builder) {
+                builder.push("confirmation");
+                general = define(builder, "general", 0);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionTimerHelp = CONFIG
-            .comment(comment_th)
-            .defineInRange("permission_timer_help", 1, 0, 10);
+        /// Define command: create.
+        public static class Create {
+            public final ModConfigSpec.IntValue timerApply;
+            public final ModConfigSpec.IntValue timerCreate;
+            public final ModConfigSpec.IntValue scene;
+            public final ModConfigSpec.IntValue attribute;
+            public final ModConfigSpec.IntValue variable;
+            public final ModConfigSpec.IntValue loot;
+            public final ModConfigSpec.IntValue weather;
 
-    public static final ModConfigSpec.IntValue setPermissionTimerTemplate = CONFIG
-            .comment(comment_tt)
-            .defineInRange("permission_timer_template", 1, 0, 10);
+            Create(ModConfigSpec.Builder builder) {
+                builder.push("create");
+                timerApply = define(builder, "timer_apply", 0);
+                timerCreate = define(builder, "timer_create", 1);
+                scene = define(builder, "scene", 2);
+                attribute = define(builder, "attribute", 2);
+                variable = define(builder, "variable", 2);
+                loot = define(builder, "loot", 2);
+                weather = define(builder, "weather", 2);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionTimerInstanceCreate = CONFIG
-            .comment(comment_tic)
-            .defineInRange("permission_timer_instance_create", 2, 0, 10);
+        /// Define command: delete.
+        public static class Delete {
+            public final ModConfigSpec.IntValue timer;
+            public final ModConfigSpec.IntValue scene;
+            public final ModConfigSpec.IntValue attribute;
+            public final ModConfigSpec.IntValue variable;
+            public final ModConfigSpec.IntValue loot;
+            public final ModConfigSpec.IntValue weather;
 
-    public static final ModConfigSpec.IntValue setPermissionTimerInstanceRun = CONFIG
-            .comment(comment_tis)
-            .defineInRange("permission_timer_instance_run", 2, 0, 10);
+            Delete(ModConfigSpec.Builder builder) {
+                builder.push("delete");
+                timer = define(builder, "timer", 2);
+                scene = define(builder, "scene", 2);
+                attribute = define(builder, "attribute", 2);
+                variable = define(builder, "variable", 2);
+                loot = define(builder, "loot", 2);
+                weather = define(builder, "weather", 2);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionTimerInstanceOthers = CONFIG
-            .comment(comment_tio)
-            .defineInRange("permission_timer_instance_others", 2, 0, 10);
+        /// Define command: start, play, give, fill, broadcast, resume...
+        public static class Run {
+            public final ModConfigSpec.IntValue timer;
+            public final ModConfigSpec.IntValue scenePlay;
+            public final ModConfigSpec.IntValue sceneBroadcast;
+            public final ModConfigSpec.IntValue lootGive;
+            public final ModConfigSpec.IntValue lootFill;
+            public final ModConfigSpec.IntValue weatherStart;
+            public final ModConfigSpec.IntValue weatherResume;
 
-    public static final ModConfigSpec.IntValue setPermissionTimerF4 = CONFIG
-            .comment(comment_tid)
-            .defineInRange("permission_timer_instance_f4", 3, 0, 10);
+            Run(ModConfigSpec.Builder builder) {
+                builder.push("run");
+                timer = define(builder, "timer", 2);
+                scenePlay = define(builder, "scene_play", 1);
+                sceneBroadcast = define(builder, "scene_broadcast", 2);
+                lootGive = define(builder, "loot_give", 2);
+                lootFill = define(builder, "loot_fill", 2);
+                weatherStart = define(builder, "weather_start", 2);
+                weatherResume = define(builder, "weather_resume", 2);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionSceneHelp = CONFIG
-            .comment(comment_sh)
-            .defineInRange("permission_scene_help", 1, 0, 10);
+        /// Define command: stop, pause...
+        public static class Stop {
+            public final ModConfigSpec.IntValue timer;
+            public final ModConfigSpec.IntValue weather;
 
-    public static final ModConfigSpec.IntValue setPermissionScenePlay = CONFIG
-            .comment(comment_spb)
-            .defineInRange("permission_scene_play", 1, 0, 10);
+            Stop(ModConfigSpec.Builder builder) {
+                builder.push("stop");
+                timer = define(builder, "timer", 2);
+                weather = define(builder, "weather", 2);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionSceneOthers = CONFIG
-            .comment(comment_so)
-            .defineInRange("permission_scene_others", 2, 0, 10);
+        /// Define command: reset, restart, ready, kill, silence...
+        public static class Status {
+            public final ModConfigSpec.IntValue timerReset;
+            public final ModConfigSpec.IntValue timerRestart;
+            public final ModConfigSpec.IntValue weatherRestart;
+            public final ModConfigSpec.IntValue weatherReady;
+            public final ModConfigSpec.IntValue weatherKill;
 
-    public static final ModConfigSpec.IntValue setPermissionAttributeHelp = CONFIG
-            .comment(comment_ah)
-            .defineInRange("permission_attribute_help", 1, 0, 10);
+            Status(ModConfigSpec.Builder builder) {
+                builder.push("status");
+                timerReset = define(builder, "timer_reset", 2);
+                timerRestart = define(builder, "timer_restart", 2);
+                weatherRestart = define(builder, "weather_restart", 2);
+                weatherReady = define(builder, "weather_ready", 2);
+                weatherKill = define(builder, "weather_kill", 2);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionAttributeCreate = CONFIG
-            .comment(comment_ac)
-            .defineInRange("permission_attribute_create", 2, 0, 10);
+        /// Define command: display.
+        public static class Display {
+            public final ModConfigSpec.IntValue timer;
+            public final ModConfigSpec.IntValue attribute;
+            public final ModConfigSpec.IntValue weather;
 
-    public static final ModConfigSpec.IntValue setPermissionAttributeOthers = CONFIG
-            .comment(comment_ao)
-            .defineInRange("permission_attribute_others", 2, 0, 10);
+            Display(ModConfigSpec.Builder builder) {
+                builder.push("display");
+                timer = define(builder, "timer", 3);
+                attribute = define(builder, "attribute", 3);
+                weather = define(builder, "weather", 3);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionAttributeF4 = CONFIG
-            .comment(comment_ad)
-            .defineInRange("permission_attribute_f4", 3, 0, 10);
+        /// Define command: template.
+        public static class Template {
+            public final ModConfigSpec.IntValue scene;
+            public final ModConfigSpec.IntValue loot;
+            public final ModConfigSpec.IntValue weather;
 
-    public static final ModConfigSpec.IntValue setPermissionVariableOperations = CONFIG
-            .comment(comment_v)
-            .defineInRange("permission_variable_operations", 2, 0, 10);
+            Template(ModConfigSpec.Builder builder) {
+                builder.push("template");
+                scene = define(builder, "scene", 2);
+                loot = define(builder, "loot", 2);
+                weather = define(builder, "weather", 2);
+                builder.pop();
+            }
+        }
 
-    public static final ModConfigSpec.IntValue setPermissionLootOperations = CONFIG
-            .comment(comment_lt)
-            .defineInRange("permission_loot_operations", 2, 0, 10);
+        /// Define command: modify (set, add, reduce), string, recovery, copy...
+        public static class Modification {
+            public final ModConfigSpec.IntValue timerModify;
+            public final ModConfigSpec.IntValue attributeModify;
+            public final ModConfigSpec.IntValue attributeRecovery;
+            public final ModConfigSpec.IntValue attributeDefine;
+            public final ModConfigSpec.IntValue variableModify;
+            public final ModConfigSpec.IntValue variableString;
+            public final ModConfigSpec.IntValue variableCopy;
 
-    public static final ModConfigSpec SPEC_PERMISSION = CONFIG.build();
+            Modification(ModConfigSpec.Builder builder) {
+                builder.push("modification");
+                timerModify = define(builder, "timer_modify", 2);
+                attributeModify = define(builder, "attribute_modify", 2);
+                attributeRecovery = define(builder, "attribute_recovery", 2);
+                attributeDefine = define(builder, "attribute_define", 2);
+                variableModify = define(builder, "variable_modify", 2);
+                variableString = define(builder, "variable_string", 2);
+                variableCopy = define(builder, "variable_copy", 2);
+                builder.pop();
+            }
+        }
+
+        /// Define command: if (value, margin, score).
+        public static class Condition {
+            public final ModConfigSpec.IntValue variable;
+
+            Condition(ModConfigSpec.Builder builder) {
+                builder.push("condition");
+                variable = define(builder, "variable", 2);
+                builder.pop();
+            }
+        }
+
+        /// Define command: reload.
+        public static class Reload {
+            public final ModConfigSpec.IntValue weather;
+
+            Reload(ModConfigSpec.Builder builder) {
+                builder.push("reload");
+                weather = define(builder, "weather", 2);
+                builder.pop();
+            }
+        }
+
+        /// Define command: Set of permissions.
+        public static class Permission {
+            public final ModConfigSpec.IntValue general;
+
+            Permission(ModConfigSpec.Builder builder) {
+                builder.push("permission");
+                general = define(builder, "general", 10);
+                builder.pop();
+            }
+        }
+    }
+
+    public static class Build {
+        public final Value.Guide guide;
+        public final Value.Information information;
+        public final Value.Confirmation confirmation;
+        public final Value.Create create;
+        public final Value.Delete delete;
+        public final Value.Run run;
+        public final Value.Stop stop;
+        public final Value.Status status;
+        public final Value.Display display;
+        public final Value.Template template;
+        public final Value.Modification modification;
+        public final Value.Condition condition;
+        public final Value.Reload reload;
+        public final Value.Permission permission;
+
+        Build(ModConfigSpec.Builder builder) {
+            guide = new Value.Guide(builder);
+            information = new Value.Information(builder);
+            confirmation = new Value.Confirmation(builder);
+            create = new Value.Create(builder);
+            delete = new Value.Delete(builder);
+            run = new Value.Run(builder);
+            stop = new Value.Stop(builder);
+            status = new Value.Status(builder);
+            display = new Value.Display(builder);
+            template = new Value.Template(builder);
+            modification = new Value.Modification(builder);
+            condition = new Value.Condition(builder);
+            reload = new Value.Reload(builder);
+            permission = new Value.Permission(builder);
+        }
+    }
+
+    public static final Build VALUE;
+
+    public static final ModConfigSpec SPEC_PERMISSION;
+
+    static {
+        Pair<Build, ModConfigSpec> pair = new ModConfigSpec.Builder()
+                .configure(Build::new);
+        VALUE = pair.getLeft();
+        SPEC_PERMISSION = pair.getRight();
+    }
+
+    private static ModConfigSpec.IntValue define(ModConfigSpec.Builder builder, String path, int defaultValue) {
+        return builder.comment("-> Define permission level requirement: " + path + ".")
+                .defineInRange(path, defaultValue, 0, 10);
+    }
 }

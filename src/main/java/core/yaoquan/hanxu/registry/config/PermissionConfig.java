@@ -226,6 +226,7 @@ public class PermissionConfig {
             public final ModConfigSpec.IntValue variableModify;
             public final ModConfigSpec.IntValue variableString;
             public final ModConfigSpec.IntValue variableCopy;
+            public final ModConfigSpec.IntValue weatherModify;
 
             Modification(ModConfigSpec.Builder builder) {
                 builder.translation("config.core_hanxu.permission.modification")
@@ -240,6 +241,7 @@ public class PermissionConfig {
                 variableModify = define(builder, "variable_modify", 2);
                 variableString = define(builder, "variable_string", 2);
                 variableCopy = define(builder, "variable_copy", 2);
+                weatherModify = define(builder, "weather_modify", 2);
                 builder.pop();
             }
         }

@@ -1,5 +1,6 @@
 package core.yaoquan.hanxu.registry.command.builder;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import core.yaoquan.hanxu.api.PermissionHolder;
@@ -183,6 +184,46 @@ public class BuildWeather {
                             .executes(cs -> ExecuteDelete.executeWeather_Delete(cs, "try"))
                     )
                     .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.delete.weather.get()))
+            )
+            .then(
+                Commands.literal("modify")
+                    .then(
+                        Commands.argument("weather_id", StringArgumentType.string())
+                            .then(
+                                Commands.argument("level", StringArgumentType.string())
+                                    .then(
+                                        Commands.literal("initial_ticks")
+                                            .then(
+                                                Commands.argument("time_amount", IntegerArgumentType.integer())
+                                                    .executes(cs -> ExecuteModification.executeWeather_Modify(cs, "initial"))
+                                            )
+                                    )
+                                    .then(
+                                        Commands.literal("remaining_ticks")
+                                            .then(
+                                                Commands.argument("time_amount", IntegerArgumentType.integer())
+                                                    .executes(cs -> ExecuteModification.executeWeather_Modify(cs, "remaining"))
+                                            )
+                                    )
+                                    .then(
+                                        Commands.literal("duration_ticks")
+                                            .then(
+                                                Commands.argument("time_amount", IntegerArgumentType.integer())
+                                                    .executes(cs -> ExecuteModification.executeWeather_Modify(cs, "duration"))
+                                            )
+                                    )
+                                    .then(
+                                        Commands.literal("stillness_ticks")
+                                            .then(
+                                                Commands.argument("time_amount", IntegerArgumentType.integer())
+                                                    .executes(cs -> ExecuteModification.executeWeather_Modify(cs, "stillness"))
+                                            )
+                                    )
+                                    .suggests(CommandSuggest::suggestDimension)
+                            )
+                            .suggests(CommandSuggest::suggestWeather)
+                    )
+                    .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.modification.weatherModify.get()))
             )
             .then(
                 Commands.literal("template")

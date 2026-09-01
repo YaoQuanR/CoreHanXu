@@ -338,6 +338,7 @@
   "commands.chx.weather_template": "[HX] Received template book:",
   "commands.chx.weather_created": "[HX] Weather created:",
   "commands.chx.weather_deleted": "[HX] Weather deleted.",
+  "commands.chx.weather_time_modified": "[HX] Weather modified:",
 
   "commands.chx.weather_empty_weather": "[HX] Not yet registered any weather!",
   "commands.chx.weather_not_found": "[HX] Weather not found!",

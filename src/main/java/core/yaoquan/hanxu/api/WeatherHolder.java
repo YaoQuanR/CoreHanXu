@@ -62,6 +62,13 @@ public class WeatherHolder {
         ACTIVE, READY, STILLNESS, IDLE,
     }
 
+    public enum ModifyType {
+        INITIAL,
+        REMAINING,
+        DURATION,
+        STILLNESS,
+    }
+
     // All registered weather.
     private static final Map<String, WeatherDefinition> apiWeathers = new ConcurrentHashMap<>();
     private static final Map<String, WeatherDefinition> commandWeathers = new ConcurrentHashMap<>();
@@ -1161,6 +1168,22 @@ public class WeatherHolder {
             case "void_fog" -> WeatherType.VOID_FOG;
             default -> WeatherType.NULL;
         };
+    }
+
+    public static boolean modifyWeatherTime(ServerLevel level, String weatherId, int newTicks, @NotNull ModifyType type) {
+        return findInstance(level, weatherId).matching(
+                instance -> {
+                    int modifyTicks = Math.max(0, newTicks);
+                    switch (type) {
+                        case INITIAL -> instance.setInitialTicks(modifyTicks);
+                        case REMAINING -> instance.setRemainingTicks(modifyTicks);
+                        case DURATION -> instance.setDurationTicks(modifyTicks);
+                        case STILLNESS -> instance.setStillnessTicks(modifyTicks);
+                    }
+                    return true;
+                },
+                () -> false
+        );
     }
 
     private static void registerYamlWeather(WeatherDefinition weatherDefinition) {

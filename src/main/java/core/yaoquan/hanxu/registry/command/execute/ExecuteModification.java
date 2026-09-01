@@ -7,6 +7,7 @@ import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.VariableHolder;
+import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
@@ -17,6 +18,7 @@ import core.yaoquan.hanxu.util.Resolver;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
@@ -548,5 +550,37 @@ public class ExecuteModification {
         );
 
         return 1;
+    }
+
+    public static int executeWeather_Modify(CommandContext<CommandSourceStack> context, String category) {
+        String weatherId = StringArgumentType.getString(context, "weather_id");
+        int timeAmount = IntegerArgumentType.getInteger(context, "time_amount");
+
+        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        if (nullableLevel.isNull()) {
+            return 0;
+        }
+        ServerLevel level = nullableLevel.get();
+
+        boolean success = switch (category) {
+            case "initial" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.INITIAL);
+            case "remaining" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.REMAINING);
+            case "duration" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.DURATION);
+            case "stillness" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.STILLNESS);
+            default -> false;
+        };
+
+        if (success) {
+            MessagePublisher.sendSystemMessage(context,
+                    Component.translatable("commands.chx.weather_time_modified")
+                            .append(" (" + level + " -> " + weatherId + "): " + category + " -> " + timeAmount)
+                            .withColor(General.Color.CONTENT)
+            );
+        }
+        else {
+            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+        }
+
+        return success? 1 : 0;
     }
 }

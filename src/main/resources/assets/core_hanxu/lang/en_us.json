@@ -373,5 +373,7 @@
   "commands.core_hanxu.not_container": "[HX] This position is not targeted to a container!",
   "commands.core_hanxu.unknown_dimension": "[HX] Unknown dimension!",
 
-  "commands.core_hanxu.has_changed_to": "has changed to"
+  "commands.core_hanxu.has_changed_to": "has changed to",
+
+  "": ""
 }

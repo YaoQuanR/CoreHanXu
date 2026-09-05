@@ -1,8 +1,10 @@
 package core.yaoquan.hanxu.api.weather;
 
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Random;
 
@@ -88,7 +90,24 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
 
     @Override
     public void sendToPlayer(ServerPlayer player, WeatherHolder.WeatherInstance instance, String dimension) {
+        if (player == null || instance == null) {
+            return;
+        }
 
+        switch (instance.getPhase()) {
+            case ACTIVE, STILLNESS -> {
+                WeatherPayload.ColoredRainPacket packet = new WeatherPayload.ColoredRainPacket(
+                        instance.getPhase(),
+                        dimension,
+                        skyColor,
+                        rainColor,
+                        snowColor
+                );
+
+                PacketDistributor.sendToPlayer(player, packet);
+            }
+            case null, default -> {}
+        }
     }
 
     @Override

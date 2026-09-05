@@ -44,9 +44,9 @@ public class WeatherPayload {
         }
 
         public static void handleClient(FogPacket packet, IPayloadContext context) {
-            context.enqueueWork(() -> {
-                WeatherClient.updateFog(packet);
-            }).exceptionally(e -> {
+            context.enqueueWork(
+                    () -> WeatherClient.updateFog(packet)
+            ).exceptionally(e -> {
                 CoreHanXu.LOGGER.error("[HX] Failed to handle fog packet: ", e);
                 return null;
             });
@@ -87,7 +87,12 @@ public class WeatherPayload {
         }
 
         public static void handleClient(ColoredRainPacket packet, IPayloadContext context) {
-            // TODO
+            context.enqueueWork(
+                    () -> WeatherClient.updateColoredRain(packet)
+            ).exceptionally(e -> {
+                CoreHanXu.LOGGER.error("[HX] Failed to handle colored rain packet: ", e);
+                return null;
+            });
         }
     }
 

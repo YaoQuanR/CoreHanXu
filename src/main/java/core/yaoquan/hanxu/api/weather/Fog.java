@@ -1,5 +1,6 @@
 package core.yaoquan.hanxu.api.weather;
 
+import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
@@ -62,7 +63,7 @@ public class Fog implements WeatherHolder.WeatherDefinition {
             offset = offsetInterpolation(height);
         }
 
-        return Math.min(Math.max(minimumDistance + offset, 0), maximumDistance);
+        return Math.min(Math.max(minimumDistance + offset, 0f), maximumDistance);
     }
 
     @Override
@@ -88,27 +89,33 @@ public class Fog implements WeatherHolder.WeatherDefinition {
         float transition = ((Number) GeneralConfig.setFogTransitionRatio.getAsDouble()).floatValue();
 
         float progress = (float) instance.getRemainingTicks() / instance.getInitialTicks();
-        float currentDistance;
         float minimumDistance = getMinimumDistance();
         float maximumDistance = getMaximumDistance();
+
+        float playerY = ((Number) player.getY()).floatValue();
+        float baseDistance = getDistance(playerY);
+
+        baseDistance = Math.max(minimumDistance, Math.min(maximumDistance, baseDistance));
+
+        float currentDistance;
 
         switch (instance.getPhase()) {
             case ACTIVE -> {
                 float activeProgress = 1.0f - progress;
                 if (activeProgress < transition) {
                     float ratio = activeProgress / transition;
-                    currentDistance = maximumDistance - (maximumDistance - minimumDistance) * ratio;
+                    currentDistance = maximumDistance - (maximumDistance - baseDistance) * ratio;
                 }
                 else if (activeProgress < (1.0f - transition)) {
-                    currentDistance = minimumDistance;
+                    currentDistance = baseDistance;
                 }
                 else {
                     float ratio = (activeProgress - (1.0f - transition)) / transition;
-                    currentDistance = minimumDistance + (maximumDistance - minimumDistance) * ratio;
+                    currentDistance = baseDistance + (maximumDistance - baseDistance) * ratio;
                 }
             }
             case STILLNESS -> currentDistance = -1;
-            default -> {
+            case null, default -> {
                 return;
             }
         }

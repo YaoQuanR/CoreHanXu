@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static core.yaoquan.hanxu.api.define.Error.errorComponent;
@@ -332,30 +333,56 @@ public class Creator {
                             Cast.toDouble(vector, "z", 0)
                     );
                     case "static_range" -> wind.staticVector(
-                            Cast.toDouble(vector, "minimum_x", 0),
-                            Cast.toDouble(vector, "maximum_x", 0),
-                            Cast.toDouble(vector, "minimum_y", 0),
-                            Cast.toDouble(vector, "maximum_y", 0),
-                            Cast.toDouble(vector, "minimum_z", 0),
-                            Cast.toDouble(vector, "maximum_z", 0)
+                            Cast.toDouble(vector, "x_min", 0),
+                            Cast.toDouble(vector, "x_max", 0),
+                            Cast.toDouble(vector, "y_min", 0),
+                            Cast.toDouble(vector, "y_max", 0),
+                            Cast.toDouble(vector, "z_min", 0),
+                            Cast.toDouble(vector, "z_max", 0)
                     );
                     case "dynamic" -> wind.dynamicVector(
-                            Cast.toDouble(vector, "minimum_x", 0),
-                            Cast.toDouble(vector, "maximum_x", 0),
-                            Cast.toDouble(vector, "minimum_y", 0),
-                            Cast.toDouble(vector, "maximum_y", 0),
-                            Cast.toDouble(vector, "minimum_z", 0),
-                            Cast.toDouble(vector, "maximum_z", 0)
+                            Cast.toDouble(vector, "x_min", 0),
+                            Cast.toDouble(vector, "x_max", 0),
+                            Cast.toDouble(vector, "y_min", 0),
+                            Cast.toDouble(vector, "y_max", 0),
+                            Cast.toDouble(vector, "z_min", 0),
+                            Cast.toDouble(vector, "z_max", 0)
                     );
                     default -> CoreHanXu.LOGGER.warn("[HX] Received unknown wind type for: {}", id);
                 }
 
-                float minimumSpeedReduction = Cast.toFloat(parameters, "minimum_speed_reduction", 0);
-                float maximumSpeedReduction = Cast.toFloat(parameters, "maximum_speed_reduction", 0);
+                Object speedReductionObject = parameters.get("speed_reduction");
+                if (!(speedReductionObject instanceof Map)) {
+                    CoreHanXu.LOGGER.warn("[HX] Received null speed reduction for: {}", id);
+                    speedReductionObject = new ConcurrentHashMap<>(
+                            Map.of(
+                                    "min", 0,
+                                    "max", 0
+                            )
+                    );
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> speedReduction = (Map<String, Object>) speedReductionObject;
+                float minimumSpeedReduction = Cast.toFloat(speedReduction, "min", 0);
+                float maximumSpeedReduction = Cast.toFloat(speedReduction, "max", 0);
                 wind.speedReduction(minimumSpeedReduction, maximumSpeedReduction);
 
-                float minimumDriftDistance = Cast.toFloat(parameters, "minimum_drift_distance", 0);
-                float maximumDriftDistance = Cast.toFloat(parameters, "maximum_drift_distance", 0);
+                Object draftDistanceObject = parameters.get("draft_distance");
+                if (!(draftDistanceObject instanceof Map)) {
+                    CoreHanXu.LOGGER.warn("[HX] Received null draft distance for: {}", id);
+                    draftDistanceObject = new ConcurrentHashMap<>(
+                            Map.of(
+                                    "min", 0,
+                                    "max", 0
+                            )
+                    );
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> draftDistance = (Map<String, Object>) draftDistanceObject;
+                float minimumDriftDistance = Cast.toFloat(draftDistance, "min", 0);
+                float maximumDriftDistance = Cast.toFloat(draftDistance, "max", 0);
                 wind.driftDistance(minimumDriftDistance, maximumDriftDistance);
 
                 boolean affectRain = Cast.toBoolean(parameters, "affect_rain", true);

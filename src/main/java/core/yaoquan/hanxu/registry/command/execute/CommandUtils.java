@@ -673,7 +673,9 @@ public class CommandUtils {
                 distance:
                   min: 8
                   max: 128
-                height_offset:
+                # This will increase the distance base on minimum distance
+                # (non-positive will use min distance).
+                height_offsets:
                   64: 2
                   128: 1
                   192: 0.5

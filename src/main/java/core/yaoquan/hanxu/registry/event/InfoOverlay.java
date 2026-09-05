@@ -132,7 +132,7 @@ public class InfoOverlay {
                     displayLines.add("(" + weatherId + " -> " + dimension + ") " + weatherInfo.phase().name().toLowerCase() + " <<< " + weatherInfo.remainingTicks() + " / " + weatherInfo.initialTicks() + " <... " + nextTicks + " (t)");
                 }
                 else {
-                    displayLines.add("(" + weatherId + " -> " + dimension + ") LOST");
+                    displayLines.add("(" + weatherId + " -> " + dimension + ") LOST or NEVER START");
                 }
                 displayedWeather++;
             }

@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.render.mixin;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import core.yaoquan.hanxu.CoreHanXu;
+import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.render.data.WeatherClient;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -52,11 +53,11 @@ public class FogRender {
             DeltaTracker deltaTracker,
             float darkenWorldAmount,
             ClientLevel level,
-            CallbackInfoReturnable<Vector4f> info4f) {
+            CallbackInfoReturnable<Vector4f> cir) {
         String dimension = level.dimension().location().toString();
         WeatherClient.FogInfo fog = WeatherClient.getFog(dimension);
 
-        if (fog == null || fog.currentDistance() < 0) {
+        if (fog == null || fog.phase() == WeatherHolder.WeatherPhase.STILLNESS) {
             return;
         }
 
@@ -65,7 +66,7 @@ public class FogRender {
         float colorG = ((color >> 8) & 0xFF) / 255.0f;
         float colorB = (color & 0xFF) / 255.0f;
         Vector4f fogColor = new Vector4f(colorR, colorG, colorB, 1.0f);
-        Vector4f returnColor = info4f.getReturnValue();
+        Vector4f returnColor = cir.getReturnValue();
         if (returnColor != null) {
             returnColor.x = colorR;
             returnColor.y = colorG;

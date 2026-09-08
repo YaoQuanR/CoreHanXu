@@ -903,6 +903,14 @@ public class WeatherHolder {
 
         WeatherState state = nullableState.get();
 
+        for (WeatherInstance instance : state.getReadyInstances()) {
+            WeatherType type = instance.getType();
+            WeatherDefinition definition = instance.getDefinition();
+            if (!state.doesPaused(instance.getId()) && definition.isAble(level)) {
+                state.tryActivateReady(type, level);
+            }
+        }
+
         for (WeatherInstance instance : state.getActiveInstances()) {
             if (!instance.doesActive()) {
                 continue;

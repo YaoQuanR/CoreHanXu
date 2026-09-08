@@ -161,8 +161,7 @@ dependencies {
     // implementation 'org.yaml:snakeyaml:2.0'
     jarJar(implementation('org.yaml:snakeyaml:2.0') {
         version {
-            strictly '[2.0,2.1)'
-            prefer '2.0'
+            strictly '2.0'
         }
     })
 }

@@ -27,7 +27,7 @@ public class ExecuteRun {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
-        return CommandUtils.commandOperateInstanceTimer(context, timerId, masterString, "start");
+        return CommandMisc.commandOperateInstanceTimer(context, timerId, masterString, "start");
     }
 
     public static int executeScene_Play(CommandContext<CommandSourceStack> context) {
@@ -183,7 +183,7 @@ public class ExecuteRun {
     public static int executeWeather_Start(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
@@ -204,7 +204,7 @@ public class ExecuteRun {
     public static int executeWeather_ResumeId(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
@@ -225,7 +225,7 @@ public class ExecuteRun {
     public static int executeWeather_ResumeType(CommandContext<CommandSourceStack> context) {
         String weatherType = StringArgumentType.getString(context, "weather_type");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }

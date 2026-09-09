@@ -92,7 +92,7 @@ public class ExecuteCreate {
             return 0;
         }
 
-        return CommandUtils.commandCreateTemplateTimer(context, timerId, timeUnit, timeAmount, titleParameter, contentParameter);
+        return CommandMisc.commandCreateTemplateTimer(context, timerId, timeUnit, timeAmount, titleParameter, contentParameter);
     }
 
     public static int executeTimer_Template_CreateRange(CommandContext<CommandSourceStack> context, String titleParameter) {
@@ -126,7 +126,7 @@ public class ExecuteCreate {
             return 0;
         }
 
-        return CommandUtils.commandCreateTemplateTimer(context, timerId, timeUnit, selectedTimeAmount, titleParameter, contentParameter);
+        return CommandMisc.commandCreateTemplateTimer(context, timerId, timeUnit, selectedTimeAmount, titleParameter, contentParameter);
     }
 
     public static int executeTimer_Instance_Create(CommandContext<CommandSourceStack> context, String titleParameter) {
@@ -152,10 +152,10 @@ public class ExecuteCreate {
             contentParameter = null;
         }
 
-        int returnValue = CommandUtils.commandCreateInstanceTimer(context, timerId, masterString, timeUnit, timeAmount, titleParameter, contentParameter);
+        int returnValue = CommandMisc.commandCreateInstanceTimer(context, timerId, masterString, timeUnit, timeAmount, titleParameter, contentParameter);
 
         if (returnValue == 1) {
-            CommandUtils.displayTimerCreateMessage(context, timerId, timeAmount, timeUnit, titleParameter, contentParameter);
+            CommandMisc.displayTimerCreateMessage(context, timerId, timeAmount, timeUnit, titleParameter, contentParameter);
             return 1;
         }
         else {
@@ -189,10 +189,10 @@ public class ExecuteCreate {
 
         int selectedTimeAmount = Converter.convertFromRangeToRandom(timeFirstRange, timeSecondRange);
 
-        int returnValue = CommandUtils.commandCreateInstanceTimer(context, timerId, masterString, timeUnit, selectedTimeAmount, titleParameter, contentParameter);
+        int returnValue = CommandMisc.commandCreateInstanceTimer(context, timerId, masterString, timeUnit, selectedTimeAmount, titleParameter, contentParameter);
 
         if (returnValue == 1) {
-            CommandUtils.displayTimerCreateMessage(context, timerId, selectedTimeAmount, timeUnit, titleParameter, contentParameter);
+            CommandMisc.displayTimerCreateMessage(context, timerId, selectedTimeAmount, timeUnit, titleParameter, contentParameter);
             return 1;
         }
         else {
@@ -294,7 +294,7 @@ public class ExecuteCreate {
 
         boolean registered = AttributeHolder.register(attributeId, maximum, defaultValue, targetPath);
 
-        CommandUtils.displayAttributeCreateMessage(context, attributeId, maximum, defaultValue, registered);
+        CommandMisc.displayAttributeCreateMessage(context, attributeId, maximum, defaultValue, registered);
 
         if (registered) {
             AttributeHolder.registerAllYamlAttributes();

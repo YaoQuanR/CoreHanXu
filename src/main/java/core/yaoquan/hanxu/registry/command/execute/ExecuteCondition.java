@@ -64,7 +64,7 @@ public class ExecuteCondition {
             return 1;
         }
 
-        return CommandUtils.commandVariableExecution(context, variableName, category);
+        return CommandMisc.commandVariableExecution(context, variableName, category);
     }
 
     public static int executeVariable_If_Score(CommandContext<CommandSourceStack> context, String category) {
@@ -123,7 +123,7 @@ public class ExecuteCondition {
             return 1;
         }
 
-        return CommandUtils.commandVariableExecution(context, null, category);
+        return CommandMisc.commandVariableExecution(context, null, category);
     }
 
     public static int executeVariable_If_Margin(CommandContext<CommandSourceStack> context, String category) {
@@ -156,6 +156,6 @@ public class ExecuteCondition {
             return 1;
         }
 
-        return CommandUtils.commandVariableExecution(context, variableName, category);
+        return CommandMisc.commandVariableExecution(context, variableName, category);
     }
 }

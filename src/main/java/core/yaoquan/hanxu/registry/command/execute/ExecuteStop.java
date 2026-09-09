@@ -16,13 +16,13 @@ public class ExecuteStop {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
-        return CommandUtils.commandOperateInstanceTimer(context, timerId, masterString, "stop");
+        return CommandMisc.commandOperateInstanceTimer(context, timerId, masterString, "stop");
     }
 
     public static int executeWeather_PauseId(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
@@ -43,7 +43,7 @@ public class ExecuteStop {
     public static int executeWeather_PauseType(CommandContext<CommandSourceStack> context) {
         String weatherType = StringArgumentType.getString(context, "weather_type");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }

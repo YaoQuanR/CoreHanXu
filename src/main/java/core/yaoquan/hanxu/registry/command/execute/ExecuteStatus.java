@@ -16,20 +16,20 @@ public class ExecuteStatus {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
-        return CommandUtils.commandOperateInstanceTimer(context, timerId, masterString, "reset");
+        return CommandMisc.commandOperateInstanceTimer(context, timerId, masterString, "reset");
     }
 
     public static int executeTimer_Instance_Restart(CommandContext<CommandSourceStack> context) {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
-        return CommandUtils.commandOperateInstanceTimer(context, timerId, masterString, "restart");
+        return CommandMisc.commandOperateInstanceTimer(context, timerId, masterString, "restart");
     }
 
     public static int executeWeather_Restart(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
@@ -55,7 +55,7 @@ public class ExecuteStatus {
     public static int executeWeather_Ready(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
@@ -81,7 +81,7 @@ public class ExecuteStatus {
     public static int executeWeather_Kill(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }

@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
-public class CommandUtils {
+public class CommandMisc {
     static int commandCreateTemplateTimer(CommandContext<CommandSourceStack> context,
                                                   String timerId, String timeUnit, int timeAmount,
                                                   String titleParameter, String contentParameter) {

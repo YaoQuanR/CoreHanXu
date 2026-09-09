@@ -74,7 +74,7 @@ public class ExecuteDisplay {
     public static int executeWeather_Display(CommandContext<CommandSourceStack> context, boolean state) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }

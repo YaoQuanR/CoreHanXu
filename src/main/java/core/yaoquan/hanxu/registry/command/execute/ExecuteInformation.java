@@ -70,13 +70,13 @@ public class ExecuteInformation {
             timeUnit = "t";
         }
 
-        return CommandUtils.displayCommandTimerRead(context, timerId, "", timeUnit, infoCategory, "template");
+        return CommandMisc.displayCommandTimerRead(context, timerId, "", timeUnit, infoCategory, "template");
     }
 
     public static int executeTimer_Template_List(CommandContext<CommandSourceStack> context) {
         String[] templateIds = TimeHolder.getAllTemplateIds();
 
-        return CommandUtils.displayTimerIdList(context, templateIds);
+        return CommandMisc.displayTimerIdList(context, templateIds);
     }
 
     public static int executeTimer_Instance_Read(CommandContext<CommandSourceStack> context) {
@@ -92,7 +92,7 @@ public class ExecuteInformation {
             timeUnit = "t";
         }
 
-        return CommandUtils.displayCommandTimerRead(context, timerId, masterString, timeUnit, infoCategory, "instance");
+        return CommandMisc.displayCommandTimerRead(context, timerId, masterString, timeUnit, infoCategory, "instance");
     }
 
     public static int executeTimer_Instance_List(CommandContext<CommandSourceStack> context) {
@@ -107,7 +107,7 @@ public class ExecuteInformation {
 
         String[] instanceIds = TimeHolder.getAllInstanceIds(masterId);
 
-        return CommandUtils.displayTimerIdList(context, instanceIds);
+        return CommandMisc.displayTimerIdList(context, instanceIds);
     }
 
     public static int executeScene_List(CommandContext<CommandSourceStack> context) {
@@ -143,7 +143,7 @@ public class ExecuteInformation {
             MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.notFound));
         }
         else {
-            CommandUtils.displaySceneIdList(context, displayList);
+            CommandMisc.displaySceneIdList(context, displayList);
         }
 
         return 1;
@@ -153,7 +153,7 @@ public class ExecuteInformation {
         Map<String, AttributeHolder.CustomAttribute> commandAttributes = AttributeHolder.getCommandAttributes();
         String[] commandAttributeList = commandAttributes.keySet().toArray(new String[0]);
 
-        return CommandUtils.displayAttributeIdList(context, commandAttributeList, false);
+        return CommandMisc.displayAttributeIdList(context, commandAttributeList, false);
     }
 
     public static int executeAdvancedAttribute_List(CommandContext<CommandSourceStack> context) {
@@ -163,8 +163,8 @@ public class ExecuteInformation {
         String[] commandAttributeList = commandAttributes.keySet().toArray(new String[0]);
         String[] apiAttributeList = apiAttributes.keySet().toArray(new String[0]);
 
-        int returnValue1 = CommandUtils.displayAttributeIdList(context, commandAttributeList, false);
-        int returnValue2 = CommandUtils.displayAttributeIdList(context, apiAttributeList, true);
+        int returnValue1 = CommandMisc.displayAttributeIdList(context, commandAttributeList, false);
+        int returnValue2 = CommandMisc.displayAttributeIdList(context, apiAttributeList, true);
 
         if (returnValue1 == 1 || returnValue2 == 1) {
             return 1;
@@ -433,13 +433,13 @@ public class ExecuteInformation {
         String[] apiWeatherList = apiDefinitions.keySet().toArray(new String[0]);
         String[] commandWeatherList = commandDefinitions.keySet().toArray(new String[0]);
 
-        return CommandUtils.displayWeatherIdList(context, commandWeatherList, apiWeatherList);
+        return CommandMisc.displayWeatherIdList(context, commandWeatherList, apiWeatherList);
     }
 
     public static int executeWeather_Read(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }

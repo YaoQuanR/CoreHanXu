@@ -556,7 +556,7 @@ public class ExecuteModification {
         String weatherId = StringArgumentType.getString(context, "weather_id");
         int timeAmount = IntegerArgumentType.getInteger(context, "time_amount");
 
-        NullableValue<ServerLevel> nullableLevel = CommandUtils.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }

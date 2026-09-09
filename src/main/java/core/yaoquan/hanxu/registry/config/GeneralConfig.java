@@ -35,6 +35,13 @@ public class GeneralConfig {
             .translation("config.core_hanxu.set_fog_transition_ratio")
             .defineInRange("fog_transition_ratio", 0.1, 0.01, 0.5);
 
+    private static final String comment5 = " Define the percentage of colored rain gradient between active phase:";
+    public static final ModConfigSpec.DoubleValue setColoredRainTransitionRatio = CONFIG
+            .comment(comment5)
+            .comment(comment4_1)
+            .translation("config.core_hanxu.set_colored_rain_transition_ratio")
+            .defineInRange("colored_rain_transition_ratio", 0.1, 0.01, 0.5);
+
     public static final ModConfigSpec SPEC_GENERAL = CONFIG.build();
 
     private static boolean validateItemName(final Object obj) {

@@ -36,7 +36,7 @@ public class ExecuteDelete {
         String masterString = StringArgumentType.getString(context, "master_id");
         String timerId = StringArgumentType.getString(context, "timer_id");
 
-        return CommandUtils.commandOperateInstanceTimer(context, timerId, masterString, "delete");
+        return CommandMisc.commandOperateInstanceTimer(context, timerId, masterString, "delete");
     }
 
     public static int executeScene_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {

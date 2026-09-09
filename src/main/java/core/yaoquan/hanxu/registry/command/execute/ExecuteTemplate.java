@@ -50,7 +50,7 @@ public class ExecuteTemplate {
 
         ItemStack book = new ItemStack(Items.WRITABLE_BOOK);
 
-        String bookTemplate = CommandUtils.lootTemplate();
+        String bookTemplate = CommandMisc.lootTemplate();
 
         WritableBookContent content = new WritableBookContent(List.of(Filterable.passThrough(bookTemplate)));
         book.set(DataComponents.WRITABLE_BOOK_CONTENT, content);
@@ -73,7 +73,7 @@ public class ExecuteTemplate {
 
         ItemStack book = new ItemStack(Items.WRITABLE_BOOK);
 
-        String bookTemplate = CommandUtils.weatherTemplate(templateType);
+        String bookTemplate = CommandMisc.weatherTemplate(templateType);
 
         WritableBookContent content = new WritableBookContent(List.of(Filterable.passThrough(bookTemplate)));
         book.set(DataComponents.WRITABLE_BOOK_CONTENT, content);

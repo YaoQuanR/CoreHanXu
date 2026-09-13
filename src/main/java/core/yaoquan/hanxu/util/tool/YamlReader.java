@@ -1,4 +1,4 @@
-package core.yaoquan.hanxu.util;
+package core.yaoquan.hanxu.util.tool;
 
 import core.yaoquan.hanxu.api.define.FilePath;
 

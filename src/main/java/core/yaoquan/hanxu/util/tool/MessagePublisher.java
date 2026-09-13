@@ -1,4 +1,4 @@
-package core.yaoquan.hanxu.util;
+package core.yaoquan.hanxu.util.tool;
 
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;

@@ -5,11 +5,11 @@ import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.QuickSendPacket;
-import core.yaoquan.hanxu.util.NullableValue;
+import core.yaoquan.hanxu.util.type.NullableValue;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
-import core.yaoquan.hanxu.util.Creator;
-import core.yaoquan.hanxu.util.Resolver;
-import core.yaoquan.hanxu.util.YamlReader;
+import core.yaoquan.hanxu.util.tool.Creator;
+import core.yaoquan.hanxu.util.tool.Resolver;
+import core.yaoquan.hanxu.util.tool.YamlReader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -177,7 +177,7 @@ public class AttributeHolder {
     /**
      * Get attribute value.
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.tool.Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param isApiAttribute    True false that where you use this function.
      * @return                  Received player value: float.
@@ -215,7 +215,7 @@ public class AttributeHolder {
     /**
      * Set attribute value (Full direction trigger).
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
      * @param isApiAttribute    True false that where you use this function.
@@ -266,7 +266,7 @@ public class AttributeHolder {
     /**
      * Set player's attribute value (Default: Point trigger).
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
      * @param isApiAttribute    True false that where you use this function.
@@ -317,7 +317,7 @@ public class AttributeHolder {
     /**
      * Add player's attribute value (Default: Point trigger).
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
      * @param isApiAttribute    True false that where you use this function.
@@ -357,7 +357,7 @@ public class AttributeHolder {
     /**
      * Reduce attribute value (Full direction trigger).
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
      * @param isApiAttribute    True false that where you use this function.
@@ -373,7 +373,7 @@ public class AttributeHolder {
     /**
      * Reduce player's attribute value (Default: Point trigger).
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param value             Submit the new value for setter.
      * @param isApiAttribute    True false that where you use this function.

@@ -1,7 +1,7 @@
 package core.yaoquan.hanxu.api.custom;
 
 import core.yaoquan.hanxu.CoreHanXu;
-import core.yaoquan.hanxu.util.Resolver;
+import core.yaoquan.hanxu.util.tool.Resolver;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;

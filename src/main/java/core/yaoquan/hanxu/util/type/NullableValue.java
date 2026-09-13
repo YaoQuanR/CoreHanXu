@@ -1,4 +1,4 @@
-package core.yaoquan.hanxu.util;
+package core.yaoquan.hanxu.util.type;
 
 import org.jetbrains.annotations.NotNull;
 

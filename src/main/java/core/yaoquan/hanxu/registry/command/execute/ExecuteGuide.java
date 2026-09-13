@@ -2,7 +2,7 @@ package core.yaoquan.hanxu.registry.command.execute;
 
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.util.MessagePublisher;
+import core.yaoquan.hanxu.util.tool.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 

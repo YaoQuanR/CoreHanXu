@@ -257,8 +257,8 @@ boolean pass = result.isUsual();
 ```
 
 If you wish to know other compare method, please view `api.VariableHolder.java` for details.
-You are encouraged to view the exceptionable situation handling by `util.Exceptionable.java` and
-operation method handling with MethodResult by `util.MethodResult.java`.
+You are encouraged to view the exceptionable situation handling by `util.type.Exceptionable.java` and
+operation method handling with MethodResult by `util.type.MethodResult.java`.
 
 #### <5> Modify
 

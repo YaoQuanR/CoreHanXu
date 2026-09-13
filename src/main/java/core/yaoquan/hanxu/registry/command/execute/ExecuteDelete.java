@@ -4,10 +4,10 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.*;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.util.JsonReader;
-import core.yaoquan.hanxu.util.MessagePublisher;
-import core.yaoquan.hanxu.util.MethodResult;
-import core.yaoquan.hanxu.util.YamlReader;
+import core.yaoquan.hanxu.util.tool.JsonReader;
+import core.yaoquan.hanxu.util.tool.MessagePublisher;
+import core.yaoquan.hanxu.util.type.MethodResult;
+import core.yaoquan.hanxu.util.tool.YamlReader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 

@@ -1,4 +1,4 @@
-package core.yaoquan.hanxu.util;
+package core.yaoquan.hanxu.util.tool;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

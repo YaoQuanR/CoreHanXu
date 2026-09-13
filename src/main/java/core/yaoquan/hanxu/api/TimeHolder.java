@@ -5,8 +5,12 @@ import core.yaoquan.hanxu.api.custom.TimerCallback;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.QuickSendPacket;
-import core.yaoquan.hanxu.util.*;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
+import core.yaoquan.hanxu.util.tool.Converter;
+import core.yaoquan.hanxu.util.tool.Creator;
+import core.yaoquan.hanxu.util.tool.Resolver;
+import core.yaoquan.hanxu.util.type.MethodResult;
+import core.yaoquan.hanxu.util.type.NullableValue;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -110,7 +114,7 @@ public class TimeHolder {
      * You are required to define an owner of timer (or called "master") when create an instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @param durationTime      Time durations.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
@@ -157,7 +161,7 @@ public class TimeHolder {
      * You are required to define an owner of timer (or called "master") when create an instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @param durationTime      Time durations.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
@@ -175,7 +179,7 @@ public class TimeHolder {
      * Use this function to instance the template timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <ul>- Template timer not found -> "templateNotExist", timerId.</ul>
@@ -226,7 +230,7 @@ public class TimeHolder {
      * Start the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -272,7 +276,7 @@ public class TimeHolder {
      * Stop the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -299,7 +303,7 @@ public class TimeHolder {
      * Reset the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -326,7 +330,7 @@ public class TimeHolder {
      * Restart the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -344,7 +348,7 @@ public class TimeHolder {
      * Delete the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -369,7 +373,7 @@ public class TimeHolder {
      * The modified timer will NOT auto stop.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @param newTime           The new time.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.

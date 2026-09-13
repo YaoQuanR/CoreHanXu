@@ -132,6 +132,7 @@ public class BuildTimer {
                             )
                             .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.delete.timer.get()))
                     )
+            )
             .then(
                 Commands.literal("instance")
                     .then(
@@ -273,7 +274,7 @@ public class BuildTimer {
                                     )
                                     .suggests(CommandSuggest::suggestUUIDOwner)
                             )
-                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.run.timer.get())))
+                            .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.run.timer.get()))
                     )
                     .then(
                         Commands.literal("stop")

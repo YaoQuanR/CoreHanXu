@@ -177,7 +177,7 @@ public class AttributeHolder {
     /**
      * Get attribute value.
      * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link core.yaoquan.hanxu.util.tool.Resolver} for details.
+     *                          You can by checking {@link Resolver} for details.
      * @param attributeId       Unique title of attribute.
      * @param isApiAttribute    True false that where you use this function.
      * @return                  Received player value: float.

@@ -21,9 +21,9 @@ import java.util.Random;
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 /**
- * <p><b>
+ * <p><h3>
  *     Scene system API
- * </b></p>
+ * </b></h3>
  * <p>
  *     Scene system provides YAML format for user to easier execute chain commands and dialogs.
  * </p>

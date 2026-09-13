@@ -3,7 +3,6 @@ package core.yaoquan.hanxu.registry.command.execute;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.*;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.NullableValue;
 import core.yaoquan.hanxu.util.*;
@@ -50,7 +49,7 @@ public class CommandMisc {
                                                   String titleParameter, String contentParameter) {
         // Reject invalid "-me" field used by non player source.
         if ((masterString.equals("-me") || masterString.equals("-m")) && context.getSource().getPlayer() == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.invalidMeFieldUsed));
+            MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.invalidMeFieldUsed));
             return 0;
         }
 
@@ -66,20 +65,21 @@ public class CommandMisc {
 
         // Then register if time not yet created.
         switch (timeUnit) {
-            case "t", "tick", "s", "second", "m", "minute", "h", "hour":
+            case "t", "tick", "s", "second", "m", "minute", "h", "hour" -> {
                 // Then register if timer not yet created.
-                if (!TimeHolder.createInstanceTimer(masterId, timerId, timeAmount, timeUnit, callback, titleParameter, contentParameter, "core_hanxu-command")) {
-                    MessagePublisher.sendFailureMessage(context,
-                            errorComponent(TimerError.alreadyExist)
-                    );
-                    return 0;
-                }
-                else {
-                    return 1;
-                }
-            default:
+                MethodResult result = TimeHolder.createInstanceTimer(masterId, timerId, timeAmount, timeUnit, callback, titleParameter, contentParameter, "core_hanxu-command");
+                return result.matching(
+                        () -> 1,
+                        (error, info) -> {
+                            displayTimerErrorResult(context, error);
+                            return 0;
+                        }
+                );
+            }
+            default -> {
                 MessagePublisher.sendFailureMessage(context, Component.translatable("commands.core_hanxu.invalid_unit_argument"));
                 return 0;
+            }
         }
     }
 
@@ -91,15 +91,16 @@ public class CommandMisc {
 
         // Check if target master existed.
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
         switch (categoryOfOperation) {
             case "start" -> {
                 // Then start.
-                if (!TimeHolder.startInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToStart));
+                MethodResult result = TimeHolder.startInstanceTimer(masterId, timerId);
+                if (result.isFailure()) {
+                    displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -124,8 +125,9 @@ public class CommandMisc {
             }
             case "stop" -> {
                 // Then stop.
-                if (!TimeHolder.stopInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToStop));
+                MethodResult result = TimeHolder.stopInstanceTimer(masterId, timerId);
+                if (result.isFailure()) {
+                    displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -147,8 +149,9 @@ public class CommandMisc {
             }
             case "reset" -> {
                 // Then reset.
-                if (!TimeHolder.resetInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToReset));
+                MethodResult result = TimeHolder.resetInstanceTimer(masterId, timerId);
+                if (result.isFailure()) {
+                    displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -169,8 +172,9 @@ public class CommandMisc {
                 );
             }
             case "restart" -> {
-                if (!TimeHolder.restartInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToRestart));
+                MethodResult result = TimeHolder.restartInstanceTimer(masterId, timerId);
+                if (result.isFailure()) {
+                    displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -195,8 +199,10 @@ public class CommandMisc {
             }
             case "delete" -> {
                 // Then delete.
-                if (!TimeHolder.deleteInstanceTimer(masterId, timerId)) {
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.unableToDeleteInstance));
+                MethodResult result = TimeHolder.deleteInstanceTimer(masterId, timerId);
+                if (result.isFailure()) {
+                    displayTimerErrorResult(context, result.getError());
+                    return 0;
                 }
 
                 // Send success message.
@@ -210,7 +216,7 @@ public class CommandMisc {
                 );
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
+                MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.undefinedOperationCategory));
                 return 0;
             }
         }
@@ -253,12 +259,12 @@ public class CommandMisc {
 
             if (getPlayerByContext) {
                 if (targetPlayerId == null) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.missingIdField));
+                    MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.missingIdField));
                     return 0;
                 }
                 targetPlayerId = Resolver.resolveTargetPlayerName(context, targetPlayerId);
                 if (targetPlayerId == null) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
+                    MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.targetNotExist));
                     return 0;
                 }
             }
@@ -266,51 +272,43 @@ public class CommandMisc {
             // For special case.
             if (targetVariableName.equals("-self") || targetVariableName.equals("-s")) {
                 if (variableName == null) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.selfFieldInScoreIf));
+                    MessagePublisher.sendFailureMessage(context,errorComponent(VariableError.selfFieldInScoreIf));
                     return 0;
                 }
                 targetVariableName = variableName;
             }
 
             if (!VariableHolder.doesExists(targetVariableName)) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
 
-            try {
-                switch (action) {
-                    case "set" -> VariableHolder.modifyVariable(targetVariableName, target);
-                    case "add" -> VariableHolder.addNumber(targetVariableName, target);
-                    case "reduce" -> VariableHolder.reduceNumber(targetVariableName, target);
-                    case "copy_from" -> {
-                        ServerPlayer player = context.getSource().getPlayer();
-                        if (player != null) {
-                            VariableHolder.copyVariableFromScore(targetVariableName, targetPlayerId, target);
-                        }
-                    }
-                    case "copy_to" -> {
-                        ServerPlayer player = context.getSource().getPlayer();
-                        if (player != null) {
-                            VariableHolder.copyScoreFromVariable(targetVariableName, targetPlayerId, target);
-                        }
-                    }
-                    case "same" -> VariableHolder.toSameValue(targetVariableName, target);
+            MethodResult result;
+            switch (action) {
+                case "set" -> result = VariableHolder.modifyVariable(targetVariableName, target);
+                case "add" -> result = VariableHolder.addNumber(targetVariableName, target);
+                case "reduce" -> result = VariableHolder.reduceNumber(targetVariableName, target);
+                case "copy_from" -> result = VariableHolder.copyVariableFromScore(targetVariableName, targetPlayerId, target);
+                case "copy_to" -> result = VariableHolder.copyScoreFromVariable(targetVariableName, targetPlayerId, target);
+                case "mask" -> result = VariableHolder.maskVariableValue(targetVariableName, target);
+                default -> result = MethodResult.failure("undefinedOperation");
+            }
+
+            if (result.isFailure()) {
+                switch (result.getError()) {
+                    case "notExist" ->
+                        MessagePublisher.sendFailureMessage(context,errorComponent(VariableError.notExist));
+                    case "invalidType" ->
+                        MessagePublisher.sendFailureMessage(context,errorComponent(VariableError.invalidType));
+                    case "invalidCasting" ->
+                        MessagePublisher.sendFailureMessage(context,errorComponent(VariableError.invalidCasting));
+                    case "invalidScoreCasting" ->
+                        MessagePublisher.sendFailureMessage(context,errorComponent(VariableError.invalidScoreCasting));
+                    case "mismatchType" ->
+                        MessagePublisher.sendFailureMessage(context,errorComponent(VariableError.mismatchType));
+                    case "undefinedOperation" ->
+                        MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.undefinedOperationCategory));
                 }
-            }
-            catch (NullPointerException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.notExist));
-                return 0;
-            }
-            catch (NumberFormatException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(VariableError.invalidType));
-                return 0;
-            }
-            catch (IllegalStateException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.unexpected));
-                return 0;
-            }
-            catch (IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
 
@@ -472,7 +470,7 @@ public class CommandMisc {
             return 1;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.undefinedOperationCategory));
+            MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.undefinedOperationCategory));
             return 0;
         }
     }
@@ -559,7 +557,7 @@ public class CommandMisc {
             );
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(AttributeError.sameNameFound));
+            MessagePublisher.sendFailureMessage(context,errorComponent(AttributeError.sameNameFound));
         }
     }
 
@@ -589,7 +587,7 @@ public class CommandMisc {
 
     static int displayWeatherIdList(CommandContext<CommandSourceStack> context, String[] yamlList, String[] apiList) {
         if (yamlList.length == 0 && apiList.length == 0) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(WeatherError.emptyWeather));
+            MessagePublisher.sendFailureMessage(context,errorComponent(WeatherError.emptyWeather));
             return 0;
         }
 
@@ -643,7 +641,7 @@ public class CommandMisc {
 
             level = server.getLevel(dimensionKey);
             if (level == null) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(GeneralError.unknownDimension));
+                MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.unknownDimension));
                 return NullableValue.none();
             }
         }
@@ -682,5 +680,43 @@ public class CommandMisc {
                 """;
             default -> "";
         };
+    }
+
+    static void displayTimerErrorResult(CommandContext<CommandSourceStack> context, String error) {
+        switch (error) {
+            case "masterNotExist" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.masterNotExist));
+            case "timerNotExist" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
+            case "timerTimedOut" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.timerTimedOut));
+            case "playerOffline" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.playerOffline));
+            default ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
+        }
+    }
+
+    static void displayVariableErrorResult(CommandContext<CommandSourceStack> context, String error) {
+        switch (error) {
+            case "duplicated" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.duplicated));
+            case "invalidCasting" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidCasting));
+            case "notExist" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.notExist));
+            case "serverOffline" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.serverOffline));
+            case "unknownScoreObjective" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unknownScoreObjective));
+            case "invalidType" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidType));
+            case "invalidScoreCasting" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidScoreCasting));
+            case "mismatchType" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.mismatchType));
+            default ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
+        }
     }
 }

@@ -1,7 +1,6 @@
 package core.yaoquan.hanxu.registry.command.execute;
 
 import com.mojang.brigadier.context.CommandContext;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import net.minecraft.commands.CommandSourceStack;
@@ -15,11 +14,13 @@ import net.minecraft.world.item.component.WritableBookContent;
 
 import java.util.List;
 
+import static core.yaoquan.hanxu.api.define.Error.*;
+
 public class ExecuteTemplate {
     public static int executeScene_Template(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -44,7 +45,7 @@ public class ExecuteTemplate {
     public static int executeLoot_Template(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -67,7 +68,7 @@ public class ExecuteTemplate {
     public static int executeWeather_Template(CommandContext<CommandSourceStack> context, String templateType) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notPlayer));
             return 0;
         }
 

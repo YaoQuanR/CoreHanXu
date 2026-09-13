@@ -5,11 +5,8 @@ import core.yaoquan.hanxu.api.custom.TimerCallback;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.QuickSendPacket;
-import core.yaoquan.hanxu.util.NullableValue;
+import core.yaoquan.hanxu.util.*;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
-import core.yaoquan.hanxu.util.Converter;
-import core.yaoquan.hanxu.util.Creator;
-import core.yaoquan.hanxu.util.Resolver;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -33,9 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * <p><b>
+ * <p><h3>
  *     Timer system API
- * </b></p>
+ * </b></h3>
  * <p>
  *     Timer system is a system that allows Java callback or custom behavior after timer time out.
  *     This system provides API and command side support.
@@ -85,9 +82,9 @@ public class TimeHolder {
 
         // Check if callback = null (For API define).
         if (callback == null && masterGroup != null) {
-            TimerCallback timerCallback = getCallback(masterGroup);
-            if (timerCallback != null) {
-                callback = timerCallback.createCustomCallback(timerId, titleParameter, contentParameter);
+            NullableValue<TimerCallback> nullableCallback = getCallback(masterGroup);
+            if (nullableCallback.isPresent()) {
+                callback = nullableCallback.get().createCustomCallback(timerId, titleParameter, contentParameter);
             }
         }
 
@@ -118,27 +115,28 @@ public class TimeHolder {
      * @param durationTime      Time durations.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
      * @param callback          Execute callback behavior when time run out. Null when using {@link TimerCallback} overrides.
-     * @param titleParameter     If you are using command callback generator,
+     * @param titleParameter    If you are using command callback generator,
      *                          remind/execute/null is required to fill in for recreate callback.
      * @param contentParameter  Also required when using command callback,
      *                          remind: display information context; execute: command execution; null: nothing.
      * @param masterGroup       Required when rebuild callback behavior,
      *                          depends on mods definition of {@link TimerCallback}.
-     * @return                  Does the creation success: boolean.
+     * @return                  Success or failure when:
+     *                          <ul>- Timer already exist -> "alreadyExist", timerId.</ul>
      */
-    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, @Nullable Consumer<ServerPlayer> callback, String titleParameter, String contentParameter, String masterGroup) {
+    public static @NotNull MethodResult createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, @Nullable Consumer<ServerPlayer> callback, String titleParameter, String contentParameter, String masterGroup) {
         // Check if timer already existed.
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData != null && instantiatedData.containsKey(timerId)) {
-            return false;
+            return MethodResult.failure("alreadyExist", timerId);
         }
 
         // Check if callback = null (For API define).
         if (callback == null) {
             CoreHanXu.LOGGER.info("[HX] Rebuild callback from API TimerCallback.");
-            TimerCallback timerCallback = getCallback(masterGroup);
-            if (timerCallback != null) {
-                callback = timerCallback.createCustomCallback(timerId, titleParameter, contentParameter);
+            NullableValue<TimerCallback> nullableCallback = getCallback(masterGroup);
+            if (nullableCallback.isPresent()) {
+                callback = nullableCallback.get().createCustomCallback(timerId, titleParameter, contentParameter);
             }
         }
 
@@ -151,7 +149,7 @@ public class TimeHolder {
         // Then put into instance.
         instantiatedTimer.computeIfAbsent(masterId, key -> new ConcurrentHashMap<>()).put(timerId, instanceTimer);
 
-        return true;
+        return MethodResult.success();
     }
 
     /**
@@ -165,9 +163,10 @@ public class TimeHolder {
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
      * @param masterGroup       Required when rebuild callback behavior,
      *                          depends on mods definition of {@link TimerCallback}.
-     * @return                  Does the creation success: boolean.
+     * @return                  Success or failure when:
+     *                          <ul>- Timer already exist -> "alreadyExist", timerId.</ul>
      */
-    public static boolean createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, String masterGroup) {
+    public static @NotNull MethodResult createInstanceTimer(UUID masterId, String timerId, int durationTime, String timeUnit, String masterGroup) {
         return createInstanceTimer(masterId, timerId, durationTime, timeUnit, null, null, null, masterGroup);
     }
 
@@ -178,58 +177,78 @@ public class TimeHolder {
      *                          use player id/"-global"/"-temporary" to define the master.
      *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
      * @param timerId           Unique title of timer.
-     * @return                  Does the creation success: boolean.
+     * @return                  Success or failure when:
+     *                          <ul>- Template timer not found -> "templateNotExist", timerId.</ul>
+     *                          <ul>- Timer already exist -> "alreadyExist", timerId.</ul>
      */
-    public static boolean createInstanceFromTemplate(UUID masterId, String timerId) {
+    public static @NotNull MethodResult createInstanceFromTemplate(UUID masterId, String timerId) {
         TimerData templateTimerData = templateTimer.get(timerId);
         Map<String, TimerData> determineTimer = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
         
         // Check if available to copy.
         if (templateTimerData == null) {
-            return false;
+            return MethodResult.failure("templateNotExist", timerId);
         }
 
         // Check if available to put.
         if (determineTimer.containsKey(timerId)) {
-            return false;
+            return MethodResult.failure("alreadyExist", timerId);
         }
         
         // Else copy now.
         TimerData instanceTimerData = new TimerData(templateTimerData);
         instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>()).put(timerId, instanceTimerData);
         
-        return true;
+        return MethodResult.success();
     }
 
     // Method of using template timer.
-    public static boolean deleteTemplateTimer(String timerId) {
+    /**
+     * Delete template timer.
+     * @param timerId           Unique title of timer.
+     * @return                  Success or failure when:
+     *                          <li>- Timer not found -> "notExist", timerId.</li>
+     */
+    public static @NotNull MethodResult deleteTemplateTimer(String timerId) {
         TimerData timerData = templateTimer.get(timerId);
         // Stop and remove timer.
         if (timerData != null) {
             timerData.stop();
             templateTimer.remove(timerId);
-            return true;
+            return MethodResult.success();
         }
 
-        return false;
+        return MethodResult.failure("notExist", timerId);
     }
 
     // Method of using instance timer:
-    public static boolean startInstanceTimer(UUID masterId, String timerId) {
+    /**
+     * Start the instance timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @return                  Success or failure when:
+     *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
+     *                          <li>- Timer not found -> "timerNotExist", timerId.</li>
+     *                          <li>- Timer is run out of time -> "timerTimedOut", timerId.</li>
+     *                          <li>- Player offline -> "playerOffline", masterId.</li>
+     */
+    public static @NotNull MethodResult startInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         // Determine if map existed.
         if (instantiatedData == null) {
-            return false;
+            return MethodResult.failure("masterNotExist", masterId.toString());
         }
         // Else get inner data and also determine if existed.
         TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
-            return false;
+            return MethodResult.failure("timerNotExist", timerId);
         }
         // Else determine if remaining time reach to 0.
         if (timerData.getRemainingTicks() <= 0) {
-            return false;
+            return MethodResult.failure("timerTimedOut", timerId);
         }
         // Else start depend on master id.
         if (masterId.equals(General.TargetUUID.GLOBAL_UUID) || masterId.equals(General.TargetUUID.TEMPORARY_UUID)) {
@@ -241,62 +260,108 @@ public class TimeHolder {
                 ServerPlayer player = minecraftServer.getPlayerList().getPlayer(masterId);
                 if (player != null) {
                     timerData.start(player);
-                    return true;
+                    return MethodResult.success();
                 }
             }
-            return false;
+            return MethodResult.failure("playerOffline", masterId.toString());
         }
-        return true;
+        return MethodResult.success();
     }
 
-    public static boolean stopInstanceTimer(UUID masterId, String timerId) {
+    /**
+     * Stop the instance timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @return                  Success or failure when:
+     *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
+     *                          <li>- Timer not found -> "timerNotExist", timerId.</li>
+     */
+    public static @NotNull MethodResult stopInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         // Determine if map existed.
         if (instantiatedData == null) {
-            return false;
+            return MethodResult.failure("masterNotExist", masterId.toString());
         }
         // Else get inner data and also determine if existed.
         TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
-            return false;
+            return MethodResult.failure("timerNotExist", timerId);
         }
         // Else stop.
         timerData.stop();
-        return true;
+        return MethodResult.success();
     }
 
-    public static boolean resetInstanceTimer(UUID masterId, String timerId) {
+    /**
+     * Reset the instance timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @return                  Success or failure when:
+     *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
+     *                          <li>- Timer not found -> "timerNotExist", timerId.</li>
+     */
+    public static @NotNull MethodResult resetInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         // Determine if map existed.
         if (instantiatedData == null) {
-            return false;
+            return MethodResult.failure("masterNotExist", masterId.toString());
         }
         // Else get inner data and also determine if existed.
         TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
-            return false;
+            return MethodResult.failure("timerNotExist", timerId);
         }
         // Else stop.
         timerData.reset();
-        return true;
+        return MethodResult.success();
     }
 
-    public static boolean restartInstanceTimer(UUID masterId, String timerId) {
-        boolean isReset = resetInstanceTimer(masterId, timerId);
-        boolean isStart = startInstanceTimer(masterId, timerId);
-        return isReset && isStart;
+    /**
+     * Restart the instance timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @return                  Success or failure when:
+     *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
+     *                          <li>- Timer not found -> "timerNotExist", timerId.</li>
+     *                          <li>- Timer is run out of time -> "timerTimedOut", timerId.</li>
+     *                          <li>- Player offline -> "playerOffline", masterId.</li>
+     */
+    public static @NotNull MethodResult restartInstanceTimer(UUID masterId, String timerId) {
+        return resetInstanceTimer(masterId, timerId).then(
+                () -> startInstanceTimer(masterId, timerId)
+        );
     }
 
-    public static boolean deleteInstanceTimer(UUID masterId, String timerId) {
+    /**
+     * Delete the instance timer.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @return                  Success or failure when:
+     *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
+     *                          <li>- Timer not found -> "timerNotExist", timerId.</li>
+     */
+    public static @NotNull MethodResult deleteInstanceTimer(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
 
         if (instantiatedData == null) {
-            return false;
+            return MethodResult.failure("masterNotExist", masterId.toString());
         }
 
-        return instantiatedData.remove(timerId) != null;
+        if (instantiatedData.remove(timerId) == null) {
+            return MethodResult.failure("timerNotExist", timerId);
+        }
+
+        return MethodResult.success();
     }
 
     /**
@@ -310,15 +375,18 @@ public class TimeHolder {
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
      * @param category          Use it for identify what operation required to do:
      *                          "initial_time" or "remaining_time".
+     * @return                  Success or failure when:
+     *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
+     *                          <li>- Timer not found -> "timerNotExist", timerId.</li>
      */
-    public static boolean modifyInstanceTimer(UUID masterId, String timerId, int newTime, String timeUnit, ModifyCategory category) {
+    public static @NotNull MethodResult modifyInstanceTimer(UUID masterId, String timerId, int newTime, String timeUnit, ModifyCategory category) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return false;
+            return MethodResult.failure("masterNotExist", masterId.toString());
         }
         TimerData timerData = instantiatedData.get(timerId);
         if (timerData == null) {
-            return false;
+            return MethodResult.failure("timerNotExist", timerId);
         }
 
         int newTicks = Converter.convertToTicks(newTime, timeUnit);
@@ -326,7 +394,7 @@ public class TimeHolder {
         // Modify
         timerData.modify(newTicks, category);
 
-        return true;
+        return MethodResult.success();
     }
 
     // Method of getting timer's information:
@@ -486,8 +554,8 @@ public class TimeHolder {
         callbacks.put(callback.getMasterGroupId(), callback);
     }
 
-    public static TimerCallback getCallback(String modId) {
-        return callbacks.get(modId);
+    public static @NotNull NullableValue<TimerCallback> getCallback(String modId) {
+        return NullableValue.ofNullable(callbacks.get(modId));
     }
 
     public static void saveInstanceTimerForPlayer(ServerPlayer player) {
@@ -658,12 +726,14 @@ public class TimeHolder {
             return Creator.createCallback(null, timerId, titleParameter, contentParameter);
         }
         else {
-            TimerCallback callback = getCallback(masterGroup);
-            if (callback != null) {
-                return callback.createCustomCallback(timerId, titleParameter, contentParameter);
-            }
-            CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
-            return null;
+            NullableValue<TimerCallback> nullableCallback = getCallback(masterGroup);
+            return nullableCallback.matching(
+                    callback -> callback.createCustomCallback(timerId, titleParameter, contentParameter),
+                    () -> {
+                        CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
+                        return null;
+                    }
+            );
         }
     }
 

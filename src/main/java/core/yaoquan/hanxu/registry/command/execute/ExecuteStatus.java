@@ -3,13 +3,14 @@ package core.yaoquan.hanxu.registry.command.execute;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import core.yaoquan.hanxu.util.NullableValue;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecuteStatus {
     public static int executeTimer_Instance_Reset(CommandContext<CommandSourceStack> context) {
@@ -46,7 +47,7 @@ public class ExecuteStatus {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_restarted").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.alreadyActivated));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.alreadyActivated));
         }
 
         return success? 1 : 0;
@@ -62,7 +63,7 @@ public class ExecuteStatus {
         ServerLevel level = nullableLevel.get();
 
         if (!WeatherHolder.doesWeatherDefinitionExist(weatherId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
             return 0;
         }
 
@@ -72,7 +73,7 @@ public class ExecuteStatus {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_ready").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.alreadyActivated));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.alreadyActivated));
         }
 
         return success? 1 : 0;
@@ -93,7 +94,7 @@ public class ExecuteStatus {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_killed").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.onReadyOrNotFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.onReadyOrNotFound));
         }
 
         return success? 1 : 0;

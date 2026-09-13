@@ -236,7 +236,7 @@ public class CommandSuggest {
         builder.suggest("reduce");
         builder.suggest("copy_from");
         builder.suggest("copy_to");
-        builder.suggest("same");
+        builder.suggest("mask");
 
         return builder.buildFuture();
     }
@@ -246,7 +246,7 @@ public class CommandSuggest {
         builder.suggest("set");
         builder.suggest("add");
         builder.suggest("reduce");
-        builder.suggest("same");
+        builder.suggest("mask");
 
         return builder.buildFuture();
     }

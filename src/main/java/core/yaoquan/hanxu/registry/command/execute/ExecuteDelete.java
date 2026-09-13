@@ -3,33 +3,36 @@ package core.yaoquan.hanxu.registry.command.execute;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.*;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.JsonReader;
 import core.yaoquan.hanxu.util.MessagePublisher;
+import core.yaoquan.hanxu.util.MethodResult;
 import core.yaoquan.hanxu.util.YamlReader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
-import static core.yaoquan.hanxu.api.define.Error.errorComponent;
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecuteDelete {
     public static int executeTimer_Template_Delete(CommandContext<CommandSourceStack> context) {
         // Receive argument.
         String timerId = StringArgumentType.getString(context, "timer_id");
 
-        boolean isDeleted = TimeHolder.deleteTemplateTimer(timerId);
-        if (isDeleted) {
-            MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.timer_deleted")
-                            .append(Component.literal(" (" + timerId + ")"))
-                            .withColor(General.Color.TITLE)
-            );
-        } else {
-            MessagePublisher.sendFailureMessage(context, errorComponent(Error.TimerError.notExist));
-        }
-
-        return 1;
+        MethodResult result = TimeHolder.deleteTemplateTimer(timerId);
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.timer_deleted")
+                                    .append(Component.literal(" (" + timerId + ")"))
+                                    .withColor(General.Color.TITLE)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
+                    return 0;
+                }
+        );
     }
 
     public static int executeTimer_Instance_Delete(CommandContext<CommandSourceStack> context) {
@@ -47,7 +50,7 @@ public class ExecuteDelete {
             boolean worldSceneExist = SceneHolder.doesSceneExist(sceneName, YamlReader.TargetPath.TO_WORLD);
             boolean globalSceneExist = SceneHolder.doesSceneExist(sceneName, YamlReader.TargetPath.TO_GLOBAL);
             if (worldSceneExist && globalSceneExist) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.sameNameFound));
+                MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.sameNameFound));
                 return 0;
             }
             else if (worldSceneExist) {
@@ -57,7 +60,7 @@ public class ExecuteDelete {
                 specifiedPath = "global";
             }
             else {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.notFound));
+                MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.notFound));
                 return 0;
             }
         }
@@ -69,7 +72,7 @@ public class ExecuteDelete {
                                     .withColor(General.Color.CONTENT));
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.failedToDelete));
                 return 0;
             case "global":
                 if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_GLOBAL)) {
@@ -78,7 +81,7 @@ public class ExecuteDelete {
                                     .withColor(General.Color.CONTENT));
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.failedToDelete));
                 return 0;
         }
 
@@ -89,16 +92,16 @@ public class ExecuteDelete {
         String attributeId = StringArgumentType.getString(context, "attribute_id");
 
         if (AttributeHolder.getApiAttributes().containsKey(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.tryToModifyApiTarget));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.tryToModifyApiTarget));
             return 0;
         }
 
         if (!AttributeHolder.doesYamlAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
         if (!AttributeHolder.doesAttributeExist(attributeId, "command")) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -107,7 +110,7 @@ public class ExecuteDelete {
             boolean globalAttributeExist = AttributeHolder.doesYamlAttributeExist(attributeId, YamlReader.TargetPath.TO_GLOBAL);
 
             if (worldAttributeExist && globalAttributeExist) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.sameNameFound));
+                MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.sameNameFound));
                 return 0;
             }
             else if (worldAttributeExist) {
@@ -127,7 +130,7 @@ public class ExecuteDelete {
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.failedToDelete));
                 return 0;
             case "global":
                 if (AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_GLOBAL)) {
@@ -137,7 +140,7 @@ public class ExecuteDelete {
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.failedToDelete));
                 return 0;
         }
 
@@ -161,7 +164,7 @@ public class ExecuteDelete {
                 );
             }
             else {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
+                MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.notExist));
                 return 0;
             }
         }
@@ -190,7 +193,7 @@ public class ExecuteDelete {
             }
 
             if (worldTableExist && globalTableExist) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.sameNameFound));
+                MessagePublisher.sendFailureMessage(context, errorComponent(LootError.sameNameFound));
                 return 0;
             }
             else if (worldTableExist) {
@@ -200,7 +203,7 @@ public class ExecuteDelete {
                 specifiedPath = "global";
             }
             else {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.tableNotExist));
+                MessagePublisher.sendFailureMessage(context, errorComponent(LootError.tableNotExist));
                 return 0;
             }
         }
@@ -214,7 +217,7 @@ public class ExecuteDelete {
                     break;
                 }
 
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(LootError.failedToDelete));
                 return 0;
             case "global":
                 if (yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_GLOBAL) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_GLOBAL)) {
@@ -224,7 +227,7 @@ public class ExecuteDelete {
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(LootError.failedToDelete));
                 return 0;
         }
 
@@ -235,12 +238,12 @@ public class ExecuteDelete {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
         if (WeatherHolder.doesWeatherExist(weatherId, "api")) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.tryToModifyApiTarget));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.tryToModifyApiTarget));
             return 0;
         }
 
         if (!WeatherHolder.doesWeatherExist(weatherId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
             return 0;
         }
 
@@ -250,7 +253,7 @@ public class ExecuteDelete {
             globalWeatherExist = WeatherHolder.doesYamlWeatherExist(weatherId, YamlReader.TargetPath.TO_GLOBAL);
 
             if (worldWeatherExist && globalWeatherExist) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.sameNameFound));
+                MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.sameNameFound));
                 return 0;
             }
             else if (worldWeatherExist) {
@@ -260,7 +263,7 @@ public class ExecuteDelete {
                 specificPath = "global";
             }
             else {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+                MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
                 return 0;
             }
         }
@@ -272,7 +275,7 @@ public class ExecuteDelete {
                     break;
                 }
 
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.failedToDelete));
                 return 0;
             case "global":
                 if (WeatherHolder.unregisterAndDelete(weatherId, YamlReader.TargetPath.TO_GLOBAL)) {
@@ -280,7 +283,7 @@ public class ExecuteDelete {
                     break;
                 }
 
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.failedToDelete));
+                MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.failedToDelete));
                 return 0;
         }
 

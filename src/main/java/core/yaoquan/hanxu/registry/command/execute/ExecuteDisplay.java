@@ -5,7 +5,6 @@ import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.AttributeHolder;
 import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import core.yaoquan.hanxu.util.NullableValue;
@@ -17,6 +16,8 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.UUID;
 
+import static core.yaoquan.hanxu.api.define.Error.*;
+
 public class ExecuteDisplay {
     public static int executeTimer_Instance_Display(CommandContext<CommandSourceStack> context, boolean state) {
         String masterString = StringArgumentType.getString(context, "master_id");
@@ -24,7 +25,7 @@ public class ExecuteDisplay {
 
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -44,7 +45,7 @@ public class ExecuteDisplay {
     public static int executeAttribute_Display(CommandContext<CommandSourceStack> context, boolean state) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
@@ -52,7 +53,7 @@ public class ExecuteDisplay {
         String masterId = StringArgumentType.getString(context, "master_id");
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -83,7 +84,7 @@ public class ExecuteDisplay {
         ServerPlayer player = context.getSource().getPlayer();
 
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notPlayer));
             return 0;
         }
 

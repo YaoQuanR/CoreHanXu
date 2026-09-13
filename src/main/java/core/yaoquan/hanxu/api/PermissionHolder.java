@@ -9,9 +9,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * <p><b>
+ * <p><h3>
  *     Permission system API
- * </b></p>
+ * </b></h3>
  * <p>
  *     Permission system is used to handle user's permission level.
  * </p>

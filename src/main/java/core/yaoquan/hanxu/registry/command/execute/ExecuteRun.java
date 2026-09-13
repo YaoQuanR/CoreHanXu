@@ -7,7 +7,6 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.LootHolder;
 import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import core.yaoquan.hanxu.util.NullableValue;
@@ -21,6 +20,8 @@ import net.minecraft.world.Container;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.UUID;
+
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecuteRun {
     public static int executeTimer_Instance_Start(CommandContext<CommandSourceStack> context) {
@@ -61,7 +62,7 @@ public class ExecuteRun {
             SceneHolder.playScene(player, sceneName);
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.playFailed));
+            MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.playFailed));
             return 0;
         }
 
@@ -73,7 +74,7 @@ public class ExecuteRun {
 
         // Check if existed.
         if (!SceneHolder.doesSceneExist(sceneName)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.notFound));
             return 0;
         }
 
@@ -85,7 +86,7 @@ public class ExecuteRun {
             SceneHolder.playSceneToEveryone(context.getSource().getServer(), sceneName);
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.playFailed));
+            MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.playFailed));
             return 0;
         }
 
@@ -102,7 +103,7 @@ public class ExecuteRun {
         ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayerByName(playerId);
 
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -117,7 +118,7 @@ public class ExecuteRun {
 
 
         if (!success) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.tableNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(LootError.tableNotExist));
             return 0;
         }
 
@@ -141,7 +142,7 @@ public class ExecuteRun {
 
         BlockEntity blockEntity = level.getBlockEntity(position);
         if (!(blockEntity instanceof Container)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notContainer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notContainer));
             return 0;
         }
 
@@ -167,7 +168,7 @@ public class ExecuteRun {
         success = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem, guaranteed);
 
         if (!success) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.tableNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(LootError.tableNotExist));
             return 0;
         }
 
@@ -195,7 +196,7 @@ public class ExecuteRun {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_started").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
         }
 
         return success? 1 : 0;
@@ -216,7 +217,7 @@ public class ExecuteRun {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_resumed").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
         }
 
         return success? 1 : 0;
@@ -239,7 +240,7 @@ public class ExecuteRun {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_type_resumed").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
         }
 
         return success? 1 : 0;

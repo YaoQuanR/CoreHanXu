@@ -9,12 +9,8 @@ import core.yaoquan.hanxu.api.TimeHolder;
 import core.yaoquan.hanxu.api.VariableHolder;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
-import core.yaoquan.hanxu.util.Creator;
-import core.yaoquan.hanxu.util.MessagePublisher;
-import core.yaoquan.hanxu.util.NullableValue;
-import core.yaoquan.hanxu.util.Resolver;
+import core.yaoquan.hanxu.util.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -24,7 +20,7 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.UUID;
 
-import static core.yaoquan.hanxu.api.define.Error.errorComponent;
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecuteModification {
     public static int executeTimer_Instance_Modify(CommandContext<CommandSourceStack> context, String category) {
@@ -34,7 +30,7 @@ public class ExecuteModification {
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -49,24 +45,30 @@ public class ExecuteModification {
         }
 
         switch (timeUnit) {
-            case "t", "tick", "s", "second", "m", "minute", "h", "hour":
-                TimeHolder.ModifyCategory modifyCategory = category.equals("initial_time")? TimeHolder.ModifyCategory.INITIAL_TIME : TimeHolder.ModifyCategory.REMAINING_TIME;
+            case "t", "tick", "s", "second", "m", "minute", "h", "hour" -> {
+                TimeHolder.ModifyCategory modifyCategory = category.equals("initial_time") ? TimeHolder.ModifyCategory.INITIAL_TIME : TimeHolder.ModifyCategory.REMAINING_TIME;
 
-                if (TimeHolder.modifyInstanceTimer(masterId, timerId, timeAmount, timeUnit, modifyCategory)) {
-                    MessagePublisher.sendSystemMessage(context,
-                            Component.translatable("commands.chx.timer_success_modification")
-                                    .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + category + " " + timeAmount + " " + timeUnit))
-                                    .withColor(General.Color.TITLE)
-                    );
-                    return 1;
-                }
-                else {
-                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.TimerError.notExist));
-                    return 0;
-                }
-            default:
+                MethodResult result = TimeHolder.modifyInstanceTimer(masterId, timerId, timeAmount, timeUnit, modifyCategory);
+                String thisTimeUnit = timeUnit;
+                return result.matching(
+                        () -> {
+                            MessagePublisher.sendSystemMessage(context,
+                                    Component.translatable("commands.chx.timer_success_modification")
+                                            .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + category + " " + timeAmount + " " + thisTimeUnit))
+                                            .withColor(General.Color.TITLE)
+                            );
+                            return 1;
+                        },
+                        (error, info) -> {
+                            CommandMisc.displayTimerErrorResult(context, error);
+                            return 0;
+                        }
+                );
+            }
+            default -> {
                 MessagePublisher.sendFailureMessage(context, Component.translatable("commands.core_hanxu.invalid_unit_argument"));
                 return 0;
+            }
         }
     }
 
@@ -86,7 +88,7 @@ public class ExecuteModification {
         UUID masterId = Resolver.resolveTargetUUID(context, playerId);
 
         if (masterId == null && !(playerId.equals("-all") || playerId.equals("-a"))) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -96,12 +98,12 @@ public class ExecuteModification {
         }
 
         if (player == null && !(playerId.equals("-all") || playerId.equals("-a"))) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -197,7 +199,7 @@ public class ExecuteModification {
             return 1;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
     }
@@ -207,7 +209,7 @@ public class ExecuteModification {
         String finalCallbackId;
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -215,7 +217,7 @@ public class ExecuteModification {
 
         NullableValue<AttributeHolder.CustomAttribute> nullableAttribute = AttributeHolder.getAttributeDefinition(attributeId, isApiAttribute);
         if (nullableAttribute.isNull()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -223,7 +225,7 @@ public class ExecuteModification {
 
         if (category.equals("simple")) {
             if (attribute.doesRecoveryRegistered() && isApiAttribute) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.tryToOverrideApiRecovery));
+                MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.tryToOverrideApiRecovery));
                 return 0;
             }
 
@@ -265,7 +267,7 @@ public class ExecuteModification {
                 case "m", "minute" -> interval *= (20 * 60);
                 case "h", "hour" -> interval *= (20 * 3600);
                 default -> {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.invalidUnitArgument));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.invalidUnitArgument));
                     return 0;
                 }
             }
@@ -289,7 +291,7 @@ public class ExecuteModification {
             String callbackId = StringArgumentType.getString(context, "callback_id");
 
             if (!BehaviorRegistry.isRegistered(callbackId)) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.tryToRegisterUnExistApiRecovery));
+                MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.tryToRegisterUnExistApiRecovery));
                 return 0;
             }
 
@@ -309,7 +311,7 @@ public class ExecuteModification {
             finalCallbackId = callbackId;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationCategory));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationCategory));
             return 0;
         }
 
@@ -340,14 +342,14 @@ public class ExecuteModification {
                 callbackId = StringArgumentType.getString(context, "callback_id");
             }
             catch (IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.missingIdField));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.missingIdField));
                 return 0;
             }
         }
 
         NullableValue<AttributeHolder.CustomAttribute> nullableAttribute = AttributeHolder.getCommandAttribute(attributeId);
         if (nullableAttribute.isNull()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -385,7 +387,7 @@ public class ExecuteModification {
                 finalCallbackId = callbackId;
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationId));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationId));
                 return 0;
             }
         }
@@ -406,49 +408,45 @@ public class ExecuteModification {
         String newValue = StringArgumentType.getString(context, "new_value");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.notExist));
             return 0;
         }
 
         NullableValue<String> nullableType = VariableHolder.getType(variableName);
         if (nullableType.isNull()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidType));
             return 0;
         }
 
-        try {
-            switch (category) {
-                case "set" -> VariableHolder.modifyVariable(variableName, newValue);
-                case "add" -> VariableHolder.addNumber(variableName, newValue);
-                case "reduce" -> VariableHolder.reduceNumber(variableName, newValue);
-                case "same" -> {
-                    if (newValue.equals("-self") || newValue.equals("-s")) {
-                        newValue = variableName;
-                    }
-                    VariableHolder.toSameValue(variableName, newValue);
+        MethodResult result;
+        switch (category) {
+            case "set" -> result = VariableHolder.modifyVariable(variableName, newValue);
+            case "add" -> result = VariableHolder.addNumber(variableName, newValue);
+            case "reduce" -> result = VariableHolder.reduceNumber(variableName, newValue);
+            case "mask" -> {
+                if (newValue.equals("-self") || newValue.equals("-s")) {
+                    newValue = variableName;
                 }
-                default -> {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationCategory));
+                result = VariableHolder.maskVariableValue(variableName, newValue);
+            }
+            default -> result = MethodResult.failure("undefinedOperation");
+        }
+
+        String thisNewValue = newValue;
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.variable_modified")
+                                    .append(" " + variableName + " " + category + " " + thisNewValue + " = " + VariableHolder.getStringFrom(variableName).getOrElse("?"))
+                                    .withColor(General.Color.CONTENT)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandMisc.displayVariableErrorResult(context, error);
                     return 0;
                 }
-            }
-        }
-        catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
-            return 0;
-        }
-        catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
-            return 0;
-        }
-
-        MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx.variable_modified")
-                        .append(" " + variableName + " " + category + " " + newValue + " = " + VariableHolder.getStringFrom(variableName).getOrElse("?"))
-                        .withColor(General.Color.CONTENT)
         );
-
-        return 1;
     }
 
     public static int executeVariable_Copy(CommandContext<CommandSourceStack> context, boolean copyFromScore) {
@@ -457,7 +455,7 @@ public class ExecuteModification {
         String scoreName = StringArgumentType.getString(context, "score_name");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.notExist));
             return 0;
         }
 
@@ -471,85 +469,73 @@ public class ExecuteModification {
         }
 
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
+        MethodResult result;
         if (copyFromScore) {
-            try {
-                VariableHolder.copyVariableFromScore(variableName, player.getScoreboardName(), scoreName);
-            }
-            catch (NumberFormatException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
-                return 0;
-            }
-            catch (NullPointerException | IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
-                return 0;
-            }
-            catch (IllegalStateException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.unexpected));
-                return 0;
-            }
+            result = VariableHolder.copyVariableFromScore(variableName, player.getScoreboardName(), scoreName);
 
-            MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.variable_copy_from_score")
-                            .append(" " + variableName + " <- " + scoreName)
-                            .withColor(General.Color.SUCCESS)
+            return result.matching(
+                    () -> {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.variable_copy_from_score")
+                                        .append(" " + variableName + " <- " + scoreName)
+                                        .withColor(General.Color.SUCCESS)
+                        );
+                        return 1;
+                    },
+                    (error, info) -> {
+                        CommandMisc.displayVariableErrorResult(context, error);
+                        return 0;
+                    }
             );
         }
         else {
-            try {
-                VariableHolder.copyScoreFromVariable(variableName, player.getScoreboardName(), scoreName);
-            }
-            catch (NumberFormatException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
-                return 0;
-            }
-            catch (NullPointerException | IllegalArgumentException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
-                return 0;
-            }
-            catch (IllegalStateException e) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.unexpected));
-                return 0;
-            }
+            result = VariableHolder.copyScoreFromVariable(variableName, player.getScoreboardName(), scoreName);
 
-            MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.variable_copy_to_score")
-                            .append(" " + variableName + " -> " + scoreName)
-                            .withColor(General.Color.SUCCESS)
+            return result.matching(
+                    () -> {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.variable_copy_to_score")
+                                        .append(" " + variableName + " -> " + scoreName)
+                                        .withColor(General.Color.SUCCESS)
+                        );
+                        return 1;
+                    },
+                    (error, info) -> {
+                        CommandMisc.displayVariableErrorResult(context, error);
+                        return 0;
+                    }
             );
         }
-
-        return 1;
     }
 
     public static int executeVariable_String(CommandContext<CommandSourceStack> context, String category) {
         String variableName = StringArgumentType.getString(context, "variable_name");
 
-        try {
-            switch (category) {
-                case "to_lower" -> VariableHolder.stringToLowerCase(variableName);
-                case "to_upper" -> VariableHolder.stringToUpperCase(variableName);
-                default -> {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationCategory));
+        MethodResult result;
+        switch (category) {
+            case "to_lower" -> result = VariableHolder.stringToLowerCase(variableName);
+            case "to_upper" -> result = VariableHolder.stringToUpperCase(variableName);
+            default -> result = MethodResult.failure("undefinedOperation");
+        }
+
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.variable_case")
+                                    .append(Component.literal(" " + VariableHolder.getStringFrom(variableName).getOrElse("?")))
+                                    .withColor(General.Color.CONTENT)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandMisc.displayVariableErrorResult(context, error);
                     return 0;
                 }
-            }
-        }
-        catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
-            return 0;
-        }
-
-        MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx.variable_case")
-                        .append(Component.literal(" " + VariableHolder.getStringFrom(variableName).getOrElse("?")))
-                        .withColor(General.Color.CONTENT)
         );
-
-        return 1;
     }
 
     public static int executeWeather_Modify(CommandContext<CommandSourceStack> context, String category) {
@@ -578,7 +564,7 @@ public class ExecuteModification {
             );
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
         }
 
         return success? 1 : 0;

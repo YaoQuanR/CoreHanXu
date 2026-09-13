@@ -32,9 +32,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import static core.yaoquan.hanxu.api.define.Error.*;
 
 /**
- * <p><b>
+ * <p><h3>
  *     Attribute system API
- * </b></p>
+ * </b></h3>
  * <p>
  *     Attribute system is a heavy system that storage value, threshold behavior,
  *     zero callback, and recovery system.
@@ -236,7 +236,7 @@ public class AttributeHolder {
         float newValue = Math.min(attribute.getMaximum(), Math.max(value, 0.0f));
 
         if (Float.compare(currentValue, newValue) == 0) {
-            return false;
+            return true;
         }
 
         Map<String, Float> values = attributeValues
@@ -300,41 +300,111 @@ public class AttributeHolder {
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, isApiAttribute, ThresholdDirection.POINT);
     }
 
+    /**
+     * Add global's attribute value (Full direction trigger).
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @param direction         Define the trigger type for threshold callbacks.
+     *                          You can by checking {@link ThresholdDirection} for details.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue + value, isApiAttribute, direction);
     }
 
+    /**
+     * Add player's attribute value (Default: Point trigger).
+     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue + value, isApiAttribute, ThresholdDirection.POINT);
     }
 
+    /**
+     * Add global's attribute value (Full direction trigger).
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @param direction         Define the trigger type for threshold callbacks.
+     *                          You can by checking {@link ThresholdDirection} for details.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, isApiAttribute, direction);
     }
 
+    /**
+     * Add global's attribute value (Default: Point trigger).
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, isApiAttribute, ThresholdDirection.POINT);
     }
 
+    /**
+     * Reduce attribute value (Full direction trigger).
+     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @param direction         Define the trigger type for threshold callbacks.
+     *                          You can by checking {@link ThresholdDirection} for details.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue - Math.abs(value), isApiAttribute, direction);
     }
 
+    /**
+     * Reduce player's attribute value (Default: Point trigger).
+     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
+     *                          You can by checking {@link core.yaoquan.hanxu.util.Resolver} for details.
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue - Math.abs(value), isApiAttribute, ThresholdDirection.POINT);
     }
 
+    /**
+     * Reduce global's attribute value (Full direction trigger).
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @param direction         Define the trigger type for threshold callbacks.
+     *                          You can by checking {@link ThresholdDirection} for details.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), isApiAttribute, direction);
     }
 
+    /**
+     * Reduce global's attribute value (Default: Point trigger).
+     * @param attributeId       Unique title of attribute.
+     * @param value             Submit the new value for setter.
+     * @param isApiAttribute    True false that where you use this function.
+     * @return                  Does the setter success: boolean.
+     */
     public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), isApiAttribute, ThresholdDirection.POINT);

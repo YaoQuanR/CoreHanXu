@@ -144,13 +144,19 @@ Instanceof: Determine if this value is in the specific type.
 String name "sus";
 String compareType = "string";
 
-boolean isInstanceof;
-try {
-    inInstanceof = VariableHolder.doesInstanceof(name, compareType);
+// The API returns a result that contains usual/except situation.
+Exceptionable<Boolean> result = VariableHolder.doesInstanceof(name, compareType);
+
+// Handle the exceptionable situation that refer to the method.
+if (result.isExcept()) {
+    switch (result.getError()) {
+        case "notExist" -> {}
+        case "invalidType -> {}
+    }
 }
-catch (NumberFormatException e) {
-    // If you provided invalid compare type, it will throw error.
-}
+
+// Get the boolean result.
+boolean pass = result.getUsual();
 ```
 
 Contain: Compare that your provided value is match the part of the variable value.
@@ -159,17 +165,16 @@ Contain: Compare that your provided value is match the part of the variable valu
 String name = "unknown_string";
 String compareValue = "valid:";
 
-boolean contained;
-try {
-    // Example: Variable value = "valid:yes" -> compare value = "valid:" -> contains "valid:"? yes -> true.
-    contained = VariableHolder.doesContains(name, compareValue);
+Exceptionable<Boolean> result;
+// Example: Variable value = "valid:yes" -> compare value = "valid:" -> contains "valid:"? yes -> true.
+result = VariableHolder.doesContains(name, compareValue);
+
+if (result.isExcept()) {
+    // Refer to the method to handle the except situation.
 }
-catch (NullPointerException e) {
-    // Throw error if this value does not existed or empty value.
-}
-catch (NumberFormatException e) {
-    // Throw error if value not have a type or invalid type.
-}
+
+// Get the result after handling except.
+boolean contained = result.getUsual();
 ```
 
 Length equal: Compare that if this value's length equals to the compare length.
@@ -178,14 +183,16 @@ Length equal: Compare that if this value's length equals to the compare length.
 String name = "long_string";
 int length = 10;
 
-boolean equal;
-try {
-    // Example: Variable value = "100496712" -> length = 9 != compare length = 10 -> false.
-    equal = VariableHolder.doesLengthEquals(name, length);
+Exceptionable<Boolean> result;
+// Example: Variable value = "100496712" -> length = 9 != compare length = 10 -> false.
+result = VariableHolder.doesLengthEquals(name, length);
+
+if (result.isExcept()) {
+    // Refer to the method to handle the except situation.
 }
-// Same to others.
-catch (NullPointerException ignored) {}
-catch (NumberFormatException ignored) {}
+
+// Get the result after handling except.
+boolean equal = result.isUsual();
 ```
 
 Equal: Compare that if this value absolutely equals to variable value.
@@ -194,14 +201,16 @@ Equal: Compare that if this value absolutely equals to variable value.
 String name = "value";
 String compareValue = "VALUE";
 
-boolean equal;
-try {
-    // Example: Variable value = "VALUE" -> exactly equal to "VALUE" -> true.
-    equal = VariableHolder.doesEquals(name, compareValue);
+Exceptionable<Boolean> result;
+// Example: Variable value = "VALUE" -> exactly equal to "VALUE" -> true.
+result = VariableHolder.doesEquals(name, compareValue);
+
+if (result.isExcept()) {
+    // Refer to the method to handle the except situation.
 }
-// Same to others.
-catch (NullPointerException ignored) {}
-catch (NumberFormatException ignored) {}
+
+// Get the result after handling except.
+boolean equal = result.isUsual();
 ```
 
 Approximate equal: Base on the feature of float/double, if you compare them with exactly number,
@@ -213,15 +222,17 @@ String name = "float_value";
 float compareValue = 2.5f;      // If compare with double value, use double.
 float bias = 0.001f;            // Determine what bias can be acceptable to consider as equal.
 
-boolean equal;
-try {
-    equal = VariableHolder.doesFloatApproximateEquals(name, compareValue, bias);
-    // Same to:
-    // equal = VariableHolder.doesDoubleApproximateEqual("double_value", 2.5d, 0.001d);
+Exceptionable<Boolean> result;
+result = VariableHolder.doesApproximateEquals(name, compareValue, bias);
+// Same to:
+// result = VariableHolder.doesApproximateEqual("double_value", 2.5d, 0.001d);
+
+if (result.isExcept()) {
+    // Refer to the method to handle the except situation.
 }
-// Same to others.
-catch (NullPointerException ignored) {}
-catch (NumberFormatException ignored) {}
+
+// Get the result after handling except.
+boolean equal = result.isUsual();
 ```
 
 Greater/Smaller: Determine if **compare value** is greater/smaller than **existing variable value**.
@@ -231,47 +242,55 @@ String name = "integer_value";
 String compareValue = 10;
 boolean includedEqual = false;  // Set true to include as <=/>=.
 
-boolean pass;
-try {
-    // Example: Compare value = 10, Variable value = 2 -> Compare value > Variable value -> does greater than existing? yes -> true.
-    pass = VariableHolder.doesGreaterThanExisting(name, compareValue, includedEqual);
-    // Same to:
-    // pass = VariableHolder.doesSmallerThanExisting(name, compareValue, includedEqual);
+Exceptionable<Boolean> result;
+// Example: Compare value = 10, Variable value = 2 -> Variable value < Compare value? yes -> true.
+result = VariableHolder.doesVariableSmaller(name, compareValue, includedEqual);
+// Same to:
+// result = VariableHolder.doesVariableGreater(name, compareValue, includedEqual);
+
+if (result.isExcept()) {
+    // Refer to the method to handle the except situation.
 }
-// Same to others.
-catch (NullPointerException ignored) {}
-catch (NumberFormatException ignored) {}
+
+// Get the result after handling except.
+boolean pass = result.isUsual();
 ```
 
 If you wish to know other compare method, please view `api.VariableHolder.java` for details.
+You are encouraged to view the exceptionable situation handling by `util.Exceptionable.java` and
+operation method handling with MethodResult by `util.MethodResult.java`.
 
 #### <5> Modify
 
 You can mask a new value by:
 ```
-try {
-    String name = "integer_value";
-    // Cast your value to string first.
-    String newValue = "10";
+String name = "integer_value";
+// Cast your value to string first.
+String newValue = "10";
     
-    VariableHolder.modifyVariable(name, newValue);
+MethodResult result = VariableHolder.modifyVariable(name, newValue);
+
+// Catch the error by result.
+if (result.isFailure()) {
+    // Logic.
 }
-catch (NullPointerException ignored) {}
-catch (NumberFormatException ignored) {}
 ```
 
 Or you can add/reduce the number by:
 ```
-try {
-    String name = "float_value";
-    String value = "15.5";
-    
-    VariableHolder.addNumber(name, value);
-    // Same to:
-    // VariableHolder.reduceNumber(name, value);
+String name = "float_value";
+String value = "15.5";
+
+// You should ensure the value in number format, otherwise it will failure.
+
+MethodResult result = VariableHolder.addNumber(name, value);
+// Same to:
+// VariableHolder.reduceNumber(name, value);
+
+// Catch the error by result.
+if (result.isFailure()) {
+    // Logic.
 }
-catch (NullPointerException ignored) {}
-catch (NumberFormatException ignored) {}
 ```
 
 #### <6> Scoreboard operations
@@ -286,20 +305,27 @@ String playerId = "player1";
 // The scoreboard name.
 String scoreName = "dummy_value";
 
-try {
-    VariableHolder.copyVariableFromScore(name, playerId, scoreName);
-}
-catch (NullPointerException e) {
-    // Throw when value not found.
-}
-catch (NumberFormatException e) {
-    // Throw when value not supported the variable type.
-}
-catch (IllegalStateException e) {
-    // Throw when Minecraft server not start.
-}
-catch (IllegalArgumentException e) {
-    // Throw when scoreboard objective not found.
+MethodResult result = VariableHolder.copyVariableFromScore(name, playerId, scoreName);
+
+// It contains 5 failure situation.
+if (result.isFailure()) {
+    switch (result.getError()) {
+        case "notExist" -> {
+            // When variable not registered.
+        }
+        case "serverOffline" -> {
+            // When server offline.
+        }
+        case "unknownScoreObjective" -> {
+            // When score name cannot used to redirect the scoreboard object.
+        }
+        case "invalidType" -> {
+            // When the variable type is not valid.
+        }
+        case "invalidScoreCasting" -> {
+            // When the score value unable to cast to boolean due to out of range (0 ~ 1).
+        }
+    }
 }
 ```
 ```
@@ -309,20 +335,24 @@ String playerId = "player1";
 // The scoreboard name.
 String scoreName = "sanity";
 
-try {
-    VariableHolder.copyScoreFromVariable(name, playerId, scoreName);
-}
-catch (NullPointerException e) {
-    // Throw when value not found.
-}
-catch (NumberFormatException e) {
-    // Throw when value not supported the variable type.
-}
-catch (IllegalStateException e) {
-    // Throw when Minecraft server not start.
-}
-catch (IllegalArgumentException e) {
-    // Throw when scoreboard objective not found.
+MethodResult result = VariableHolder.copyScoreFromVariable(name, playerId, scoreName);
+
+// Simular but contains only 4 failure.
+if (result.isFailure()) {
+    switch (result.getError()) {
+        case "notExist" -> {
+            // When variable not registered.
+        }
+        case "serverOffline" -> {
+            // When server offline.
+        }
+        case "unknownScoreObjective" -> {
+            // When score name cannot used to redirect the scoreboard object.
+        }
+        case "invalidType" -> {
+            // When the variable type is not valid.
+        }
+    }
 }
 ```
 

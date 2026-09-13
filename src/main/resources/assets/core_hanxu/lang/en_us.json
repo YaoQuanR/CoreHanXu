@@ -219,6 +219,8 @@
   "commands.chx.timer_already_exist": "[HX] Timer has already exist!",
   "commands.chx.timer_not_exist": "[HX] Timer does not exist!",
   "commands.chx.timer_not_exist_or_already_instantiated": "[HX] Timer not exist or already instantiated!",
+  "commands.chx.timer_master_not_exist": "[HX] Master of timer does not exist!",
+  "commands.chx.timer_timed_out": "[HX] The timer has timed out.",
   "commands.chx.timer_unable_to_start": "[HX] Unable to start timer, check if target offline, run off, or not exist!",
   "commands.chx.timer_unable_to_stop": "[HX] Unable to stop timer, check if targeted timer exist!",
   "commands.chx.timer_unable_to_reset": "[HX] Unable to reset timer, check if targeted timer exist!",
@@ -304,9 +306,13 @@
 
   "commands.chx.variable_already_exist": "[HX] This variable are already exist!",
   "commands.chx.variable_invalid_type": "[HX] Invalid type used to storage/compare this variable!",
+  "commands.chx.variable_invalid_casting": "[HX] Failed to cast the inputted string to the specific type!",
+  "commands.chx.variable_invalid_score_casting": "[HX] Failed to cast the score value to boolean!",
   "commands.chx.variable_empty_variable": "[HX] Not yet created any variable!",
   "commands.chx.variable_not_exist": "[HX] This variable does not exist!",
   "commands.chx.variable_self_field_in_score_if": "[HX] Function 'if score' cannot get 'self' to scoreboard name!",
+  "commands.chx.variable_duplicated": "[HX] Rejected to override a variable without force override!",
+  "commands.chx.variable_mismatch_type": "[HX] Mismatch type between target value and reference value!",
 
   "commands.chx.loot_list_title": "[HX] Loot file found:",
   "commands.chx.loot_give": "[HX] Successfully gave loot to player:",
@@ -350,10 +356,12 @@
   "commands.chx.weather_same_name_found": "[HX] Two same name weather found! Provide specific path component and try again.",
   "commands.chx.weather_failed_to_delete": "[HX] Weather has failed to delete!",
 
+  "commands.core_hanxu.server_offline": "[HX] Server offline!",
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",
   "commands.core_hanxu.uneditable_player_permission": "[HX] Uneditable player permission! Config:player_permission_editable is false.",
   "commands.core_hanxu.exceed_maximum_permission_level": "[HX] Permission level cannot exceed 10.",
   "commands.core_hanxu.not_player": "[HX] Only player are allowed to use this command.",
+  "commands.core_hanxu.player_offline": "[HX] Player offline!",
   "commands.core_hanxu.not_yet_agreed": "[HX] Accept the license '/chx license agree' and re-execute this command again.",
   "commands.core_hanxu.invalid_unit_argument": "[HX] Invalid unit argument used!",
   "commands.core_hanxu.invalid_selector_used": "[HX] Invalid selector used!",
@@ -370,6 +378,7 @@
   "commands.core_hanxu.invalid_me_field_used": "[HX] Invalid -me field used!",
   "commands.core_hanxu.invalid_field_for_name": "[HX] Invalid field for name used: Start with '-'/'@'.",
   "commands.core_hanxu.unexpected": "[HX] Unexpected error!",
+  "commands.core_hanxu.unknown_score_objective": "[HX] Unknown score objective from score name!",
   "commands.core_hanxu.not_container": "[HX] This position is not targeted to a container!",
   "commands.core_hanxu.unknown_dimension": "[HX] Unknown dimension!",
 

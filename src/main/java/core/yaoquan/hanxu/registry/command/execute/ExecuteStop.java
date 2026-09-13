@@ -3,13 +3,14 @@ package core.yaoquan.hanxu.registry.command.execute;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import core.yaoquan.hanxu.util.NullableValue;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecuteStop {
     public static int executeTimer_Instance_Stop(CommandContext<CommandSourceStack> context) {
@@ -34,7 +35,7 @@ public class ExecuteStop {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_paused").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.onReadyOrNotFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.onReadyOrNotFound));
         }
 
         return success? 1 : 0;
@@ -57,7 +58,7 @@ public class ExecuteStop {
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_type_resumed").withColor(General.Color.SUCCESS));
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.onReadyOrNotFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.onReadyOrNotFound));
         }
 
         return success? 1 : 0;

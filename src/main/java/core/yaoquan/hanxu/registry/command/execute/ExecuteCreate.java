@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static core.yaoquan.hanxu.api.define.Error.errorComponent;
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecuteCreate {
     public static int executeTimer_Instance_Apply(CommandContext<CommandSourceStack> context) {
@@ -43,25 +43,32 @@ public class ExecuteCreate {
         // Determine if target exist.
         if (targetUUID == null) {
             MessagePublisher.sendFailureMessage(context,
-                Error.errorComponent(Error.GeneralError.targetNotExist)
+               errorComponent(Error.GeneralError.targetNotExist)
             );
             return 0;
         }
 
         // Determine if template timer exist and if instance timer exist, then register (Copy).
-        if (TimeHolder.createInstanceFromTemplate(targetUUID, templateTimerId)) {
-            MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx.timer_instantiated")
-                    .append(Component.literal(" " + templateTimerId + " -> " + displayTarget))
-                    .withColor(General.Color.SUCCESS)
-            );
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, errorComponent(Error.TimerError.notExistOrAlreadyInstantiated));
-            return 0;
-        }
-
-        return 1;
+        MethodResult result = TimeHolder.createInstanceFromTemplate(targetUUID, templateTimerId);
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.timer_instantiated")
+                                    .append(Component.literal(" " + templateTimerId + " -> " + displayTarget))
+                                    .withColor(General.Color.SUCCESS)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    switch (error) {
+                        case "templateNotExist" ->
+                            MessagePublisher.sendFailureMessage(context, errorComponent(Error.TimerError.notExistOrAlreadyInstantiated));
+                        case "alreadyExist" ->
+                            MessagePublisher.sendFailureMessage(context, errorComponent(Error.TimerError.alreadyExist));
+                    }
+                    return 0;
+                }
+        );
     }
 
     public static int executeTimer_Template_Create(CommandContext<CommandSourceStack> context, String titleParameter) {
@@ -203,21 +210,21 @@ public class ExecuteCreate {
     public static int executeScene_Create(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notPlayer));
             return 0;
         }
 
         String toPath = StringArgumentType.getString(context, "to_path");
 
         if (!toPath.equals("world") && !toPath.equals("global")) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.undefinedSavePath));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedSavePath));
             return 0;
         }
 
         // Then read book from player's main hand.
         ItemStack book = player.getMainHandItem();
         if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.mainHandItemNotTarget));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.mainHandItemNotTarget));
             return 0;
         }
 
@@ -232,25 +239,25 @@ public class ExecuteCreate {
 
         String yamlContent = YamlReader.read(book);
         if (yamlContent == null || yamlContent.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.noContentFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.noContentFound));
             return 0;
         }
 
         String sceneId = YamlReader.readSpecificField(yamlContent, "id");
         if (sceneId.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.missingIdField));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.missingIdField));
             return 0;
         }
 
         YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
 
         if (SceneHolder.doesSceneExist(sceneId, targetPath)) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.SceneError.alreadyExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.alreadyExist));
             return 0;
         }
 
         if (!yamlContent.contains("type:") || !yamlContent.contains("dialogs:")) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.uncompletedContent));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.uncompletedContent));
             return 0;
         }
 
@@ -265,7 +272,7 @@ public class ExecuteCreate {
             );
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.failedToSave));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.SceneError.failedToSave));
             return 0;
         }
 
@@ -311,85 +318,87 @@ public class ExecuteCreate {
         String variableValue = StringArgumentType.getString(context, "variable_value");
 
         if (VariableHolder.doesExists(variableName) && !override) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.alreadyExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.alreadyExist));
             return 0;
         }
 
         if (override) {
             NullableValue<String> nullableType = VariableHolder.getType(variableName);
             if (nullableType.isNull()) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
+                MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.invalidType));
                 return 0;
             }
 
             String actualType = nullableType.get();
 
             if (!actualType.equals(variableType)) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
+                MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.invalidType));
                 return 0;
             }
         }
 
         if (variableName.startsWith("-") || variableName.startsWith("@")) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.invalidFieldForName));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.invalidFieldForName));
             return 0;
         }
 
-        if (VariableHolder.createVariable(variableName, variableType, variableValue, override)) {
-            MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.variable_created")
-                            .append(" " + variableType + " " + variableName + " <<- " + variableValue)
-                            .withColor(General.Color.SUCCESS)
-            );
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
-            return 0;
-        }
-
-        return 1;
+        MethodResult result = VariableHolder.createVariable(variableName, variableType, variableValue, override);
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.variable_created")
+                                    .append(" " + variableType + " " + variableName + " <<- " + variableValue)
+                                    .withColor(General.Color.SUCCESS)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandMisc.displayVariableErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 
     public static int executeLoot_Create(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.notPlayer));
             return 0;
         }
 
         String toPath = StringArgumentType.getString(context, "to_path");
         if (!toPath.equals("world") && !toPath.equals("global")) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedSavePath));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.undefinedSavePath));
             return 0;
         }
 
         ItemStack book = player.getMainHandItem();
         if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.mainHandItemNotTarget));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.mainHandItemNotTarget));
             return 0;
         }
 
         String yamlContent = YamlReader.read(book);
         if (yamlContent == null || yamlContent.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.noContentFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.noContentFound));
             return 0;
         }
 
         String tableId = YamlReader.readSpecificField(yamlContent, "id");
         if (tableId.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.missingIdField));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.missingIdField));
             return 0;
         }
 
         YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
 
         if (LootHolder.doesFileLootTableExists(tableId, targetPath)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.alreadyExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.LootError.alreadyExist));
             return 0;
         }
 
         if (!yamlContent.contains("pools:")) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.uncompletedContent));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.uncompletedContent));
             return 0;
         }
 
@@ -403,7 +412,7 @@ public class ExecuteCreate {
             );
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.failedToSave));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.LootError.failedToSave));
             return 0;
         }
 
@@ -413,43 +422,43 @@ public class ExecuteCreate {
     public static int executeWeather_Create(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.notPlayer));
             return 0;
         }
 
         String toPath = StringArgumentType.getString(context, "to_path");
         if (!toPath.equals("world") && !toPath.equals("global")) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedSavePath));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.undefinedSavePath));
             return 0;
         }
 
         ItemStack book = player.getMainHandItem();
         if (book.isEmpty() || (!book.is(Items.WRITABLE_BOOK) && !book.is(Items.WRITTEN_BOOK))) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.mainHandItemNotTarget));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.mainHandItemNotTarget));
             return 0;
         }
 
         String yamlContent = YamlReader.read(book);
         if (yamlContent == null || yamlContent.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.noContentFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.noContentFound));
             return 0;
         }
 
         String weatherId = YamlReader.readSpecificField(yamlContent, "id");
         if (weatherId.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.missingIdField));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.missingIdField));
             return 0;
         }
 
         YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
 
         if (WeatherHolder.doesWeatherExist(weatherId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.alreadyExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.WeatherError.alreadyExist));
             return 0;
         }
 
         if (!yamlContent.contains("type:")) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.uncompletedContent));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.uncompletedContent));
             return 0;
         }
 
@@ -465,7 +474,7 @@ public class ExecuteCreate {
             WeatherHolder.registerYamlWeather(weatherId);
         }
         catch (Exception e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.WeatherError.failedToSave));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.WeatherError.failedToSave));
             return 0;
         }
 

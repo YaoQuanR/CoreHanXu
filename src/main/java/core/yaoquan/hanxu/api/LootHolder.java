@@ -72,7 +72,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import static core.yaoquan.hanxu.api.define.Error.errorString;
 
 /**
- * Loot system API
+ * <p><h3>
+ *     Loot system API
+ * </h3></p>
  * @since 0.6.0 (Internal Development)
  */
 public class LootHolder {

@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.VariableHolder;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.util.Exceptionable;
 import core.yaoquan.hanxu.util.MessagePublisher;
 import core.yaoquan.hanxu.util.Resolver;
 import net.minecraft.commands.CommandSourceStack;
@@ -15,6 +16,8 @@ import net.minecraft.server.ServerScoreboard;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ScoreHolder;
 
+import static core.yaoquan.hanxu.api.define.Error.*;
+
 public class ExecuteCondition {
     public static int executeVariable_If_Value(CommandContext<CommandSourceStack> context, String category) {
         String variableName = StringArgumentType.getString(context, "variable_name");
@@ -22,43 +25,56 @@ public class ExecuteCondition {
         String compareValue = StringArgumentType.getString(context, "compare_value");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.notExist));
             return 0;
         }
 
-        boolean success;
-        try {
-            switch (compareSign) {
-                // [Existing value (Variable)] {Sign} [Compare value] but method opposites: [Compare value] {Sign} [Existing value].
-                case "=", "==" -> success = VariableHolder.doesEquals(variableName, compareValue);
-                case "!=", "≠" -> success = VariableHolder.doesNotEquals(variableName, compareValue);
-                case ">" -> success = VariableHolder.doesSmallerThanExisting(variableName, compareValue, false);
-                case ">=", "≥" -> success = VariableHolder.doesSmallerOrEqualThanExisting(variableName, compareValue);
-                case "<" -> success = VariableHolder.doesGreaterThanExisting(variableName, compareValue, false);
-                case "<=", "≤" -> success = VariableHolder.doesGreaterOrEqualThanExisting(variableName, compareValue);
-                case "instanceof" -> success = VariableHolder.doesInstanceof(variableName, compareValue);
-                case "contains" -> success = VariableHolder.doesContains(variableName, compareValue);
-                case "length" -> {
-                    int length = Integer.parseInt(compareValue);
-                    success = VariableHolder.doesLengthEquals(variableName, length);
+        Exceptionable<Boolean> result;
+        switch (compareSign) {
+            // [Existing value (Variable)] {Sign} [Compare value].
+            case "=", "==" -> result = VariableHolder.doesEquals(variableName, compareValue);
+            case "!=", "≠" -> result = VariableHolder.doesDifference(variableName, compareValue);
+            case ">" -> result = VariableHolder.doesVariableGreater(variableName, compareValue, false);
+            case ">=", "≥" -> result = VariableHolder.doesVariableAtLeast(variableName, compareValue);
+            case "<" -> result = VariableHolder.doesVariableSmaller(variableName, compareValue, false);
+            case "<=", "≤" -> result = VariableHolder.doesVariableAtMost(variableName, compareValue);
+            case "instanceof" -> result = VariableHolder.doesInstanceof(variableName, compareValue);
+            case "contains" -> result = VariableHolder.doesContains(variableName, compareValue);
+            case "length" -> {
+                int length;
+                try {
+                    length = Integer.parseInt(compareValue);
                 }
-                case "starts_with" -> success = VariableHolder.doesStartsWith(variableName, compareValue);
-                case "ends_with" -> success = VariableHolder.doesEndsWith(variableName, compareValue);
-                default -> {
-                    MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.undefinedOperationCategory));
-                    return 0;
+                catch (NumberFormatException e) {
+                    result = Exceptionable.exception("invalidCasting");
+                    break;
                 }
+                result = VariableHolder.doesLengthEquals(variableName, length);
+            }
+            case "starts_with" -> result = VariableHolder.doesStartsWith(variableName, compareValue);
+            case "ends_with" -> result = VariableHolder.doesEndsWith(variableName, compareValue);
+            default -> {
+                MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.undefinedOperationCategory));
+                return 0;
             }
         }
-        catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.VariableError.notExist));
-            return 0;
-        } catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
+
+        boolean pass;
+        if (result.isExcept()) {
+            switch (result.getError()) {
+                case "notExist" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.notExist));
+                case "invalidType" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.invalidType));
+                case "invalidCasting" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.invalidCasting));
+            }
             return 0;
         }
 
-        if (!success) {
+        pass = result.getUsual();
+
+        if (!pass) {
             // Failed to pass comparison.
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_failed_comparison").withColor(General.Color.CONTENT));
             return 1;
@@ -77,7 +93,7 @@ public class ExecuteCondition {
         ServerScoreboard scoreboard = server.getScoreboard();
         Objective objective = scoreboard.getObjective(scoreName);
         if (objective == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.unexpected));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.unexpected));
             return 0;
         }
 
@@ -104,16 +120,16 @@ public class ExecuteCondition {
                 case "starts_with" -> success = String.valueOf(scoreValue).startsWith(String.valueOf(compareValue));
                 case "ends_with" -> success = String.valueOf(scoreValue).endsWith(String.valueOf(compareValue));
                 default -> {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationCategory));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.undefinedOperationCategory));
                     return 0;
                 }
             }
         }
         catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.notExist));
             return 0;
         } catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.invalidType));
             return 0;
         }
 
@@ -132,30 +148,27 @@ public class ExecuteCondition {
         String compareValue = StringArgumentType.getString(context, "compare_value");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.notExist));
             return 0;
         }
 
         // This method only accept format: /chx variable margin_equals [variable_name] % [margin_value] {=/==} [compare_value] ...
-        boolean success;
-        try {
-            success = VariableHolder.doesMarginEquals(variableName, marginValue, compareValue);
-        }
-        catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
-            return 0;
-        }
-        catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.invalidType));
-            return 0;
-        }
+        Exceptionable<Boolean> result = VariableHolder.doesMarginEquals(variableName, marginValue, compareValue);
 
-        if (!success) {
-            // Failed to pass comparison.
-            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_failed_comparison").withColor(General.Color.CONTENT));
-            return 1;
-        }
-
-        return CommandMisc.commandVariableExecution(context, variableName, category);
+        return result.matching(
+                success -> {
+                    if (success) {
+                        return CommandMisc.commandVariableExecution(context, variableName, category);
+                    }
+                    else {
+                        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_failed_comparison").withColor(General.Color.CONTENT));
+                        return 1;
+                    }
+                },
+                (error, info) -> {
+                    CommandMisc.displayVariableErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 }

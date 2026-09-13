@@ -4,7 +4,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.PermissionHolder;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.util.MessagePublisher;
@@ -17,6 +16,8 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Random;
 import java.util.UUID;
+
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecutePermission {
     public static int executePermission_Check(CommandContext<CommandSourceStack> context, String target) {
@@ -64,7 +65,7 @@ public class ExecutePermission {
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + autoAuthorizedPermissionLevel).withColor(General.Color.TITLE));
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationCategory));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationCategory));
                 return 0;
             }
         }
@@ -81,7 +82,7 @@ public class ExecutePermission {
                 player = context.getSource().getPlayer();
             }
             else {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.notPlayer));
                 return 0;
             }
         }
@@ -91,7 +92,7 @@ public class ExecutePermission {
         else {
             player = server.getPlayerList().getPlayerByName(playerId);
             if (player == null) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
         }
@@ -99,14 +100,14 @@ public class ExecutePermission {
         int newLevel = IntegerArgumentType.getInteger(context, "level");
 
         if (newLevel > 10) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.exceedMaximumPermissionLevel));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.exceedMaximumPermissionLevel));
             return 0;
         }
 
         boolean editable = GeneralConfig.setEditablePlayerPermission.getAsBoolean();
 
         if (!editable) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.uneditablePlayerPermission));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.uneditablePlayerPermission));
             return 0;
         }
 

@@ -9,6 +9,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
+import static core.yaoquan.hanxu.api.define.Error.*;
+
 public class ExecuteConfirmation {
     public static int executeLicense_Agree(CommandContext<CommandSourceStack> context) {
         if (context.getSource().getEntity() instanceof Player player) {
@@ -18,11 +20,11 @@ public class ExecuteConfirmation {
                     .putBoolean("core.yaoquan.hanxu.agreed_license", true);
             }
             else {
-                MessagePublisher.sendFailureMessage(context, core.yaoquan.hanxu.api.define.Error.errorComponent(core.yaoquan.hanxu.api.define.Error.GeneralError.licenseAlreadyAgreed));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.licenseAlreadyAgreed));
             }
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.notPlayer));
+            MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.notPlayer));
         }
         return 1;
     }

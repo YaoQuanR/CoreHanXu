@@ -7,6 +7,8 @@ public class Error {
         alreadyExist,
         notExist,
         notExistOrAlreadyInstantiated,
+        masterNotExist,
+        timerTimedOut,
         unableToStart,
         unableToStop,
         unableToReset,
@@ -41,9 +43,13 @@ public class Error {
     public enum VariableError {
         alreadyExist,
         invalidType,
+        invalidCasting,
+        invalidScoreCasting,
         emptyVariable,
         notExist,
         selfFieldInScoreIf,
+        duplicated,
+        mismatchType,
     }
 
     public enum LootError {
@@ -68,10 +74,12 @@ public class Error {
     }
 
     public enum GeneralError {
+        serverOffline,
         licenseAlreadyAgreed,
         uneditablePlayerPermission,
         exceedMaximumPermissionLevel,
         notPlayer,
+        playerOffline,
         notYetAgreed,
         invalidUnitArgument,
         invalidSelectorUsed,
@@ -87,6 +95,7 @@ public class Error {
         invalidMeFieldUsed,
         invalidFieldForName,
         unexpected,
+        unknownScoreObjective,
         notContainer,
         unknownDimension,
     }
@@ -105,6 +114,8 @@ public class Error {
             case alreadyExist -> Component.translatable("commands.chx.timer_already_exist");
             case notExist -> Component.translatable("commands.chx.timer_not_exist");
             case notExistOrAlreadyInstantiated -> Component.translatable("commands.chx.timer_not_exist_or_already_instantiated");
+            case masterNotExist -> Component.translatable("commands.chx.timer_master_not_exist");
+            case timerTimedOut -> Component.translatable("commands.chx.timer_timed_out");
             case unableToStart -> Component.translatable("commands.chx.timer_unable_to_start");
             case unableToStop -> Component.translatable("commands.chx.timer_unable_to_stop");
             case unableToReset -> Component.translatable("commands.chx.timer_unable_to_reset");
@@ -148,9 +159,13 @@ public class Error {
         return switch (variableError) {
             case alreadyExist -> Component.translatable("commands.chx.variable_already_exist");
             case invalidType -> Component.translatable("commands.chx.variable_invalid_type");
+            case invalidCasting -> Component.translatable("commands.chx.variable_invalid_casting");
+            case invalidScoreCasting -> Component.translatable("commands.chx.variable_invalid_score_casting");
             case emptyVariable -> Component.translatable("commands.chx.variable_empty_variable");
             case notExist -> Component.translatable("commands.chx.variable_not_exist");
             case selfFieldInScoreIf -> Component.translatable("commands.chx.variable_self_field_in_score_if");
+            case duplicated -> Component.translatable("commands.chx.variable_duplicated");
+            case mismatchType -> Component.translatable("commands.chx.variable_mismatch_type");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }
@@ -184,10 +199,12 @@ public class Error {
 
     public static Component errorComponent(GeneralError generalError) {
         return switch (generalError) {
+            case serverOffline -> Component.translatable("commands.core_hanxu.server_offline");
             case licenseAlreadyAgreed -> Component.translatable("commands.core_hanxu.license_already_agreed");
             case uneditablePlayerPermission -> Component.translatable("commands.core_hanxu.uneditable_player_permission");
             case exceedMaximumPermissionLevel -> Component.translatable("commands.core_hanxu.exceed_maximum_permission_level");
             case notPlayer -> Component.translatable("commands.core_hanxu.not_player");
+            case playerOffline -> Component.translatable("commands.core_hanxu.player_offline");
             case notYetAgreed -> Component.translatable("commands.core_hanxu.not_yet_agreed");
             case invalidUnitArgument -> Component.translatable("commands.core_hanxu.invalid_unit_argument");
             case invalidSelectorUsed -> Component.translatable("commands.core_hanxu.invalid_selector_used");
@@ -203,6 +220,7 @@ public class Error {
             case invalidMeFieldUsed -> Component.translatable("commands.core_hanxu.invalid_me_field_used");
             case invalidFieldForName -> Component.translatable("commands.core_hanxu.invalid_field_for_name");
             case unexpected -> Component.translatable("commands.core_hanxu.unexpected");
+            case unknownScoreObjective -> Component.translatable("commands.core_hanxu.unknown_score_objective");
             case notContainer -> Component.translatable("commands.core_hanxu.not_container");
             case unknownDimension -> Component.translatable("commands.core_hanxu.unknown_dimension");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");

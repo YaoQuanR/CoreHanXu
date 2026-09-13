@@ -4,6 +4,8 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.api.define.SaveDat;
+import core.yaoquan.hanxu.util.Exceptionable;
+import core.yaoquan.hanxu.util.MethodResult;
 import core.yaoquan.hanxu.util.NullableValue;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
@@ -13,7 +15,9 @@ import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ScoreHolder;
+import net.minecraft.world.scores.Scoreboard;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.CheckReturnValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -24,9 +28,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * <p><b>
+ * <p><h3>
  *     Variable System API
- * </b></p>
+ * </b></h3>
  * <p>
  *     Variable system is a light weighted variable storage system for cross system work.
  *     It contains variable type (As similar to Java class) and variable value.
@@ -74,15 +78,19 @@ public class VariableHolder {
     /**
      * Create a new variable.
      * @param variableName          Defined id of this variable.
-     * @param variableType          Valid type (Same as Java data class) for variable.
+     * @param variableType          Valid type (Same as Java data class) for variable,
+     *                              which contains <b>string, integer, boolean, float, double, long</b>.
      * @param variableValue         Defined value of this variable.
      * @param override              Rewrite value when set to true.
-     * @return                      Does the creation success: boolean.
+     * @return                      Success of failure when:
+     *                              <li>- Using duplicated variable without force override -> "duplicated", variableName.</li>
+     *                              <li>- Failed to casting the inputted string to a valid type -> "invalidCasting", variableValue.</li>
+     *                              <li>- Casting to invalid type -> "invalidType", variableType.</li>
      */
-    public static boolean createVariable(String variableName, String variableType, String variableValue, boolean override) {
+    public static @NotNull MethodResult createVariable(String variableName, String variableType, String variableValue, boolean override) {
         if (registeredVariables.contains(variableName) && !override) {
             CoreHanXu.LOGGER.warn("[HX] Rejected override variable: {}", variableName);
-            return false;
+            return MethodResult.failure("duplicated", variableName);
         }
 
         CoreHanXu.LOGGER.info("[HX] Creating variable: {} in type: {}", variableName, variableType);
@@ -100,7 +108,7 @@ public class VariableHolder {
                 }
                 catch (NumberFormatException e) {
                     CoreHanXu.LOGGER.warn("[HX] Invalid integer variable value: {}", variableValue);
-                    return false;
+                    return MethodResult.failure("invalidCasting", variableValue);
                 }
             }
             case "boolean", "bool", "Boolean" -> {
@@ -113,7 +121,7 @@ public class VariableHolder {
                         value = variableValue.equalsIgnoreCase("1");
                     }
                     else {
-                        return false;
+                        return MethodResult.failure("invalidCasting", variableValue);
                     }
 
                     registeredVariables.add(variableName);
@@ -121,7 +129,7 @@ public class VariableHolder {
                 }
                 catch (NumberFormatException e) {
                     CoreHanXu.LOGGER.warn("[HX] Invalid boolean variable value: {}", variableValue);
-                    return false;
+                    return MethodResult.failure("invalidCasting", variableValue);
                 }
             }
             case "float", "Float" -> {
@@ -132,7 +140,7 @@ public class VariableHolder {
                 }
                 catch (NumberFormatException e) {
                     CoreHanXu.LOGGER.warn("[HX] Invalid float variable value: {}", variableValue);
-                    return false;
+                    return MethodResult.failure("invalidCasting", variableValue);
                 }
             }
             case "double", "Double" -> {
@@ -143,7 +151,7 @@ public class VariableHolder {
                 }
                 catch (NumberFormatException e) {
                     CoreHanXu.LOGGER.warn("[HX] Invalid double variable value: {}", variableValue);
-                    return false;
+                    return MethodResult.failure("invalidCasting", variableValue);
                 }
             }
             case "long", "Long" -> {
@@ -154,15 +162,15 @@ public class VariableHolder {
                 }
                 catch (NumberFormatException e) {
                     CoreHanXu.LOGGER.warn("[HX] Invalid long variable value: {}", variableValue);
-                    return false;
+                    return MethodResult.failure("invalidCasting", variableValue);
                 }
             }
             default -> {
-                return false;
+                return MethodResult.failure("invalidType", variableType);
             }
         }
 
-        return true;
+        return MethodResult.success();
     }
 
     /**
@@ -198,6 +206,10 @@ public class VariableHolder {
         longVariables.clear();
     }
 
+    /**
+     * Receive a map that storage cast string of all variable.
+     * @return                      Map of all variable.
+     */
     public static Map<String, String> getAllVariableAsString() {
         Map<String, String> allVariableAsString = new HashMap<>(stringVariables);
 
@@ -224,6 +236,13 @@ public class VariableHolder {
         return allVariableAsString;
     }
 
+    /**
+     * Receive a variable type string for operations.
+     * @param variableName          Defined id of this variable.
+     * @return                      A nullable value that return when:
+     *                              <li>- Registered variable with valid type -> Contains a presented string.</li>
+     *                              <li>- Variable not found in valid type -> None.</li>
+     */
     public static @NotNull NullableValue<String> getType(String variableName) {
         if (stringVariables.containsKey(variableName)) {
             return NullableValue.ofNotNull("string");
@@ -246,6 +265,13 @@ public class VariableHolder {
         return NullableValue.none();
     }
 
+    /**
+     * Receive a variable value as string.
+     * @param variableName          Define id of this variable.
+     * @return                      A nullable value that return when:
+     *                              <li>- Registered variable with valid type -> Contains a presented string.</li>
+     *                              <li>- Variable not found in valid type -> None.</li>
+     */
     public static @NotNull NullableValue<String> getStringFrom(String variableName) {
         if (stringVariables.containsKey(variableName)) {
             return NullableValue.ofNullable(stringVariables.get(variableName));
@@ -268,6 +294,15 @@ public class VariableHolder {
         return NullableValue.none();
     }
 
+    /**
+     * Receive a variable value by name and type.
+     * @param variableName          Define id of this variable.
+     * @param variableType          Valid type (Same as Java data class) for variable,
+     *                              which contains <b>string, integer, boolean, float, double, long</b>.
+     * @return                      A nullable value that return when:
+     *                              <li>- Registered variable with valid type -> Contains a presented object.</li>
+     *                              <li>- Variable not found in valid type -> None.</li>
+     */
     public static @NotNull NullableValue<Object> getObjectFrom(String variableName, String variableType) {
         switch (variableType) {
             case "string", "str", "String" -> {
@@ -294,6 +329,13 @@ public class VariableHolder {
         }
     }
 
+    /**
+     * Receive a variable value by name and type.
+     * @param variableName          Define id of this variable.
+     * @return                      A nullable value that return when:
+     *                              <li>- Registered variable with valid type -> Contains a presented object.</li>
+     *                              <li>- Variable not found in valid type -> None.</li>
+     */
     public static @NotNull NullableValue<Object> getObjectFrom(String variableName) {
         if (!registeredVariables.contains(variableName)) {
             return NullableValue.none();
@@ -319,436 +361,745 @@ public class VariableHolder {
         return NullableValue.none();
     }
 
+    /**
+     * Determine if the variable is registered.
+     * @param variableName          Define id of this variable.
+     * @return                      Does it exist: boolean.
+     */
     public static boolean doesExists(String variableName) {
         return registeredVariables.contains(variableName);
     }
 
-    public static boolean doesInstanceof(String variableName, String compareType) throws NumberFormatException {
-        switch (compareType) {
-            case "string", "str", "String" -> {
-                return stringVariables.containsKey(variableName);
-            }
-            case "integer", "int", "Integer" -> {
-                return integerVariables.containsKey(variableName);
-            }
-            case "boolean", "bool", "Boolean" -> {
-                return booleanVariables.containsKey(variableName);
-            }
-            case "float", "Float" -> {
-                return floatVariables.containsKey(variableName);
-            }
-            case "double", "Double" -> {
-                return doubleVariables.containsKey(variableName);
-            }
-            case "long", "Long" -> {
-                return longVariables.containsKey(variableName);
-            }
-            default -> throw new NumberFormatException();
-        }
-    }
-
-    public static boolean doesContains(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the variable if an instance of the specific type.
+     * @param variableName          Define id of this variable.
+     * @param compareType           Valid type (Same as Java data class) for variable,
+     *                              which contains <b>string, integer, boolean, float, double, long</b>.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesInstanceof(String variableName, String compareType) {
         if (!registeredVariables.contains(variableName)) {
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
-
-        String value = getStringFrom(variableName).getOrThrow(NullPointerException::new);
-
-        return value.contains(compareValue);
+        return switch (compareType) {
+            case "string", "str", "String" ->
+                    Exceptionable.usual(stringVariables.containsKey(variableName));
+            case "integer", "int", "Integer" ->
+                    Exceptionable.usual(integerVariables.containsKey(variableName));
+            case "boolean", "bool", "Boolean" ->
+                    Exceptionable.usual(booleanVariables.containsKey(variableName));
+            case "float", "Float" ->
+                    Exceptionable.usual(floatVariables.containsKey(variableName));
+            case "double", "Double" ->
+                    Exceptionable.usual(doubleVariables.containsKey(variableName));
+            case "long", "Long" ->
+                    Exceptionable.usual(longVariables.containsKey(variableName));
+            default ->
+                    Exceptionable.exception("invalidType", compareType);
+        };
     }
 
-    public static boolean doesLengthEquals(String variableName, int length) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the variable if containing a specific string content.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          The content of the reference for the string part matching.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesContains(String variableName, String compareValue) {
+        if (!registeredVariables.contains(variableName)) {
+            return Exceptionable.exception("notExist", variableName);
+        }
+
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
+        }
+
+        return getStringFrom(variableName).matching(
+                value -> Exceptionable.usual(value.contains(compareValue)),
+                () -> Exceptionable.exception("notExist", variableName)
+        );
+    }
+
+    /**
+     * Compare the variable if reaches the specific length.
+     * @param variableName          Define id of this variable.
+     * @param length                Integer value for length compilation.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesLengthEquals(String variableName, int length) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to compare 'length' for unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
-
-        switch (variableType) {
-            case "string" -> {
-                return stringVariables.get(variableName).length() == length;
-            }
-            case "integer" -> {
-                return Integer.toString(integerVariables.get(variableName)).length() == length;
-            }
-            case "float" -> {
-                return Float.toString(floatVariables.get(variableName)).length() == length;
-            }
-            case "double" -> {
-                return Double.toString(doubleVariables.get(variableName)).length() == length;
-            }
-            case "long" -> {
-                return Long.toString(longVariables.get(variableName)).length() == length;
-            }
-            default -> throw new NumberFormatException();
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
         }
+        String variableType = nullableType.get();
+
+        return switch (variableType) {
+            case "string" ->
+                    Exceptionable.usual(stringVariables.get(variableName).length() == length);
+            case "integer" ->
+                    Exceptionable.usual(Integer.toString(integerVariables.get(variableName)).length() == length);
+            case "float" ->
+                    Exceptionable.usual(Float.toString(floatVariables.get(variableName)).length() == length);
+            case "double" ->
+                    Exceptionable.usual(Double.toString(doubleVariables.get(variableName)).length() == length);
+            case "long" ->
+                    Exceptionable.usual(Long.toString(longVariables.get(variableName)).length() == length);
+            default ->
+                    Exceptionable.exception("invalidType", variableName);
+        };
     }
 
-    public static boolean doesEquals(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the variable if equals to referenced variable.
+     * It will cast the compare value to exactly same type of variable for compilation.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          The content of the reference to compare if completely equals.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- This compare value is invalid type format for compilation -> Exception: "invalidCasting", compareValue.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesEquals(String variableName, String compareValue) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'equals' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
-        switch (variableType) {
-            case "string" -> {
-                return stringVariables.get(variableName).equals(compareValue);
-            }
-            case "integer" -> {
-                return integerVariables.get(variableName) == Integer.parseInt(compareValue);
-            }
-            case "boolean" -> {
-                return booleanVariables.get(variableName) == Boolean.parseBoolean(compareValue);
-            }
-            case "float" -> {
-                return floatVariables.get(variableName) == Float.parseFloat(compareValue);
-            }
-            case "double" -> {
-                return doubleVariables.get(variableName) == Double.parseDouble(compareValue);
-            }
-            case "long" -> {
-                return longVariables.get(variableName) == Long.parseLong(compareValue);
-            }
-            default -> throw new NumberFormatException();
+        try {
+            return switch (variableType) {
+                case "string" ->
+                        Exceptionable.usual(stringVariables.get(variableName).equals(compareValue));
+                case "integer" ->
+                        Exceptionable.usual(integerVariables.get(variableName) == Integer.parseInt(compareValue));
+                case "boolean" ->
+                        Exceptionable.usual(booleanVariables.get(variableName) == Boolean.parseBoolean(compareValue));
+                case "float" ->
+                        Exceptionable.usual(floatVariables.get(variableName) == Float.parseFloat(compareValue));
+                case "double" ->
+                        Exceptionable.usual(doubleVariables.get(variableName) == Double.parseDouble(compareValue));
+                case "long" ->
+                        Exceptionable.usual(longVariables.get(variableName) == Long.parseLong(compareValue));
+                default ->
+                        Exceptionable.exception("invalidType", variableName);
+            };
+        }
+        catch (NumberFormatException e) {
+            return Exceptionable.exception("invalidCasting", compareValue);
         }
     }
 
-    public static boolean doesFloatApproximateEquals(String variableName, float compareValue, float bias) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the float value if they are equals within the bias of floating value.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          Float value to compare.
+     * @param bias                  Bias that considers equals when within the bias different.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesApproximateEquals(String variableName, float compareValue, float bias) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'approximate equals' unexist float variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
         if (variableType.equals("float")) {
-            return Math.max(floatVariables.get(variableName), compareValue) - Math.min(floatVariables.get(variableName), compareValue) < bias;
+            return Exceptionable.usual(Math.max(floatVariables.get(variableName), compareValue) - Math.min(floatVariables.get(variableName), compareValue) < bias);
         }
         else {
-            throw new NumberFormatException();
+            return Exceptionable.exception("invalidType", variableName);
         }
     }
 
-    public static boolean doesDoubleApproximateEquals(String variableName, double compareValue, double bias) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the double value if they are equals within the bias of floating value.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          Double value to compare.
+     * @param bias                  Bias that considers equals when within the bias different.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesApproximateEquals(String variableName, double compareValue, double bias) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'approximate equals' unexist double variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
         if (variableType.equals("double")) {
-            return Math.max(doubleVariables.get(variableName), compareValue) - Math.min(doubleVariables.get(variableName), compareValue) < bias;
+            return Exceptionable.usual(Math.max(doubleVariables.get(variableName), compareValue) - Math.min(doubleVariables.get(variableName), compareValue) < bias);
         }
         else {
-            throw new NumberFormatException();
+            return Exceptionable.exception("invalidType", variableName);
         }
     }
 
-    public static boolean doesGreaterThanExisting(String variableName, String compareValue, boolean includedEqual) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the variable if it is smaller than compare value.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          Number to compare.
+     * @param includedEqual         Determine if considers equal situation.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- The compare value is not a number for cast for compilation -> Exception: "invalidCasting", compareValue.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesVariableSmaller(String variableName, String compareValue, boolean includedEqual) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to compare 'greater than' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
-        switch (variableType) {
-            case "integer" -> {
-                if (includedEqual) {
-                    return Integer.parseInt(compareValue) >= integerVariables.get(variableName);
+        try {
+            switch (variableType) {
+                case "integer" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Integer.parseInt(compareValue) >= integerVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Integer.parseInt(compareValue) > integerVariables.get(variableName));
+                    }
                 }
-                else {
-                    return Integer.parseInt(compareValue) > integerVariables.get(variableName);
+                case "float" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Float.parseFloat(compareValue) >= floatVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Float.parseFloat(compareValue) > floatVariables.get(variableName));
+                    }
+                }
+                case "double" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Double.parseDouble(compareValue) >= doubleVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Double.parseDouble(compareValue) > doubleVariables.get(variableName));
+                    }
+                }
+                case "long" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Long.parseLong(compareValue) >= longVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Long.parseLong(compareValue) > longVariables.get(variableName));
+                    }
+                }
+                default -> {
+                    return Exceptionable.exception("invalidType", variableName);
                 }
             }
-            case "float" -> {
-                if (includedEqual) {
-                    return Float.parseFloat(compareValue) >= floatVariables.get(variableName);
-                }
-                else {
-                    return Float.parseFloat(compareValue) > floatVariables.get(variableName);
-                }
-            }
-            case "double" -> {
-                if (includedEqual) {
-                    return Double.parseDouble(compareValue) >= doubleVariables.get(variableName);
-                }
-                else {
-                    return Double.parseDouble(compareValue) > doubleVariables.get(variableName);
-                }
-            }
-            case "long" -> {
-                if (includedEqual) {
-                    return Long.parseLong(compareValue) >= longVariables.get(variableName);
-                }
-                else {
-                    return Long.parseLong(compareValue) > longVariables.get(variableName);
-                }
-            }
-            default -> throw new NumberFormatException();
+        }
+        catch (NumberFormatException e) {
+            return Exceptionable.exception("invalidCasting", compareValue);
         }
     }
 
-    public static boolean doesSmallerThanExisting(String variableName, String compareValue, boolean includedEqual) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the variable if it is greater than compare value.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          Number to compare.
+     * @param includedEqual         Determine if considers equal situation.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- The compare value is not a number for cast for compilation -> Exception: "invalidCasting", compareValue.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesVariableGreater(String variableName, String compareValue, boolean includedEqual) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to compare 'smaller than' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
-        switch (variableType) {
-            case "integer" -> {
-                if (includedEqual) {
-                    return Integer.parseInt(compareValue) <= integerVariables.get(variableName);
+        try {
+            switch (variableType) {
+                case "integer" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Integer.parseInt(compareValue) <= integerVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Integer.parseInt(compareValue) < integerVariables.get(variableName));
+                    }
                 }
-                else {
-                    return Integer.parseInt(compareValue) < integerVariables.get(variableName);
+                case "float" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Float.parseFloat(compareValue) <= floatVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Float.parseFloat(compareValue) < floatVariables.get(variableName));
+                    }
+                }
+                case "double" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Double.parseDouble(compareValue) <= doubleVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Double.parseDouble(compareValue) < doubleVariables.get(variableName));
+                    }
+                }
+                case "long" -> {
+                    if (includedEqual) {
+                        return Exceptionable.usual(Long.parseLong(compareValue) <= longVariables.get(variableName));
+                    } else {
+                        return Exceptionable.usual(Long.parseLong(compareValue) < longVariables.get(variableName));
+                    }
+                }
+                default -> {
+                    return Exceptionable.exception("invalidType", variableName);
                 }
             }
-            case "float" -> {
-                if (includedEqual) {
-                    return Float.parseFloat(compareValue) <= floatVariables.get(variableName);
-                }
-                else {
-                    return Float.parseFloat(compareValue) < floatVariables.get(variableName);
-                }
-            }
-            case "double" -> {
-                if (includedEqual) {
-                    return Double.parseDouble(compareValue) <= doubleVariables.get(variableName);
-                }
-                else {
-                    return Double.parseDouble(compareValue) < doubleVariables.get(variableName);
-                }
-            }
-            case "long" -> {
-                if (includedEqual) {
-                    return Long.parseLong(compareValue) <= longVariables.get(variableName);
-                }
-                else {
-                    return Long.parseLong(compareValue) < longVariables.get(variableName);
-                }
-            }
-            default -> throw new NumberFormatException();
+        }
+        catch (NumberFormatException e) {
+            return Exceptionable.exception("invalidCasting", compareValue);
         }
     }
 
-    public static boolean doesGreaterOrEqualThanExisting(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
-        return doesGreaterThanExisting(variableName, compareValue, true);
+    /**
+     * Compare the variable if it is smaller than compare value.
+     * Which is considers the equal situation.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          Number to compare.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- The compare value is not a number for cast for compilation -> Exception: "invalidCasting", compareValue.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesVariableAtMost(String variableName, String compareValue) {
+        return doesVariableSmaller(variableName, compareValue, true);
     }
 
-    public static boolean doesSmallerOrEqualThanExisting(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
-        return doesSmallerThanExisting(variableName, compareValue, true);
+    /**
+     * Compare the variable if it is greater than compare value.
+     * Which is considers the equal situation.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          Number to compare.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- The compare value is not a number for cast for compilation -> Exception: "invalidCasting", compareValue.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesVariableAtLeast(String variableName, String compareValue) {
+        return doesVariableGreater(variableName, compareValue, true);
     }
 
-    public static boolean doesNotEquals(String variableName, String compareValue) throws NullPointerException, NumberFormatException {
-        return !doesEquals(variableName, compareValue);
+    /**
+     * Compare the variable in reverse result of {@link #doesEquals(String, String)}.
+     * It will cast the compare value to exactly same type of variable for compilation.
+     * @param variableName          Define id of this variable.
+     * @param compareValue          The content of the reference to compare if completely equals.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- This compare value is invalid type format for compilation -> Exception: "invalidCasting", compareValue.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesDifference(String variableName, String compareValue) {
+        return doesEquals(variableName, compareValue).matching(
+                result -> Exceptionable.usual(!result),
+                Exceptionable::exception
+        );
     }
 
-    public static boolean doesMarginEquals(String variableName, String marginValue, String compareValue) throws NullPointerException, NumberFormatException {
+    /**
+     * Compare the variable if its remainder from divide is equals to the compare value.
+     * @param variableName          Define id of this variable.
+     * @param marginValue           Number that for divide the variable value.
+     * @param compareValue          Compare value that compare by the remainder.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- This margin/compare value is invalid type format for compilation -> Exception: "invalidCasting", "{@code marginValue} or {@code compareValue}".</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesMarginEquals(String variableName, String marginValue, String compareValue) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'margin equals' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
-        switch (variableType) {
-            case "integer" -> {
-                return integerVariables.get(variableName) % Integer.parseInt(marginValue) == Integer.parseInt(compareValue);
+        try {
+            switch (variableType) {
+                case "integer" -> {
+                    return Exceptionable.usual(integerVariables.get(variableName) % Integer.parseInt(marginValue) == Integer.parseInt(compareValue));
+                }
+                case "float" -> {
+                    float biasMargin = floatVariables.get(variableName) % Float.parseFloat(marginValue);
+                    return Exceptionable.usual(Math.max(biasMargin, Float.parseFloat(compareValue)) - Math.min(biasMargin, Float.parseFloat(compareValue)) < 0.0001f);
+                }
+                case "double" -> {
+                    double biasMargin = doubleVariables.get(variableName) % Double.parseDouble(marginValue);
+                    return Exceptionable.usual(Math.max(biasMargin, Double.parseDouble(compareValue)) - Math.min(biasMargin, Double.parseDouble(compareValue)) < 0.0001d);
+                }
+                case "long" -> {
+                    return Exceptionable.usual(longVariables.get(variableName) % Long.parseLong(marginValue) == Long.parseLong(compareValue));
+                }
+                default -> {
+                    return Exceptionable.exception("invalidType", variableName);
+                }
             }
-            case "float" -> {
-                float biasMargin = floatVariables.get(variableName) % Float.parseFloat(marginValue);
-                return Math.max(biasMargin, Float.parseFloat(compareValue)) - Math.min(biasMargin, Float.parseFloat(compareValue)) < 0.0001f;
-            }
-            case "double" -> {
-                double biasMargin = doubleVariables.get(variableName) % Double.parseDouble(marginValue);
-                return Math.max(biasMargin, Double.parseDouble(compareValue)) - Math.min(biasMargin, Double.parseDouble(compareValue)) < 0.0001d;
-            }
-            case "long" -> {
-                return longVariables.get(variableName) % Long.parseLong(marginValue) == Long.parseLong(compareValue);
-            }
-            default -> throw new NumberFormatException();
+        }
+        catch (NumberFormatException e) {
+            return Exceptionable.exception("invalidCasting", marginValue + " or " + compareValue);
         }
     }
 
-    public static boolean doesStartsWith(String variableName, String startsWithValue) throws NullPointerException, NumberFormatException {
+    /**
+     * Determine the variable if starts with the specific part.
+     * @param variableName          Define id of this variable.
+     * @param startsWithValue       Reference to determine if contains in starting.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesStartsWith(String variableName, String startsWithValue) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to compare 'starts with' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
-
-        switch (variableType) {
-            case "string" -> {
-                return stringVariables.get(variableName) != null && stringVariables.get(variableName).startsWith(startsWithValue);
-            }
-            case "integer" -> {
-                return integerVariables.get(variableName) != null && String.valueOf(integerVariables.get(variableName)).startsWith(startsWithValue);
-            }
-            case "float" -> {
-                return floatVariables.get(variableName) != null && String.valueOf(floatVariables.get(variableName)).startsWith(startsWithValue);
-            }
-            case "double" -> {
-                return doubleVariables.get(variableName) != null && String.valueOf(doubleVariables.get(variableName)).startsWith(startsWithValue);
-            }
-            case "long" -> {
-                return longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).startsWith(startsWithValue);
-            }
-            default -> throw new NumberFormatException();
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
         }
+        String variableType = nullableType.get();
+
+        return switch (variableType) {
+            case "string" ->
+                    Exceptionable.usual(stringVariables.get(variableName) != null && stringVariables.get(variableName).startsWith(startsWithValue));
+            case "integer" ->
+                    Exceptionable.usual(integerVariables.get(variableName) != null && String.valueOf(integerVariables.get(variableName)).startsWith(startsWithValue));
+            case "float" ->
+                    Exceptionable.usual(floatVariables.get(variableName) != null && String.valueOf(floatVariables.get(variableName)).startsWith(startsWithValue));
+            case "double" ->
+                    Exceptionable.usual(doubleVariables.get(variableName) != null && String.valueOf(doubleVariables.get(variableName)).startsWith(startsWithValue));
+            case "long" ->
+                    Exceptionable.usual(longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).startsWith(startsWithValue));
+            default ->
+                    Exceptionable.exception("invalidType", variableName);
+        };
     }
 
-    public static boolean doesEndsWith(String variableName, String endsWithValue) throws NullPointerException, NumberFormatException {
+    /**
+     * Determine the variable if ends with the specific part.
+     * @param variableName          Define id of this variable.
+     * @param endsWithValue         Reference to determine if contains in ending.
+     * @return                      A result that maybe failure:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
+     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
+     */
+    @CheckReturnValue
+    public static @NotNull Exceptionable<Boolean> doesEndsWith(String variableName, String endsWithValue) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to compare 'ends with' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return Exceptionable.exception("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
-        switch (variableType) {
-            case "string" -> {
-                return stringVariables.get(variableName) != null && stringVariables.get(variableName).endsWith(endsWithValue);
-            }
-            case "integer" -> {
-                return integerVariables.get(variableName) != null && String.valueOf(integerVariables.get(variableName)).endsWith(endsWithValue);
-            }
-            case "float" -> {
-                return floatVariables.get(variableName) != null && String.valueOf(floatVariables.get(variableName)).endsWith(endsWithValue);
-            }
-            case "double" -> {
-                return doubleVariables.get(variableName) != null && String.valueOf(doubleVariables.get(variableName)).endsWith(endsWithValue);
-            }
-            case "long" -> {
-                return longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).endsWith(endsWithValue);
-            }
-            default -> throw new NumberFormatException();
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return Exceptionable.exception("invalidType", variableName);
         }
+        String variableType = nullableType.get();
+
+        return switch (variableType) {
+            case "string" ->
+                    Exceptionable.usual(stringVariables.get(variableName) != null && stringVariables.get(variableName).endsWith(endsWithValue));
+            case "integer" ->
+                    Exceptionable.usual(integerVariables.get(variableName) != null && String.valueOf(integerVariables.get(variableName)).endsWith(endsWithValue));
+            case "float" ->
+                    Exceptionable.usual(floatVariables.get(variableName) != null && String.valueOf(floatVariables.get(variableName)).endsWith(endsWithValue));
+            case "double" ->
+                    Exceptionable.usual(doubleVariables.get(variableName) != null && String.valueOf(doubleVariables.get(variableName)).endsWith(endsWithValue));
+            case "long" ->
+                    Exceptionable.usual(longVariables.get(variableName) != null && String.valueOf(longVariables.get(variableName)).endsWith(endsWithValue));
+            default ->
+                    Exceptionable.exception("invalidType", variableName);
+        };
     }
 
-    public static void modifyVariable(String variableName, String newValue) throws NullPointerException, NumberFormatException {
+    /**
+     * Modify the variable value by exactly same type new value.
+     * @param variableName          Define id of this variable.
+     * @param newValue              The new value that must within same type to old value,
+     *                              which contains <b>string, integer, boolean, float, double, long</b>.
+     * @return                      Success of failure when:
+     *                              <li>- This variable are not registered -> "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
+     *                              <li>- Invalid type from new value -> "invalidType", variableType.</li>
+     *                              <li>- Using invalid format type to modify -> "invalidCasting", newValue.</li>
+     */
+    public static @NotNull MethodResult modifyVariable(String variableName, String newValue) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'modify' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return MethodResult.failure("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return MethodResult.failure("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
-        switch (variableType) {
-            case "string" -> stringVariables.put(variableName, newValue);
-            case "integer" -> integerVariables.put(variableName, Integer.parseInt(newValue));
-            case "boolean" -> {
-                boolean value;
-                if (newValue.equals("true") || newValue.equals("false")) {
-                    value = newValue.equals("true");
-                }
-                else if (newValue.equals("1") || newValue.equals("0")) {
-                    value = newValue.equals("1");
-                }
-                else {
-                    throw new NumberFormatException();
-                }
+        try {
+            switch (variableType) {
+                case "string" -> stringVariables.put(variableName, newValue);
+                case "integer" -> integerVariables.put(variableName, Integer.parseInt(newValue));
+                case "boolean" -> {
+                    boolean value;
+                    if (newValue.equals("true") || newValue.equals("false")) {
+                        value = newValue.equals("true");
+                    }
+                    else if (newValue.equals("1") || newValue.equals("0")) {
+                        value = newValue.equals("1");
+                    }
+                    else {
+                        return MethodResult.failure("invalidCasting", newValue);
+                    }
 
-                booleanVariables.put(variableName, value);
+                    booleanVariables.put(variableName, value);
+                }
+                case "float" -> floatVariables.put(variableName, Float.parseFloat(newValue));
+                case "double" -> doubleVariables.put(variableName, Double.parseDouble(newValue));
+                case "long" -> longVariables.put(variableName, Long.parseLong(newValue));
+                default -> {
+                    return MethodResult.failure("invalidType", variableType);
+                }
             }
-            case "float" -> floatVariables.put(variableName, Float.parseFloat(newValue));
-            case "double" -> doubleVariables.put(variableName, Double.parseDouble(newValue));
-            case "long" -> longVariables.put(variableName, Long.parseLong(newValue));
         }
+        catch (NumberFormatException e) {
+            return MethodResult.failure("invalidCasting", newValue);
+        }
+
+        return MethodResult.success();
     }
 
-    public static void addNumber(String variableName, String value) throws NullPointerException, NumberFormatException {
+    /**
+     * Add a number to the old variable value.
+     * @param variableName          Define id of this variable.
+     * @param value                 The new value that must within same type to old value,
+     *                              which contains <b>integer, float, double, long</b>.
+     * @return                      Success of failure when:
+     *                              <li>- This variable are not registered -> "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
+     *                              <li>- Invalid type from new value -> "invalidType", variableType.</li>
+     *                              <li>- Using invalid number format to modify -> "invalidCasting", newValue.</li>
+     */
+    public static @NotNull MethodResult addNumber(String variableName, String value) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'increase' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return MethodResult.failure("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return MethodResult.failure("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
         if (variableType.equals("string") || variableType.equals("boolean")) {
-            throw new NumberFormatException();
+            return MethodResult.failure("invalidCasting", variableName);
         }
 
-        switch (variableType) {
-            case "integer" -> {
-                int newValue = integerVariables.get(variableName) + Integer.parseInt(value);
-                integerVariables.put(variableName, newValue);
-            }
-            case "float" -> {
-                float newValue = floatVariables.get(variableName) + Float.parseFloat(value);
-                floatVariables.put(variableName, newValue);
-            }
-            case "double" -> {
-                double newValue = doubleVariables.get(variableName) + Double.parseDouble(value);
-                doubleVariables.put(variableName, newValue);
-            }
-            case "long" -> {
-                long newValue = longVariables.get(variableName) + Long.parseLong(value);
-                longVariables.put(variableName, newValue);
+        try {
+            switch (variableType) {
+                case "integer" -> {
+                    int newValue = integerVariables.get(variableName) + Integer.parseInt(value);
+                    integerVariables.put(variableName, newValue);
+                }
+                case "float" -> {
+                    float newValue = floatVariables.get(variableName) + Float.parseFloat(value);
+                    floatVariables.put(variableName, newValue);
+                }
+                case "double" -> {
+                    double newValue = doubleVariables.get(variableName) + Double.parseDouble(value);
+                    doubleVariables.put(variableName, newValue);
+                }
+                case "long" -> {
+                    long newValue = longVariables.get(variableName) + Long.parseLong(value);
+                    longVariables.put(variableName, newValue);
+                }
+                default -> {
+                    return MethodResult.failure("invalidType", variableName);
+                }
             }
         }
+        catch (NumberFormatException e) {
+            return MethodResult.failure("invalidCasting", value);
+        }
+
+        return MethodResult.success();
     }
 
-    public static void reduceNumber(String variableName, String value) throws NullPointerException, NumberFormatException {
+    /**
+     * Reduce a number to the old variable value.
+     * @param variableName          Define id of this variable.
+     * @param value                 The absolute (positive) new value for reduce old value by same type,
+     *                              which contains <b>integer, float, double, long</b>.
+     * @return                      Success of failure when:
+     *                              <li>- This variable are not registered -> "notExist", variableName.</li>
+     *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
+     *                              <li>- Invalid type from new value -> "invalidType", variableType.</li>
+     *                              <li>- Using invalid number format to modify -> "invalidCasting", newValue.</li>
+     */
+    public static @NotNull MethodResult reduceNumber(String variableName, String value) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'decrease' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return MethodResult.failure("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return MethodResult.failure("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
         if (variableType.equals("string") || variableType.equals("boolean")) {
-            throw new NumberFormatException();
+            return MethodResult.failure("invalidCasting", value);
         }
 
-        switch (variableType) {
-            case "integer" -> {
-                int newValue = integerVariables.get(variableName) - Math.abs(Integer.parseInt(value));
-                integerVariables.put(variableName, newValue);
-            }
-            case "float" -> {
-                float newValue = floatVariables.get(variableName) - Math.abs(Float.parseFloat(value));
-                floatVariables.put(variableName, newValue);
-            }
-            case "double" -> {
-                double newValue = doubleVariables.get(variableName) - Math.abs(Double.parseDouble(value));
-                doubleVariables.put(variableName, newValue);
-            }
-            case "long" -> {
-                long newValue = longVariables.get(variableName) - Math.abs(Long.parseLong(value));
-                longVariables.put(variableName, newValue);
+        try {
+            switch (variableType) {
+                case "integer" -> {
+                    int newValue = integerVariables.get(variableName) - Math.abs(Integer.parseInt(value));
+                    integerVariables.put(variableName, newValue);
+                }
+                case "float" -> {
+                    float newValue = floatVariables.get(variableName) - Math.abs(Float.parseFloat(value));
+                    floatVariables.put(variableName, newValue);
+                }
+                case "double" -> {
+                    double newValue = doubleVariables.get(variableName) - Math.abs(Double.parseDouble(value));
+                    doubleVariables.put(variableName, newValue);
+                }
+                case "long" -> {
+                    long newValue = longVariables.get(variableName) - Math.abs(Long.parseLong(value));
+                    longVariables.put(variableName, newValue);
+                }
+                default -> {
+                    return MethodResult.failure("invalidType", variableName);
+                }
             }
         }
+        catch (NumberFormatException e) {
+            return MethodResult.failure("invalidCasting", value);
+        }
+
+        return MethodResult.success();
     }
 
-    public static void copyVariableFromScore(String variableName, String playerName, String scoreName) throws NullPointerException, NumberFormatException, IllegalStateException, IllegalArgumentException {
+    /**
+     * Copy the variable to the {@link Scoreboard} system.
+     * @param variableName          Define id of this variable.
+     * @param playerName            Player name for redirecting to the player by {@link ScoreHolder}.
+     * @param scoreName             Score name from {@link Scoreboard}.
+     * @return                      Success of failure when:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Server offline -> "serverOffline", variableName.</li>
+     *                              <li>- Received null score objective from score name -> "unknownScoreObjective", scoreName.</li>
+     *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
+     *                              <li>- Unable to cast score value to boolean -> "invalidScoreCasting", variableName.</li>
+     */
+    public static @NotNull MethodResult copyVariableFromScore(String variableName, String playerName, String scoreName) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'copy to' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return MethodResult.failure("notExist", variableName);
         }
 
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
-            throw new IllegalStateException();
+            return MethodResult.failure("serverOffline", variableName);
         }
 
         ServerScoreboard scoreboard = server.getScoreboard();
         Objective objective = scoreboard.getObjective(scoreName);
         if (objective == null) {
-            throw new IllegalArgumentException();
+            return MethodResult.failure("unknownScoreObjective", scoreName);
         }
 
         ScoreHolder scoreHolder = ScoreHolder.forNameOnly(playerName);
 
         int scoreValue = scoreboard.getOrCreatePlayerScore(scoreHolder, objective).get();
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return MethodResult.failure("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
         switch (variableType) {
             case "string" -> {
@@ -777,31 +1128,50 @@ public class VariableHolder {
                     booleanVariables.put(variableName, scoreValue == 1);
                 }
                 else {
-                    throw new NumberFormatException();
+                    return MethodResult.failure("invalidScoreCasting", variableName);
                 }
             }
-            default -> throw new NumberFormatException();
+            default -> {
+                return MethodResult.failure("invalidType", variableName);
+            }
         }
+
+        return MethodResult.success();
     }
 
-    public static void copyScoreFromVariable(String variableName, String playerName, String scoreName) throws NullPointerException, NumberFormatException, IllegalStateException, IllegalArgumentException {
+    /**
+     * Copy the score in {@link Scoreboard} from variable system.
+     * @param variableName          Define id of this variable.
+     * @param playerName            Player name for redirecting to the player by {@link ScoreHolder}.
+     * @param scoreName             Score name from {@link Scoreboard}.
+     * @return                      Success of failure when:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- Server offline -> "serverOffline", variableName.</li>
+     *                              <li>- Received null score objective from score name -> "unknownScoreObjective", scoreName.</li>
+     *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
+     */
+    public static @NotNull MethodResult copyScoreFromVariable(String variableName, String playerName, String scoreName) {
         if (!registeredVariables.contains(variableName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'copy from' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return MethodResult.failure("notExist", variableName);
         }
 
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
-            throw new IllegalStateException();
+            return MethodResult.failure("serverOffline", variableName);
         }
 
         ServerScoreboard scoreboard = server.getScoreboard();
         Objective objective = scoreboard.getObjective(scoreName);
         if (objective == null) {
-            throw new IllegalArgumentException();
+            return MethodResult.failure("unknownScoreObjective", scoreName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableType = getType(variableName);
+        if (nullableType.isNull()) {
+            return MethodResult.failure("invalidType", variableName);
+        }
+        String variableType = nullableType.get();
 
         int scoreValue;
         switch (variableType) {
@@ -810,57 +1180,106 @@ public class VariableHolder {
             case "double" -> scoreValue = (int) Math.round(doubleVariables.get(variableName));
             case "long" -> scoreValue = (int) (long) longVariables.get(variableName);
             case "boolean" -> scoreValue = booleanVariables.get(variableName)? 1 : 0;
-            default -> throw new NumberFormatException();
+            default -> {
+                return MethodResult.failure("invalidType", variableName);
+            }
         }
 
         ScoreHolder scoreHolder = ScoreHolder.forNameOnly(playerName);
         scoreboard.getOrCreatePlayerScore(scoreHolder, objective).set(scoreValue);
+
+        return MethodResult.success();
     }
 
-    public static void toSameValue(String variableName, String referenceName) throws NullPointerException, NumberFormatException {
+    /**
+     * Mask an exactly same value from reference to this variable.
+     * @param variableName          Define id of this variable.
+     * @param referenceName         Define id of the reference variable.
+     * @return                      Success of failure when:
+     *                              <li>- This variable are not registered -> "notExist", variableName/referenceName.</li>
+     *                              <li>- Variable that target or reference is invalid type -> "invalidType", "{@code variableName} or {@code referenceName}".</li>
+     *                              <li>- Different type of variable -> "mismatchType", "{@code variableType} <- {@code referenceType}".</li>
+     *                              <li>- Invalid variable type -> "invalidType", variableType.</li>
+     *                              <li>- Unexcepted casting error -> "invalidCasting", referenceValue.</li>
+     */
+    public static @NotNull MethodResult maskVariableValue(String variableName, String referenceName) {
         if (!registeredVariables.contains(variableName) || !registeredVariables.contains(referenceName)) {
             CoreHanXu.LOGGER.warn("[HX] Trying to 'same' unexist variable: {}", variableName);
-            throw new NullPointerException();
+            return MethodResult.failure("notExist", variableName);
         }
 
-        String variableType = getType(variableName).getOrThrow(NumberFormatException::new);
-        String referenceType = getType(referenceName).getOrThrow(NumberFormatException::new);
+        NullableValue<String> nullableVariableType = getType(variableName);
+        NullableValue<String> nullableReferenceType = getType(referenceName);
+        if (nullableVariableType.isNull() || nullableReferenceType.isNull()) {
+            return MethodResult.failure("invalidType", variableName + " or " + referenceName);
+        }
+        String variableType = nullableVariableType.get();
+        String referenceType = nullableReferenceType.get();
 
         if (!variableType.equals(referenceType)) {
-            throw new NumberFormatException();
+            return MethodResult.failure("mismatchType", variableType + " <- " + referenceType);
         }
 
-        String referenceValue = getStringFrom(referenceName).getOrThrow(NullPointerException::new);
-
-        switch (variableType) {
-            case "string" -> stringVariables.put(variableName, referenceValue);
-            case "integer" -> integerVariables.put(variableName, Integer.parseInt(referenceValue));
-            case "boolean" -> booleanVariables.put(variableName, Boolean.parseBoolean(referenceValue));
-            case "float" -> floatVariables.put(variableName, Float.parseFloat(referenceValue));
-            case "double" -> doubleVariables.put(variableName, Double.parseDouble(referenceValue));
-            case "long" -> longVariables.put(variableName, Long.parseLong(referenceValue));
-            default -> throw new NumberFormatException();
+        NullableValue<String> nullableReferenceValue = getStringFrom(referenceName);
+        if (nullableReferenceValue.isNull()) {
+            return MethodResult.failure("notExist", referenceName);
         }
+        String referenceValue = nullableReferenceValue.get();
+
+        try {
+            switch (variableType) {
+                case "string" -> stringVariables.put(variableName, referenceValue);
+                case "integer" -> integerVariables.put(variableName, Integer.parseInt(referenceValue));
+                case "boolean" -> booleanVariables.put(variableName, Boolean.parseBoolean(referenceValue));
+                case "float" -> floatVariables.put(variableName, Float.parseFloat(referenceValue));
+                case "double" -> doubleVariables.put(variableName, Double.parseDouble(referenceValue));
+                case "long" -> longVariables.put(variableName, Long.parseLong(referenceValue));
+                default -> {
+                    return MethodResult.failure("invalidType", referenceType);
+                }
+            }
+        }
+        catch (NumberFormatException e) {
+            return MethodResult.failure("invalidCasting", variableName);
+        }
+
+        return MethodResult.success();
     }
 
-    public static void stringToLowerCase(String variableName) throws NullPointerException {
+    /**
+     * Changing a string to lower case.
+     * @param variableName          Define id of this variable.
+     * @return                      Success or failure when:
+     *                              <li>- Not a string variable to operate -> "invalidType", variableName.</li>
+     */
+    public static @NotNull MethodResult stringToLowerCase(String variableName) {
         if (!stringVariables.containsKey(variableName)) {
-            throw new NullPointerException();
+            return MethodResult.failure("invalidType", variableName);
         }
 
         String newString = stringVariables.get(variableName).toLowerCase();
 
         stringVariables.put(variableName, newString);
+
+        return MethodResult.success();
     }
 
-    public static void stringToUpperCase(String variableName) throws NullPointerException {
+    /**
+     * Changing a string to upper case.
+     * @param variableName          Define id of this variable.
+     * @return                      Success or failure when:
+     *                              <li>- Not a string variable to operate -> "invalidType", variableName.</li>
+     */
+    public static @NotNull MethodResult stringToUpperCase(String variableName) {
         if (!stringVariables.containsKey(variableName)) {
-            throw new NullPointerException();
+            return MethodResult.failure("invalidType", variableName);
         }
 
         String newString = stringVariables.get(variableName).toUpperCase();
 
         stringVariables.put(variableName, newString);
+
+        return MethodResult.success();
     }
 
     public static @NotNull NullableValue<CompoundTag> packAllVariables() {
@@ -919,11 +1338,6 @@ public class VariableHolder {
             CompoundTag variable = variableTag.getCompound(variableName).orElse(new CompoundTag());
             String variableType = variable.getString("type").orElse(null);
 
-            if (variableType == null) {
-                CoreHanXu.LOGGER.warn("[HX] Missing variable type for variable: {}", variableName);
-                continue;
-            }
-
             switch (variableType) {
                 case "string" -> {
                     String value = variable.getStringOr("value", "");
@@ -955,7 +1369,8 @@ public class VariableHolder {
                     registeredVariables.add(variableName);
                     longVariables.put(variableName, value);
                 }
-                case null, default -> throw new NumberFormatException();
+                case null -> CoreHanXu.LOGGER.warn("[HX] Missing variable type for loading variable: {}", variableName);
+                default -> CoreHanXu.LOGGER.warn("[HX] Skipped unsupported type for loading variable: {}", variableName);
             }
         }
     }

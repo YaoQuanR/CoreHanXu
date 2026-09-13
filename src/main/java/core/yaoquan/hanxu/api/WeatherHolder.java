@@ -39,7 +39,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Weather System API
+ * <p><h3>
+ *     Weather System API
+ * </h3></p>
  * @since 0.7.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)

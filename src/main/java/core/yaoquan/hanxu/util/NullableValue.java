@@ -10,9 +10,9 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * <p><b>
+ * <p><h3>
  *     Nullable Value Type
- * </b></p>
+ * </b></h3>
  * <p>
  *     This method aims to define null value declaration in explicitly for handle.
  *     It returns a value that may be null or exact value.
@@ -184,7 +184,7 @@ public class NullableValue<T> {
 
     @Override
     public String toString() {
-        return isNull()? "Nullable.NULL" : "Nullable." + value;
+        return isNull()? "Nullable.Null" : "Nullable.Some(" + value + ")";
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import core.yaoquan.hanxu.api.*;
-import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.MessagePublisher;
@@ -23,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
+
+import static core.yaoquan.hanxu.api.define.Error.*;
 
 public class ExecuteInformation {
     public static int executeLicense_State(CommandContext<CommandSourceStack> context) {
@@ -48,7 +49,7 @@ public class ExecuteInformation {
             }
             ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
             if (player == null) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
                 return 0;
             }
             boolean state = PermissionHolder.Storage.getLicenseState(player);
@@ -101,7 +102,7 @@ public class ExecuteInformation {
         UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
         if (masterId == null) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.targetNotExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.targetNotExist));
             return 0;
         }
 
@@ -140,7 +141,7 @@ public class ExecuteInformation {
 
         // Then list out.
         if (displayList.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.SceneError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.notFound));
         }
         else {
             CommandMisc.displaySceneIdList(context, displayList);
@@ -178,7 +179,7 @@ public class ExecuteInformation {
         String attributeId = StringArgumentType.getString(context, "attribute_id");
 
         if (!AttributeHolder.doesAttributeExist(attributeId)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -195,7 +196,7 @@ public class ExecuteInformation {
             isApiAttribute = true;
         }
         else {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationId));
+            MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationId));
             return 0;
         }
 
@@ -205,7 +206,7 @@ public class ExecuteInformation {
                 AttributeHolder.getCommandAttribute(attributeId);
 
         if (nullableAttribute.isNull()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.notFound));
+            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
             return 0;
         }
 
@@ -216,7 +217,7 @@ public class ExecuteInformation {
                 Map<Float, String> thresholds = attribute.getThresholdCallbacks();
 
                 if (thresholds.isEmpty()) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.noThreshold));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.noThreshold));
                     return 0;
                 }
 
@@ -232,14 +233,14 @@ public class ExecuteInformation {
                 Map<Float, String> thresholds = attribute.getThresholdCallbacks();
 
                 if (thresholds.isEmpty()) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.noThreshold));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.noThreshold));
                     return 0;
                 }
 
                 float value = FloatArgumentType.getFloat(context, "threshold_value");
 
                 if (!thresholds.containsKey(value)) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.noSpecificThreshold));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.noSpecificThreshold));
                     return 0;
                 }
 
@@ -249,7 +250,7 @@ public class ExecuteInformation {
             case "zero" -> {
                 String zeroId = attribute.getZeroCallbackId();
                 if (zeroId == null) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.noZero));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.noZero));
                     return 0;
                 }
 
@@ -262,7 +263,7 @@ public class ExecuteInformation {
             case "recovery" -> {
                 String recoveryId = attribute.getRecoveryCurveId();
                 if (recoveryId == null) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.noRecovery));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.noRecovery));
                     return 0;
                 }
 
@@ -298,13 +299,13 @@ public class ExecuteInformation {
                         playerId = context.getSource().getPlayer().getName().toString();
                     }
                     else {
-                        MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.AttributeError.noIdFieldProvidedByNonPlayer));
+                        MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.noIdFieldProvidedByNonPlayer));
                         return 0;
                     }
                 }
 
                 if ((playerId.equals("-me") || playerId.equals("-m")) && context.getSource().getPlayer() == null) {
-                    MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.invalidMeFieldUsed));
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.invalidMeFieldUsed));
                     return 0;
                 }
 
@@ -334,7 +335,7 @@ public class ExecuteInformation {
                 }
             }
             default -> {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.GeneralError.undefinedOperationId));
+                MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationId));
                 return 0;
             }
         }
@@ -347,7 +348,7 @@ public class ExecuteInformation {
             Set<String> variableNames = VariableHolder.getAllRegisteredVariables();
 
             if (variableNames.isEmpty()) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.emptyVariable));
+                MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.emptyVariable));
                 return 0;
             }
 
@@ -359,7 +360,7 @@ public class ExecuteInformation {
         else if (category.equals("values")) {
             Map<String, String> allVariables = VariableHolder.getAllVariableAsString();
             if (allVariables.isEmpty()) {
-                MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.emptyVariable));
+                MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.emptyVariable));
                 return 0;
             }
 
@@ -376,7 +377,7 @@ public class ExecuteInformation {
         String variableName = StringArgumentType.getString(context, "variable_name");
 
         if (!VariableHolder.doesExists(variableName)) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.VariableError.notExist));
+            MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.notExist));
             return 0;
         }
 
@@ -396,7 +397,7 @@ public class ExecuteInformation {
         Set<String> tableIds = LootHolder.getRegisteredTableIds();
 
         if (tableIds.isEmpty()) {
-            MessagePublisher.sendFailureMessage(context, Error.errorComponent(Error.LootError.emptyTable));
+            MessagePublisher.sendFailureMessage(context, errorComponent(LootError.emptyTable));
             return 0;
         }
 

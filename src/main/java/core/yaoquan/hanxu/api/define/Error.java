@@ -9,11 +9,6 @@ public class Error {
         notExistOrAlreadyInstantiated,
         masterNotExist,
         timerTimedOut,
-        unableToStart,
-        unableToStop,
-        unableToReset,
-        unableToRestart,
-        unableToDeleteInstance,
     }
 
     public enum SceneError {
@@ -37,7 +32,6 @@ public class Error {
         noRecovery,
         tryToOverrideApiRecovery,
         tryToRegisterUnExistApiRecovery,
-        failedToCreate,
     }
 
     public enum VariableError {
@@ -64,13 +58,14 @@ public class Error {
     public enum WeatherError {
         emptyWeather,
         notFound,
+        yamlNotFound,
+        inUse,
         alreadyActivated,
-        onReadyOrNotFound,
         alreadyExist,
+        notInitialized,
         failedToSave,
         tryToModifyApiTarget,
         sameNameFound,
-        failedToDelete,
     }
 
     public enum GeneralError {
@@ -116,11 +111,6 @@ public class Error {
             case notExistOrAlreadyInstantiated -> Component.translatable("commands.chx.timer_not_exist_or_already_instantiated");
             case masterNotExist -> Component.translatable("commands.chx.timer_master_not_exist");
             case timerTimedOut -> Component.translatable("commands.chx.timer_timed_out");
-            case unableToStart -> Component.translatable("commands.chx.timer_unable_to_start");
-            case unableToStop -> Component.translatable("commands.chx.timer_unable_to_stop");
-            case unableToReset -> Component.translatable("commands.chx.timer_unable_to_reset");
-            case unableToRestart -> Component.translatable("commands.chx.timer_unable_to_restart");
-            case unableToDeleteInstance -> Component.translatable("commands.chx.timer_unable_to_delete_instance");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }
@@ -150,7 +140,6 @@ public class Error {
             case noRecovery -> Component.translatable("commands.chx.attribute_no_recovery");
             case tryToOverrideApiRecovery -> Component.translatable("commands.chx.attribute_try_to_override_api_recovery");
             case tryToRegisterUnExistApiRecovery -> Component.translatable("commands.chx.attribute_try_to_register_un_exist_api_recovery");
-            case failedToCreate -> Component.translatable("commands.chx.attribute_failed_to_create");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }
@@ -186,13 +175,14 @@ public class Error {
         return switch (weatherError) {
             case emptyWeather -> Component.translatable("commands.chx.weather_empty_weather");
             case notFound -> Component.translatable("commands.chx.weather_not_found");
+            case yamlNotFound -> Component.translatable("commands.chx.weather_yaml_not_found");
+            case inUse -> Component.translatable("commands.chx.weather_in_use");
             case alreadyActivated -> Component.translatable("commands.chx.weather_already_activated");
-            case onReadyOrNotFound -> Component.translatable("commands.chx.weather_on_ready_or_not_found");
             case alreadyExist -> Component.translatable("commands.chx.weather_already_exist");
+            case notInitialized -> Component.translatable("commands.chx.weather_not_initialized");
             case failedToSave -> Component.translatable("commands.chx.weather_failed_to_save");
             case tryToModifyApiTarget -> Component.translatable("commands.chx.weather_try_to_modify_api_target");
             case sameNameFound -> Component.translatable("commands.chx.weather_same_name_found");
-            case failedToDelete -> Component.translatable("commands.chx.weather_failed_to_delete");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

@@ -28,7 +28,7 @@ public class ColoredRainSky {
 
         String dimension = level.dimension().location().toString();
         WeatherClient.ColoredRainInfo coloredRain = WeatherClient.getColoredRain(dimension);
-        if (coloredRain == null || coloredRain.phase() == WeatherHolder.WeatherPhase.STILLNESS) {
+        if (coloredRain == null || coloredRain.phase() != WeatherHolder.WeatherPhase.ACTIVE) {
             return;
         }
 

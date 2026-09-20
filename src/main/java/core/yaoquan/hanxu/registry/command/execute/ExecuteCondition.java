@@ -166,7 +166,7 @@ public class ExecuteCondition {
                     }
                 },
                 (error, info) -> {
-                    CommandMisc.displayVariableErrorResult(context, error);
+                    CommandError.displayVariableErrorResult(context, error);
                     return 0;
                 }
         );

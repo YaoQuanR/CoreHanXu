@@ -358,7 +358,7 @@ public class ExecuteCreate {
                     return 1;
                 },
                 (error, info) -> {
-                    CommandMisc.displayVariableErrorResult(context, error);
+                    CommandError.displayVariableErrorResult(context, error);
                     return 0;
                 }
         );
@@ -457,7 +457,7 @@ public class ExecuteCreate {
 
         YamlReader.TargetPath targetPath = toPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
 
-        if (WeatherHolder.doesWeatherExist(weatherId)) {
+        if (WeatherHolder.doesWeatherInstanceExist(weatherId)) {
             MessagePublisher.sendFailureMessage(context, errorComponent(Error.WeatherError.alreadyExist));
             return 0;
         }

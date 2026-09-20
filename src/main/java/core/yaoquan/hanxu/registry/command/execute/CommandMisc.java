@@ -10,16 +10,8 @@ import core.yaoquan.hanxu.util.tool.Creator;
 import core.yaoquan.hanxu.util.tool.MessagePublisher;
 import core.yaoquan.hanxu.util.tool.Resolver;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -74,7 +66,7 @@ public class CommandMisc {
                 return result.matching(
                         () -> 1,
                         (error, info) -> {
-                            displayTimerErrorResult(context, error);
+                            CommandError.displayTimerErrorResult(context, error);
                             return 0;
                         }
                 );
@@ -103,7 +95,7 @@ public class CommandMisc {
                 // Then start.
                 MethodResult result = TimeHolder.startInstanceTimer(masterId, timerId);
                 if (result.isFailure()) {
-                    displayTimerErrorResult(context, result.getError());
+                    CommandError.displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -130,7 +122,7 @@ public class CommandMisc {
                 // Then stop.
                 MethodResult result = TimeHolder.stopInstanceTimer(masterId, timerId);
                 if (result.isFailure()) {
-                    displayTimerErrorResult(context, result.getError());
+                    CommandError.displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -154,7 +146,7 @@ public class CommandMisc {
                 // Then reset.
                 MethodResult result = TimeHolder.resetInstanceTimer(masterId, timerId);
                 if (result.isFailure()) {
-                    displayTimerErrorResult(context, result.getError());
+                    CommandError.displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -177,7 +169,7 @@ public class CommandMisc {
             case "restart" -> {
                 MethodResult result = TimeHolder.restartInstanceTimer(masterId, timerId);
                 if (result.isFailure()) {
-                    displayTimerErrorResult(context, result.getError());
+                    CommandError.displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -204,7 +196,7 @@ public class CommandMisc {
                 // Then delete.
                 MethodResult result = TimeHolder.deleteInstanceTimer(masterId, timerId);
                 if (result.isFailure()) {
-                    displayTimerErrorResult(context, result.getError());
+                    CommandError.displayTimerErrorResult(context, result.getError());
                     return 0;
                 }
 
@@ -564,30 +556,6 @@ public class CommandMisc {
         }
     }
 
-    static String lootTemplate() {
-        return """
-            id: "FILE NAME?"
-            
-            pools:
-              - rolls: 1
-                entries:
-                  - type: item
-                    id: "minecraft:iron_ingot"
-                    weight: 3
-                    functions:
-                      - function: set_count
-                        count:
-                          min: 1
-                          max: 4
-                  - type: item
-                    id: "minecraft:gold_ingot"
-                    weight: 1
-                conditions:
-                  - condition: random_chance
-                    chance: 0.5
-            """;
-    }
-
     static int displayWeatherIdList(CommandContext<CommandSourceStack> context, String[] yamlList, String[] apiList) {
         if (yamlList.length == 0 && apiList.length == 0) {
             MessagePublisher.sendFailureMessage(context,errorComponent(WeatherError.emptyWeather));
@@ -617,109 +585,5 @@ public class CommandMisc {
         }
 
         return 1;
-    }
-
-    static @NotNull NullableValue<ServerLevel> findServerLevel(@NotNull CommandContext<CommandSourceStack> context) {
-        String levelString;
-        ServerLevel level;
-        try {
-            levelString = StringArgumentType.getString(context, "level");
-            if (levelString.startsWith("\"") || levelString.endsWith("\"")) {
-                levelString = levelString.substring(1, levelString.length() - 1);
-            }
-        }
-        catch (IllegalArgumentException e) {
-            levelString = null;
-        }
-
-        if (levelString == null) {
-            level = context.getSource().getLevel();
-        }
-        else {
-            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-            ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(levelString));
-            if (server == null) {
-                return NullableValue.none();
-            }
-
-            level = server.getLevel(dimensionKey);
-            if (level == null) {
-                MessagePublisher.sendFailureMessage(context,errorComponent(GeneralError.unknownDimension));
-                return NullableValue.none();
-            }
-        }
-
-        return NullableValue.ofNotNull(level);
-    }
-
-    static String weatherTemplate(String templateType) {
-        return switch (templateType) {
-            case "fog" -> """
-                # The register name of a weather.
-                id: "SIMPLE_FOG"
-                # Base on the support of weather type.
-                # Vanilla mod support: fog | colored_rain | wind | ...
-                type: fog
-                
-                # General arguments.
-                duration:
-                  min: 200
-                  max: 400
-                stillness:
-                  min: 200
-                  max: 400
-                
-                # Special arguments for fog weather.
-                color: 0xD95D5D
-                distance:
-                  min: 8
-                  max: 128
-                # This will increase the distance base on minimum distance
-                # (non-positive will use min distance).
-                height_offsets:
-                  64: 2
-                  128: 1
-                  192: 0.5
-                """;
-            default -> "";
-        };
-    }
-
-    static void displayTimerErrorResult(CommandContext<CommandSourceStack> context, String error) {
-        switch (error) {
-            case "masterNotExist" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.masterNotExist));
-            case "timerNotExist" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
-            case "timerTimedOut" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.timerTimedOut));
-            case "playerOffline" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.playerOffline));
-            default ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
-        }
-    }
-
-    static void displayVariableErrorResult(CommandContext<CommandSourceStack> context, String error) {
-        switch (error) {
-            case "duplicated" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.duplicated));
-            case "invalidCasting" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidCasting));
-            case "notExist" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.notExist));
-            case "serverOffline" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.serverOffline));
-            case "unknownScoreObjective" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unknownScoreObjective));
-            case "invalidType" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidType));
-            case "invalidScoreCasting" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidScoreCasting));
-            case "mismatchType" ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.mismatchType));
-            default ->
-                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
-        }
     }
 }

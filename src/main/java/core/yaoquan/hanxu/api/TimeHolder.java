@@ -554,6 +554,7 @@ public class TimeHolder {
     }
 
     // Save and load methods:
+    /// <b>INNER METHOD</b>
     public static void registerCallback(TimerCallback callback) {
         callbacks.put(callback.getMasterGroupId(), callback);
     }
@@ -562,6 +563,7 @@ public class TimeHolder {
         return NullableValue.ofNullable(callbacks.get(modId));
     }
 
+    /// <b>INNER METHOD</b>
     public static void saveInstanceTimerForPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_instance_timers";
         CompoundTag dataRoot = player.getPersistentData();
@@ -583,6 +585,7 @@ public class TimeHolder {
         dataRoot.put(headKey, allTimersTag);
     }
 
+    /// <b>INNER METHOD</b>
     public static void saveInstanceTimerForGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_instance_timers";
         CompoundTag dataRoot = new CompoundTag();
@@ -610,6 +613,7 @@ public class TimeHolder {
         }
     }
 
+    /// <b>INNER METHOD</b>
     public static void loadInstanceTimerForPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_instance_timers";
         CompoundTag dataRoot = player.getPersistentData();
@@ -618,6 +622,7 @@ public class TimeHolder {
         rebuildTimerData(allTimersTag, player.getUUID());
     }
 
+    /// <b>INNER METHOD</b>
     public static void loadInstanceTimerForGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_instance_timers";
         Path file = FilePath.getModDataPath(level);

@@ -1,17 +1,25 @@
 package core.yaoquan.hanxu.util.tool;
 
 import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.util.type.NullableValue;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.commands.arguments.selector.EntitySelectorParser;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Random;
@@ -203,5 +211,38 @@ public class Resolver {
         }
 
         return result;
+    }
+
+    public static @NotNull NullableValue<ServerLevel> resolveServerLevel(@NotNull CommandContext<CommandSourceStack> context) {
+        String levelString;
+        ServerLevel level;
+        try {
+            levelString = StringArgumentType.getString(context, "level");
+            if (levelString.startsWith("\"") || levelString.endsWith("\"")) {
+                levelString = levelString.substring(1, levelString.length() - 1);
+            }
+        }
+        catch (IllegalArgumentException e) {
+            levelString = null;
+        }
+
+        if (levelString == null) {
+            level = context.getSource().getLevel();
+        }
+        else {
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+            ResourceKey<Level> dimensionKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(levelString));
+            if (server == null) {
+                return NullableValue.none();
+            }
+
+            level = server.getLevel(dimensionKey);
+            if (level == null) {
+                MessagePublisher.sendFailureMessage(context,errorComponent(Error.GeneralError.unknownDimension));
+                return NullableValue.none();
+            }
+        }
+
+        return NullableValue.ofNotNull(level);
     }
 }

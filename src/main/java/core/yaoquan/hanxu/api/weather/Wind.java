@@ -7,7 +7,16 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Random;
 
-/// @since 0.7.1 (Internal Development)
+/**
+ * <p><h3>
+ *     Wind
+ * </h3></p>
+ * <p>
+ *     Classic type that implements from {@link WeatherHolder.WeatherDefinition} and {@link WeatherHolder.WeatherType}.
+ * </p>
+ *
+ * @since 0.7.1 (Internal Development)
+ */
 public class Wind implements WeatherHolder.WeatherDefinition {
     // Determine how the direction change.
     public enum WindType {

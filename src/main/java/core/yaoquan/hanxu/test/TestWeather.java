@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.test;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.api.weather.Fog;
+import core.yaoquan.hanxu.util.type.MethodResult;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -41,8 +42,8 @@ public class TestWeather {
         ServerLevel level = server.getLevel(ServerLevel.OVERWORLD);
 
         if (!WeatherHolder.doesWeatherStateExist(level, "blue_fog")) {
-            boolean success = WeatherHolder.restartWeather(level, "blue_fog");
-            CoreHanXu.LOGGER.info("[HX] Started test fog 'blue_fog' {}", success? "successfully." : "failed.");
+            MethodResult result = WeatherHolder.restartWeather(level, "blue_fog");
+            CoreHanXu.LOGGER.info("[HX] Started test fog 'blue_fog' {}", result.isSuccess()? "successfully." : "failed.");
         }
         WeatherHolder.displayToInfoPage(player, level, "blue_fog", true);
     }

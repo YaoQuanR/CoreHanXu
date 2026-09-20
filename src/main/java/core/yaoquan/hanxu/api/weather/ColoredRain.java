@@ -8,7 +8,16 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Random;
 
-/// @since 0.7.1 (Internal Development)
+/**
+ * <p><h3>
+ *     Colored Rain
+ * </h3></p>
+ * <p>
+ *     Classic type that implements from {@link WeatherHolder.WeatherDefinition} and {@link WeatherHolder.WeatherType}.
+ * </p>
+ *
+ * @since 0.7.1 (Internal Development)
+ */
 public class ColoredRain implements WeatherHolder.WeatherDefinition {
     // Define what behavior should override when player enter a specific climate (Biome set).
     public enum RainType {
@@ -77,8 +86,8 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
 
     @Override
     public WeatherHolder.WeatherInstance createInstance(Random random) {
-        int duration = minimumDuration + random.nextInt(maximumDuration - minimumDuration);
-        int stillness = minimumStillness + random.nextInt(maximumStillness - minimumStillness);
+        int duration = minimumDuration + random.nextInt(maximumDuration - minimumDuration + 1);
+        int stillness = minimumStillness + random.nextInt(maximumStillness - minimumStillness + 1);
         return new WeatherHolder.WeatherInstance(
                 id,
                 WeatherHolder.WeatherType.COLORED_RAIN,

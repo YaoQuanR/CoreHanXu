@@ -440,7 +440,7 @@ public class ExecuteInformation {
     public static int executeWeather_Read(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = Resolver.resolveServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }

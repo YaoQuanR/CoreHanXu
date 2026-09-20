@@ -94,7 +94,8 @@ public class SceneHolder {
     /**
      * Delete scene from selected target.
      * @param sceneName           As same as file name.
-     * @param targetPath          Enum path: TO_GLOBAL or TO_WORLD.
+     * @param targetPath          Storage path of YAML file.
+     *                            Enum path: TO_GLOBAL or TO_WORLD.
      * @return                    Does the delete success: boolean.
      */
     public static boolean deleteScene(String sceneName, YamlReader.TargetPath targetPath) {
@@ -128,7 +129,8 @@ public class SceneHolder {
     /**
      * Check specific path: global / world.
      * @param sceneName           As same as file name.
-     * @param targetPath          Enum path: TO_GLOBAL or TO_WORLD.
+     * @param targetPath          Storage path of YAML file.
+     *                            Enum path: TO_GLOBAL or TO_WORLD.
      * @return                    Does scene exist: boolean.
      */
     public static boolean doesSceneExist(String sceneName, YamlReader.TargetPath targetPath) {

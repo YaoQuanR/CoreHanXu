@@ -106,6 +106,10 @@ public class Exceptionable<T> {
         return failure.error();
     }
 
+    public @NotNull String getFailureInfo() {
+        return failure.info();
+    }
+
     public @NotNull Exceptionable<T> ifUsual(Consumer<? super T> consumer) {
         if (isUsual()) {
             consumer.accept(value);

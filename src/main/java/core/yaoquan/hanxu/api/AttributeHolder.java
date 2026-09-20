@@ -76,8 +76,8 @@ public class AttributeHolder {
 
     /**
      * For API register.
-     * @param attribute         Create a new CustomAttribute {@link CustomAttribute}
-     *                          included custom callback definitions by fluent factory.
+     * @param attribute           Create a new CustomAttribute {@link CustomAttribute}
+     *                            included custom callback definitions by fluent factory.
      */
     public static void register(CustomAttribute attribute) {
         apiAttributes.put(attribute.getAttributeId(), attribute);
@@ -92,10 +92,12 @@ public class AttributeHolder {
 
     /**
      * For command register.
-     * @param attributeId       Unique title of attribute.
-     * @param maximum           Define the maximum changeable value of attribute.
-     * @param defaultValue      Define the start value of attribute.
-     * @return                  Does register success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param maximum             Define the maximum changeable value of attribute.
+     * @param defaultValue        Define the start value of attribute.
+     * @param targetPath          Storage path of YAML file.
+     *                            Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                    Does register success: boolean.
      */
     public static boolean register(String attributeId, float maximum, float defaultValue, YamlReader.TargetPath targetPath) {
         if (apiAttributes.containsKey(attributeId) || commandAttributes.containsKey(attributeId)) {
@@ -114,8 +116,8 @@ public class AttributeHolder {
 
     /**
      * For Command source unregister.
-     * @param attributeId       Unique title of attribute.
-     * @return                  Does unregister success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @return                    Does unregister success: boolean.
      */
     public static boolean unregister(String attributeId) {
         if (commandAttributes.containsKey(attributeId)) {
@@ -129,9 +131,10 @@ public class AttributeHolder {
 
     /**
      * For command unregister (delete YAML).
-     * @param attributeId       Unique title of attribute.
-     * @param targetPath        Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                  Does unregister success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param targetPath          Storage path of YAML file.
+     *                            Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                    Does unregister success: boolean.
      */
     public static boolean unregisterAndDelete(String attributeId, YamlReader.TargetPath targetPath) {
         boolean unregister = unregister(attributeId);
@@ -176,16 +179,15 @@ public class AttributeHolder {
 
     /**
      * Get attribute value.
-     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
-     * @param attributeId       Unique title of attribute.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Received player value: float.
-     *                          If this player not set the value yet, return default value from definition: float.
+     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
+     *                            You can by checking {@link Resolver} for details.
+     * @param attributeId         Unique title of attribute.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Received player value: float.
+     *                            If this player not set the value yet, return default value from definition: float.
      */
     public static float getValue(UUID masterId, String attributeId, boolean isApiAttribute) {
-        return getAttributeDefinition(attributeId, isApiAttribute)
-                .matching(
+        return getAttributeDefinition(attributeId, isApiAttribute).matching(
                         attribute -> {
                             // Receive value, create new concurrent hash map if null.
                             Map<String, Float> playerValues = attributeValues
@@ -203,10 +205,10 @@ public class AttributeHolder {
 
     /**
      * Get global's attribute value.
-     * @param attributeId       Unique title of attribute.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Received player value: float.
-     *                          If this player not set the value yet, return default value from definition: float.
+     * @param attributeId         Unique title of attribute.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Received player value: float.
+     *                            If this player not set the value yet, return default value from definition: float.
      */
     public static float getGlobalValue(String attributeId, boolean isApiAttribute) {
         return getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
@@ -214,14 +216,14 @@ public class AttributeHolder {
 
     /**
      * Set attribute value (Full direction trigger).
-     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @param direction         Define the trigger type for threshold callbacks.
-     *                          You can by checking {@link ThresholdDirection} for details.
-     * @return                  Does the setter success: boolean.
+     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
+     *                            You can by checking {@link Resolver} for details.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @param direction           Define the trigger type for threshold callbacks.
+     *                            You can by checking {@link ThresholdDirection} for details.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         NullableValue<CustomAttribute> nullableAttribute = getAttributeDefinition(attributeId, isApiAttribute);
@@ -265,12 +267,12 @@ public class AttributeHolder {
 
     /**
      * Set player's attribute value (Default: Point trigger).
-     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Does the setter success: boolean.
+     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
+     *                            You can by checking {@link Resolver} for details.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         return setValue(masterId, attributeId, value, isApiAttribute, ThresholdDirection.POINT);
@@ -278,12 +280,12 @@ public class AttributeHolder {
 
     /**
      * Set global's attribute value (Full direction trigger).
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @param direction         Define the trigger type for threshold callbacks.
-     *                          You can by checking {@link ThresholdDirection} for details.
-     * @return                  Does the setter success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @param direction           Define the trigger type for threshold callbacks.
+     *                            You can by checking {@link ThresholdDirection} for details.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean setGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, isApiAttribute, direction);
@@ -291,10 +293,10 @@ public class AttributeHolder {
 
     /**
      * Set global's attribute value (Default: Point trigger).
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Does the setter success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean setGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, isApiAttribute, ThresholdDirection.POINT);
@@ -302,12 +304,12 @@ public class AttributeHolder {
 
     /**
      * Add global's attribute value (Full direction trigger).
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @param direction         Define the trigger type for threshold callbacks.
-     *                          You can by checking {@link ThresholdDirection} for details.
-     * @return                  Does the setter success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @param direction           Define the trigger type for threshold callbacks.
+     *                            You can by checking {@link ThresholdDirection} for details.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
@@ -316,12 +318,12 @@ public class AttributeHolder {
 
     /**
      * Add player's attribute value (Default: Point trigger).
-     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Does the setter success: boolean.
+     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
+     *                            You can by checking {@link Resolver} for details.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
@@ -330,12 +332,12 @@ public class AttributeHolder {
 
     /**
      * Add global's attribute value (Full direction trigger).
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @param direction         Define the trigger type for threshold callbacks.
-     *                          You can by checking {@link ThresholdDirection} for details.
-     * @return                  Does the setter success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @param direction           Define the trigger type for threshold callbacks.
+     *                            You can by checking {@link ThresholdDirection} for details.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
@@ -344,10 +346,10 @@ public class AttributeHolder {
 
     /**
      * Add global's attribute value (Default: Point trigger).
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Does the setter success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
@@ -356,14 +358,14 @@ public class AttributeHolder {
 
     /**
      * Reduce attribute value (Full direction trigger).
-     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @param direction         Define the trigger type for threshold callbacks.
-     *                          You can by checking {@link ThresholdDirection} for details.
-     * @return                  Does the setter success: boolean.
+     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
+     *                            You can by checking {@link Resolver} for details.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @param direction           Define the trigger type for threshold callbacks.
+     *                            You can by checking {@link ThresholdDirection} for details.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
@@ -372,12 +374,12 @@ public class AttributeHolder {
 
     /**
      * Reduce player's attribute value (Default: Point trigger).
-     * @param masterId          Use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Does the setter success: boolean.
+     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
+     *                            You can by checking {@link Resolver} for details.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
@@ -386,12 +388,12 @@ public class AttributeHolder {
 
     /**
      * Reduce global's attribute value (Full direction trigger).
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @param direction         Define the trigger type for threshold callbacks.
-     *                          You can by checking {@link ThresholdDirection} for details.
-     * @return                  Does the setter success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @param direction           Define the trigger type for threshold callbacks.
+     *                            You can by checking {@link ThresholdDirection} for details.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
@@ -400,10 +402,10 @@ public class AttributeHolder {
 
     /**
      * Reduce global's attribute value (Default: Point trigger).
-     * @param attributeId       Unique title of attribute.
-     * @param value             Submit the new value for setter.
-     * @param isApiAttribute    True false that where you use this function.
-     * @return                  Does the setter success: boolean.
+     * @param attributeId         Unique title of attribute.
+     * @param value               Submit the new value for setter.
+     * @param isApiAttribute      True false that where you use this function.
+     * @return                    Does the setter success: boolean.
      */
     public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
@@ -413,8 +415,8 @@ public class AttributeHolder {
     // Load YAML data for import.
     /**
      * Get the YAML attribute data from sub path "attribute" for all .yaml documents.
-     * @param fileName          The file name of YAML.
-     * @return                  New attribute class data: NullableValue<\Attribute>.
+     * @param fileName            The file name of YAML.
+     * @return                    New attribute class data: NullableValue<\Attribute>.
      */
     public static NullableValue<Attribute> loadYamlAttribute(String fileName) {
         try {
@@ -439,7 +441,8 @@ public class AttributeHolder {
     /**
      * Delete YAML attribute from selected target.
      * @param fileName            As same as file name.
-     * @param targetPath          Enum path: TO_GLOBAL or TO_WORLD.
+     * @param targetPath          Storage path of YAML file.
+     *                            Enum path: TO_GLOBAL or TO_WORLD.
      * @return                    Does the delete success: boolean.
      */
     public static boolean deleteYamlAttribute(String fileName, YamlReader.TargetPath targetPath) {
@@ -498,6 +501,7 @@ public class AttributeHolder {
     }
 
     // Submit packet into F4 display.
+    /// <b>INNER METHOD</b>
     public static void syncPacketToClient(ServerPlayer player,
                                           UUID masterId,
                                           String attributeId,
@@ -515,6 +519,7 @@ public class AttributeHolder {
     }
 
     // Check if required to refresh the F4 attribute display.
+    /// <b>INNER METHOD</b>
     public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String attributeId, boolean isApiAttribute) {
         String key = player.getUUID() + ":" + masterId + ":" + attributeId;
 
@@ -524,6 +529,7 @@ public class AttributeHolder {
     }
 
     // Update display every 5 ticks.
+    /// <b>INNER METHOD</b>
     public static void tickSync() {
         tickCounter++;
         if (tickCounter < 5) {
@@ -563,6 +569,7 @@ public class AttributeHolder {
         }
     }
 
+    /// <b>INNER METHOD</b>
     public static void tickRecovery() {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
@@ -612,6 +619,7 @@ public class AttributeHolder {
         }
     }
 
+    /// <b>INNER METHOD</b>
     public static void saveAttributeToPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_attributes";
         CompoundTag dataRoot = player.getPersistentData();
@@ -629,6 +637,7 @@ public class AttributeHolder {
         dataRoot.put(headKey, allAttributesTag);
     }
 
+    /// <b>INNER METHOD</b>
     public static void saveAttributeToGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_attributes";
         CompoundTag dataRoot = new CompoundTag();
@@ -654,6 +663,7 @@ public class AttributeHolder {
         }
     }
 
+    /// <b>INNER METHOD</b>
     public static void loadAttributeForPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_attributes";
         CompoundTag dataRoot = player.getPersistentData();
@@ -662,6 +672,7 @@ public class AttributeHolder {
         rebuildAttributeData(player.getUUID(), allAttributesTag);
     }
 
+    /// <b>INNER METHOD</b>
     public static void loadAttributeForGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_attributes";
         Path file = FilePath.getModDataPath(level);
@@ -687,6 +698,7 @@ public class AttributeHolder {
         rebuildAttributeData(General.TargetUUID.GLOBAL_UUID, allAttributesTag);
     }
 
+    /// <b>INNER METHOD</b>
     public static void registerAllYamlAttributes() {
         List<Path> files = YamlReader.listOut("attribute");
         for (Path file : files) {
@@ -694,10 +706,11 @@ public class AttributeHolder {
 
             NullableValue<Attribute> nullableAttribute = loadYamlAttribute(fileName);
 
-            nullableAttribute.ifPresent(attribute -> registerYamlAttribute(attribute, false));
+            nullableAttribute.ifPresent(AttributeHolder::registerYamlAttribute);
         }
     }
 
+    /// <b>INNER METHOD</b>
     @SuppressWarnings("unchecked")
     public static void saveYamlAttribute(String attributeId, UpdateCategory updateCategory, float threshold, String callbackId, String behavior, String content) {
         Path globalFile = FilePath.getGlobalPath().resolve("attribute").resolve(attributeId + ".yaml");
@@ -991,11 +1004,7 @@ public class AttributeHolder {
     }
 
     // Register all YAML attributes.
-    private static void registerYamlAttribute(Attribute attribute, boolean isOverride) {
-        if (isOverride) {
-            // Only command/YAML will override their attributes.
-            commandAttributes.remove(attribute.id);
-        }
+    private static void registerYamlAttribute(Attribute attribute) {
         if (apiAttributes.containsKey(attribute.id) || commandAttributes.containsKey(attribute.id)) {
             CoreHanXu.LOGGER.warn("[HX] Rejected duplicate attribute: {}", attribute.id);
             return;

@@ -68,12 +68,12 @@ public class FogRender {
         WeatherClient.FogInfo fog = WeatherClient.getFog(dimension);
         WeatherClient.ColoredRainInfo coloredRain = WeatherClient.getColoredRain(dimension);
 
-        if (fog != null && fog.phase() != WeatherHolder.WeatherPhase.STILLNESS) {
+        if (fog != null && fog.phase() == WeatherHolder.WeatherPhase.ACTIVE) {
             applyToFog(fog, cir);
             return;
         }
 
-        if (coloredRain != null && coloredRain.phase() != WeatherHolder.WeatherPhase.STILLNESS) {
+        if (coloredRain != null && coloredRain.phase() == WeatherHolder.WeatherPhase.ACTIVE) {
             applyToColoredRain(camera, renderDistance, isFoggy, deltaTracker, level, coloredRain, cir);
         }
     }

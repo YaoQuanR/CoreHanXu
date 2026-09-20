@@ -176,11 +176,12 @@ public class VariableHolder {
     /**
      * Delete variable from data.
      * @param variableName          Defined id of this variable.
-     * @return                      Does the deletion success: boolean.
+     * @return                      Success or failure when:
+     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
      */
-    public static boolean deleteVariable(String variableName) {
+    public static @NotNull MethodResult deleteVariable(String variableName) {
         if (!registeredVariables.contains(variableName)) {
-            return false;
+            return MethodResult.failure("notExist", variableName);
         }
 
         registeredVariables.remove(variableName);
@@ -190,7 +191,8 @@ public class VariableHolder {
         floatVariables.remove(variableName);
         doubleVariables.remove(variableName);
         longVariables.remove(variableName);
-        return true;
+
+        return MethodResult.success();
     }
 
     /**
@@ -239,7 +241,7 @@ public class VariableHolder {
     /**
      * Receive a variable type string for operations.
      * @param variableName          Defined id of this variable.
-     * @return                      A nullable value that return when:
+     * @return                      A nullable value that returns when:
      *                              <li>- Registered variable with valid type -> Contains a presented string.</li>
      *                              <li>- Variable not found in valid type -> None.</li>
      */
@@ -268,7 +270,7 @@ public class VariableHolder {
     /**
      * Receive a variable value as string.
      * @param variableName          Define id of this variable.
-     * @return                      A nullable value that return when:
+     * @return                      A nullable value that returns when:
      *                              <li>- Registered variable with valid type -> Contains a presented string.</li>
      *                              <li>- Variable not found in valid type -> None.</li>
      */
@@ -299,7 +301,7 @@ public class VariableHolder {
      * @param variableName          Define id of this variable.
      * @param variableType          Valid type (Same as Java data class) for variable,
      *                              which contains <b>string, integer, boolean, float, double, long</b>.
-     * @return                      A nullable value that return when:
+     * @return                      A nullable value that returns when:
      *                              <li>- Registered variable with valid type -> Contains a presented object.</li>
      *                              <li>- Variable not found in valid type -> None.</li>
      */
@@ -332,7 +334,7 @@ public class VariableHolder {
     /**
      * Receive a variable value by name and type.
      * @param variableName          Define id of this variable.
-     * @return                      A nullable value that return when:
+     * @return                      A nullable value that returns when:
      *                              <li>- Registered variable with valid type -> Contains a presented object.</li>
      *                              <li>- Variable not found in valid type -> None.</li>
      */
@@ -1282,6 +1284,7 @@ public class VariableHolder {
         return MethodResult.success();
     }
 
+    /// <b>INNER METHOD</b>
     public static @NotNull NullableValue<CompoundTag> packAllVariables() {
         String headKey = SaveDat.HeadKey.variables.get();
         CompoundTag root = new CompoundTag();
@@ -1314,6 +1317,7 @@ public class VariableHolder {
         return NullableValue.ofNotNull(root);
     }
 
+    /// <b>INNER METHOD</b>
     public static void loadAllVariables(ServerLevel level) {
         String headKey = SaveDat.HeadKey.variables.get();
         Path file = FilePath.getModDataPath(level);

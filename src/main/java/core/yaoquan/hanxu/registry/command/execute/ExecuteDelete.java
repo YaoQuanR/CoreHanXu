@@ -153,23 +153,30 @@ public class ExecuteDelete {
         if (variableName.equals("-all") || variableName.equals("-a")) {
             VariableHolder.deleteAllVariables();
             MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.variable_all_deleted").withColor(General.Color.SUCCESS));
+
+            return 1;
         }
         else {
             String variableType = VariableHolder.getType(variableName).getOrElse("?");
-            if (VariableHolder.deleteVariable(variableName)) {
-                MessagePublisher.sendSystemMessage(context,
-                        Component.translatable("commands.chx.variable_deleted")
-                                .append(" " + variableName + " (" +  variableType + ")")
-                                .withColor(General.Color.SUCCESS)
-                );
-            }
-            else {
-                MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.notExist));
-                return 0;
-            }
-        }
 
-        return 1;
+            MethodResult result = VariableHolder.deleteVariable(variableName);
+
+            return result.matching(
+                    () -> {
+                        MessagePublisher.sendSystemMessage(context,
+                                Component.translatable("commands.chx.variable_deleted")
+                                        .append(" " + variableName + " (" +  variableType + ")")
+                                        .withColor(General.Color.SUCCESS)
+                        );
+
+                        return 1;
+                    },
+                    (error, info) -> {
+                        CommandError.displayVariableErrorResult(context, error);
+                        return 0;
+                    }
+            );
+        }
     }
 
     public static int executeLoot_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
@@ -237,13 +244,8 @@ public class ExecuteDelete {
     public static int executeWeather_Delete(CommandContext<CommandSourceStack> context, String specificPath) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        if (WeatherHolder.doesWeatherExist(weatherId, "api")) {
+        if (WeatherHolder.doesWeatherInstanceExist(weatherId, "api")) {
             MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.tryToModifyApiTarget));
-            return 0;
-        }
-
-        if (!WeatherHolder.doesWeatherExist(weatherId)) {
-            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
             return 0;
         }
 
@@ -268,25 +270,18 @@ public class ExecuteDelete {
             }
         }
 
-        switch (specificPath) {
-            case "world":
-                if (WeatherHolder.unregisterAndDelete(weatherId, YamlReader.TargetPath.TO_WORLD)) {
+        YamlReader.TargetPath targetPath = specificPath.equals("world")? YamlReader.TargetPath.TO_WORLD : YamlReader.TargetPath.TO_GLOBAL;
+        MethodResult result = WeatherHolder.unregisterAndDelete(weatherId, targetPath);
+
+        return result.matching(
+                () -> {
                     MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_deleted").withColor(General.Color.SUCCESS));
-                    break;
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayWeatherErrorResult(context, error);
+                    return 0;
                 }
-
-                MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.failedToDelete));
-                return 0;
-            case "global":
-                if (WeatherHolder.unregisterAndDelete(weatherId, YamlReader.TargetPath.TO_GLOBAL)) {
-                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_deleted").withColor(General.Color.SUCCESS));
-                    break;
-                }
-
-                MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.failedToDelete));
-                return 0;
-        }
-
-        return 1;
+        );
     }
 }

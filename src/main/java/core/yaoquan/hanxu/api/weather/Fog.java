@@ -1,6 +1,5 @@
 package core.yaoquan.hanxu.api.weather;
 
-import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
@@ -10,7 +9,16 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.*;
 
-/// @since 0.7.0 (Internal Development)
+/**
+ * <p><h3>
+ *     Fog
+ * </h3></p>
+ * <p>
+ *     Classic type that implements from {@link WeatherHolder.WeatherDefinition} and {@link WeatherHolder.WeatherType}.
+ * </p>
+ *
+ * @since 0.7.0 (Internal Development)
+ */
 public class Fog implements WeatherHolder.WeatherDefinition {
     private final String id;
     private final Random random;

@@ -30,7 +30,7 @@ public class General {
     }
 
     public static class Version {
-        private static final String CORE_VERSION = "0.7.1id5";
+        private static final String CORE_VERSION = "0.7.1id6";
 
         public static String getCoreVersion() {
             return CORE_VERSION;

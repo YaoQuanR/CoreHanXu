@@ -9,11 +9,13 @@ import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.weather.ColoredRain;
 import core.yaoquan.hanxu.api.weather.Fog;
 import core.yaoquan.hanxu.api.weather.Wind;
+import core.yaoquan.hanxu.util.type.Exceptionable;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.List;
@@ -230,10 +232,13 @@ public class Creator {
 
     /**
      * Create weather for command/YAML definitions.
+     * @return                      It will return a usual result unless:
+     *                              <li>- Not supported type -> Exception: "unknownType", type.</li>
+     *                              <li>- Wind type of vector are not defined -> Exception: "missingField", "windType"/"windVector".</li>
      */
-    public static WeatherHolder.WeatherDefinition createWeatherDefinition(
-            String id, WeatherHolder.WeatherType type, Random random,
-            Map<String, Object> parameters) {
+    public static @NotNull Exceptionable<WeatherHolder.WeatherDefinition> createWeatherDefinition(
+            @NotNull String id, @NotNull WeatherHolder.WeatherType type, @NotNull Random random,
+            @NotNull Map<String, Object> parameters) {
         int minimumDuration = 1200;
         int maximumDuration = 6000;
         Object durationObject = parameters.get("duration");
@@ -270,7 +275,7 @@ public class Creator {
 
                 Object heightOffsets = parameters.get("height_offsets");
                 if (!(heightOffsets instanceof Map)) {
-                    return fog;
+                    return Exceptionable.usual(fog);
                 }
 
                 for (Map.Entry<?, ?> entry : ((Map<?, ?>) heightOffsets).entrySet()) {
@@ -282,7 +287,7 @@ public class Creator {
                     }
                 }
 
-                return fog;
+                return Exceptionable.usual(fog);
             }
             case COLORED_RAIN -> {
                 int skyColor = Cast.toInteger(parameters, "sky_color", WeatherHolder.DefaultColor.RAINY_SKY);
@@ -301,7 +306,7 @@ public class Creator {
                         .snowBiomes(getRainType(parameters, "snow_biomes"))
                         .dryBiomes(getRainType(parameters, "dry_biomes"));
 
-                return coloredRain;
+                return Exceptionable.usual(coloredRain);
             }
             case WIND -> {
                 Wind wind = new Wind(id, random)
@@ -312,7 +317,7 @@ public class Creator {
 
                 if (windType == null) {
                     CoreHanXu.LOGGER.warn("[HX] Received null wind type for: {}", id);
-                    return null;
+                    return Exceptionable.exception("missingField", "windType");
                 }
 
                 windType = windType.toLowerCase();
@@ -321,7 +326,7 @@ public class Creator {
 
                 if (!(vectorObject instanceof Map)) {
                     CoreHanXu.LOGGER.warn("[HX] Received null vector for: {}", id);
-                    return null;
+                    return Exceptionable.exception("missingField", "windVector");
                 }
 
                 @SuppressWarnings("unchecked")
@@ -389,11 +394,11 @@ public class Creator {
                 float dynamicSpeedChange = Cast.toFloat(parameters, "dynamic_speed_change", 0);
                 wind.affectRain(affectRain).dynamicSpeedChange(dynamicSpeedChange);
 
-                return wind;
+                return Exceptionable.usual(wind);
             }
             // Wait for more definitions.
-            case null, default -> {
-                return null;
+            default -> {
+                return Exceptionable.exception("unknownType", type.name().toLowerCase());
             }
         }
     }

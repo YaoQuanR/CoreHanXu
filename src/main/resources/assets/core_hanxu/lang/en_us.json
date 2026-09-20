@@ -221,11 +221,6 @@
   "commands.chx.timer_not_exist_or_already_instantiated": "[HX] Timer not exist or already instantiated!",
   "commands.chx.timer_master_not_exist": "[HX] Master of timer does not exist!",
   "commands.chx.timer_timed_out": "[HX] The timer has timed out.",
-  "commands.chx.timer_unable_to_start": "[HX] Unable to start timer, check if target offline, run off, or not exist!",
-  "commands.chx.timer_unable_to_stop": "[HX] Unable to stop timer, check if targeted timer exist!",
-  "commands.chx.timer_unable_to_reset": "[HX] Unable to reset timer, check if targeted timer exist!",
-  "commands.chx.timer_unable_to_restart": "[HX] Unable to restart timer, check if targeted timer exist!",
-  "commands.chx.timer_unable_to_delete_instance": "[HX] Unable to delete instance timer, check if targeted timer exist!",
 
   "commands.chx.timer_created": "[HX] Timer created!",
   "commands.chx.timer_with_execute_behavior": "[HX] Execute when time out",
@@ -348,13 +343,14 @@
 
   "commands.chx.weather_empty_weather": "[HX] Not yet registered any weather!",
   "commands.chx.weather_not_found": "[HX] Weather not found!",
+  "commands.chx.weather_yaml_not_found": "[HX] Weather definition not found in YAML file!",
+  "commands.chx.weather_in_use": "[HX] Weather is now in active or ready phase, unable to operate!",
   "commands.chx.weather_already_activated": "[HX] Weather has already activated!",
-  "commands.chx.weather_on_ready_or_not_found": "[HX] Weather has on ready or not found!",
   "commands.chx.weather_already_exist": "[HX] Registered weather with this name are already exist!",
+  "commands.chx.weather_not_initialized": "[HX] The weather has not yet initialized! Run the level and restart the weather for operation!",
   "commands.chx.weather_failed_to_save": "[HX] Weather has failed to save!",
   "commands.chx.weather_try_to_modify_api_target": "[HX] API weather are not allowed to modify by commands.",
   "commands.chx.weather_same_name_found": "[HX] Two same name weather found! Provide specific path component and try again.",
-  "commands.chx.weather_failed_to_delete": "[HX] Weather has failed to delete!",
 
   "commands.core_hanxu.server_offline": "[HX] Server offline!",
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",

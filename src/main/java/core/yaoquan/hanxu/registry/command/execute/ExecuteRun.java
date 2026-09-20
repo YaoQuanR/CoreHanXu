@@ -9,6 +9,7 @@ import core.yaoquan.hanxu.api.SceneHolder;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.util.tool.MessagePublisher;
+import core.yaoquan.hanxu.util.type.MethodResult;
 import core.yaoquan.hanxu.util.type.NullableValue;
 import core.yaoquan.hanxu.util.tool.Resolver;
 import net.minecraft.commands.CommandSourceStack;
@@ -184,49 +185,53 @@ public class ExecuteRun {
     public static int executeWeather_Start(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = Resolver.resolveServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
         ServerLevel level = nullableLevel.get();
 
-        boolean success = WeatherHolder.startWeather(level, weatherId);
+        MethodResult result = WeatherHolder.startWeather(level, weatherId);
 
-        if (success) {
-            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_started").withColor(General.Color.SUCCESS));
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
-        }
-
-        return success? 1 : 0;
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_started").withColor(General.Color.SUCCESS));
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayWeatherErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 
     public static int executeWeather_ResumeId(CommandContext<CommandSourceStack> context) {
         String weatherId = StringArgumentType.getString(context, "weather_id");
 
-        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = Resolver.resolveServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
         ServerLevel level = nullableLevel.get();
 
-        boolean success = WeatherHolder.resumeWeather(level, weatherId);
+        MethodResult result = WeatherHolder.resumeWeather(level, weatherId);
 
-        if (success) {
-            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_resumed").withColor(General.Color.SUCCESS));
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
-        }
-
-        return success? 1 : 0;
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_resumed").withColor(General.Color.SUCCESS));
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayWeatherErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 
     public static int executeWeather_ResumeType(CommandContext<CommandSourceStack> context) {
         String weatherType = StringArgumentType.getString(context, "weather_type");
 
-        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = Resolver.resolveServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
@@ -234,15 +239,17 @@ public class ExecuteRun {
 
         WeatherHolder.WeatherType type = WeatherHolder.parseStringToType(weatherType);
 
-        boolean success = WeatherHolder.resumeWeather(level, type);
+        MethodResult result = WeatherHolder.resumeWeather(level, type);
 
-        if (success) {
-            MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_type_resumed").withColor(General.Color.SUCCESS));
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
-        }
-
-        return success? 1 : 0;
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_type_resumed").withColor(General.Color.SUCCESS));
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayWeatherErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 }

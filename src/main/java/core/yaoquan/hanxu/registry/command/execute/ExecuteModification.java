@@ -64,7 +64,7 @@ public class ExecuteModification {
                             return 1;
                         },
                         (error, info) -> {
-                            CommandMisc.displayTimerErrorResult(context, error);
+                            CommandError.displayTimerErrorResult(context, error);
                             return 0;
                         }
                 );
@@ -447,7 +447,7 @@ public class ExecuteModification {
                     return 1;
                 },
                 (error, info) -> {
-                    CommandMisc.displayVariableErrorResult(context, error);
+                    CommandError.displayVariableErrorResult(context, error);
                     return 0;
                 }
         );
@@ -491,7 +491,7 @@ public class ExecuteModification {
                         return 1;
                     },
                     (error, info) -> {
-                        CommandMisc.displayVariableErrorResult(context, error);
+                        CommandError.displayVariableErrorResult(context, error);
                         return 0;
                     }
             );
@@ -509,7 +509,7 @@ public class ExecuteModification {
                         return 1;
                     },
                     (error, info) -> {
-                        CommandMisc.displayVariableErrorResult(context, error);
+                        CommandError.displayVariableErrorResult(context, error);
                         return 0;
                     }
             );
@@ -536,7 +536,7 @@ public class ExecuteModification {
                     return 1;
                 },
                 (error, info) -> {
-                    CommandMisc.displayVariableErrorResult(context, error);
+                    CommandError.displayVariableErrorResult(context, error);
                     return 0;
                 }
         );
@@ -546,31 +546,37 @@ public class ExecuteModification {
         String weatherId = StringArgumentType.getString(context, "weather_id");
         int timeAmount = IntegerArgumentType.getInteger(context, "time_amount");
 
-        NullableValue<ServerLevel> nullableLevel = CommandMisc.findServerLevel(context);
+        NullableValue<ServerLevel> nullableLevel = Resolver.resolveServerLevel(context);
         if (nullableLevel.isNull()) {
             return 0;
         }
         ServerLevel level = nullableLevel.get();
 
-        boolean success = switch (category) {
-            case "initial" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.INITIAL);
-            case "remaining" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.REMAINING);
-            case "duration" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.DURATION);
-            case "stillness" -> WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.STILLNESS);
-            default -> false;
+        MethodResult result = switch (category) {
+            case "initial" ->
+                    WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.INITIAL);
+            case "remaining" ->
+                    WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.REMAINING);
+            case "duration" ->
+                    WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.DURATION);
+            case "stillness" ->
+                    WeatherHolder.modifyWeatherTime(level, weatherId, timeAmount, WeatherHolder.ModifyType.STILLNESS);
+            default -> MethodResult.failure("undefinedCategory");
         };
 
-        if (success) {
-            MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.weather_time_modified")
-                            .append(" (" + level + " -> " + weatherId + "): " + category + " -> " + timeAmount)
-                            .withColor(General.Color.CONTENT)
-            );
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notFound));
-        }
-
-        return success? 1 : 0;
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.weather_time_modified")
+                                    .append(" (" + level + " -> " + weatherId + "): " + category + " -> " + timeAmount)
+                                    .withColor(General.Color.CONTENT)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayWeatherErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 }

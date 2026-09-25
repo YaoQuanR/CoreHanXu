@@ -15,7 +15,7 @@ import java.util.Random;
  *     Classic type that implements from {@link WeatherHolder.WeatherDefinition} and {@link WeatherHolder.WeatherType}.
  * </p>
  *
- * @since 0.7.1 (Internal Development)
+ * @since 0.7.2 (Internal Development)
  */
 public class Wind implements WeatherHolder.WeatherDefinition {
     // Determine how the direction change.

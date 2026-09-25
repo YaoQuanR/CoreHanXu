@@ -35,7 +35,7 @@ public class Creator {
      *                          remind/execute/null is required to fill in for recreate callback.
      * @param contentParameter  Also required when using command callback,
      *                          remind: display information context; execute: command execution; null: nothing.
-     * @return                  Generated callback: Consumer<\ServerPlayer>.
+     * @return                  Generated callback: {@code Consumer<ServerPlayer>}.
      */
     public static Consumer<ServerPlayer> createCallback(CommandContext<CommandSourceStack> context, String timerId, String titleParameter, String contentParameter) {
         // Build callback according to titleParameter from command;
@@ -220,7 +220,7 @@ public class Creator {
                 BehaviorRegistry.BehaviorCallback callback = BehaviorRegistry.getCallback(callbackId);
                 if (callback != null) {
                     BehaviorRegistry.register(
-                        callbackId, BehaviorRegistry.getCallback(callbackId)
+                        callbackId, callback
                     );
                 }
                 else {

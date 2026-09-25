@@ -31,6 +31,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
 public class WeatherHolder {
     public static class DefaultColor {
-        public static final int RAIN = 0xCFEBFF;
+        public static final int RAIN = 0x4667C2;
         public static final int RAINY_SKY = 0x4D82A8;
         public static final int SNOW = 0xEDF8FF;
         public static final int FOG = 0xCCDDEE;
@@ -100,7 +101,7 @@ public class WeatherHolder {
      *     Stillness: Phase that is in its cooldown period. Contains stillness ticks.
      * </li>
      * <li>
-     *     Idle: Phase that never active before. It only used when first create of weather or package lost.
+     *     Idle: Phase that never active before. It only used when the phase not specified.
      * </li>
      */
     public enum WeatherPhase {
@@ -143,12 +144,12 @@ public class WeatherHolder {
      * Only allows when operating stillness or idle phase weather.
      * Not able to unregister API weather, unless delete from mod codes and reboot.
      * @param definition            The fundamental information of a weather definition,
-     *                              where the definition defined is by all specific weathers.
+     *                              where the definition is defined by all specific weathers.
      *                              <li>Please view the implement of {@link WeatherDefinition},
      *                              and the package at {@link core.yaoquan.hanxu.api.weather} for details.</li>
      * @return                      Success or failure when:
      *                              <li>- Delete when weather are in ready or active phase -> "inUse", definition.getId().</li>
-     *                              <li>- Weather not found in register -> "notFound", defintion.getId().</li>
+     *                              <li>- Weather not found in register -> "notFound", definition.getId().</li>
      */
     public static @NotNull MethodResult unregister(WeatherDefinition definition) {
         for (WeatherState state : weatherStates.values()) {
@@ -176,11 +177,16 @@ public class WeatherHolder {
      * @param targetPath            Storage path of YAML file.
      *                              Enum path: TO_GLOBAL or TO_WORLD.
      * @return                      Success or failure when:
-     *                              <li>- Delete when weather are in ready or active phase -> "inUse", definition.getId().</li>
-     *                              <li>- Weather not found in register and YAML -> "notFound", defintion.getId().</li>
+     *                              <li>- Delete when weather are in ready or active phase -> "inUse", id.</li>
+     *                              <li>- Weather not found in command register -> "notFound", id.</li>
+     *                              <li>- YAML not found for this weather -> "yamlNotFound", id.</li>
      */
     public static @NotNull MethodResult unregisterAndDelete(String id, YamlReader.TargetPath targetPath) {
-        WeatherDefinition definition = commandWeathers.get(id);
+        NullableValue<WeatherDefinition> nullableDefinition = getCommandWeatherDefinition(id);
+        if (nullableDefinition.isNull()) {
+            return MethodResult.failure("notFound", id);
+        }
+        WeatherDefinition definition = nullableDefinition.get();
 
         MethodResult unregister = unregister(definition);
 
@@ -193,7 +199,6 @@ public class WeatherHolder {
             catch (IOException e) {
                 CoreHanXu.LOGGER.warn("[HX] Failed to unregister weather and delete weather YAML: {}", id, e);
                 return MethodResult.failure("yamlNotFound", id);
-
             }
         }
 
@@ -218,10 +223,38 @@ public class WeatherHolder {
     }
 
     /**
+     * Receive a weather definition.
+     * @param id                    The defined id of weather definition.
+     * @return                      A nullable value that returns when:
+     *                              <li>- Registered weather in api -> Contains a presented definition.</li>
+     *                              <li>- Weather is not registered -> None.</li>
+     */
+    public static @NotNull NullableValue<WeatherDefinition> getApiWeatherDefinition(String id) {
+        if (apiWeathers.containsKey(id)) {
+            return NullableValue.ofNotNull(apiWeathers.get(id));
+        }
+        return NullableValue.none();
+    }
+
+    /**
+     * Receive a weather definition.
+     * @param id                    The defined id of weather definition.
+     * @return                      A nullable value that returns when:
+     *                              <li>- Registered weather in command -> Contains a presented definition.</li>
+     *                              <li>- Weather is not registered -> None.</li>
+     */
+    public static @NotNull NullableValue<WeatherDefinition> getCommandWeatherDefinition(String id) {
+        if (commandWeathers.containsKey(id)) {
+            return NullableValue.ofNotNull(commandWeathers.get(id));
+        }
+        return NullableValue.none();
+    }
+
+    /**
      * Receive a weather state from the level.
      * @param level                 Level, or called dimension. A data set that from {@link ServerLevel}.
      * @return                      A nullable value that returns when:
-     *                              <li>- A level that has registered weather -> Contains a presented states.</li>
+     *                              <li>- A level that has registered weather -> Contains a presented state.</li>
      *                              <li>- A level that never run with this mod -> None.</li>
      */
     public static @NotNull NullableValue<WeatherState> getWeatherState(ServerLevel level) {
@@ -240,10 +273,10 @@ public class WeatherHolder {
     }
 
     /**
-     * Receive a weather state from the level.
+     * Receive a weather state from the dimension key.
      * @param dimension             A resource key for level dimension that able to found by {@link ResourceKey}.
      * @return                      A nullable value that returns when:
-     *                              <li>- A level that has registered weather -> Contains a presented states.</li>
+     *                              <li>- A level that has registered weather -> Contains a presented state.</li>
      *                              <li>- A level that never run with this mod -> None.</li>
      */
     public static @NotNull NullableValue<WeatherState> getWeatherState(ResourceKey<Level> dimension) {
@@ -255,8 +288,8 @@ public class WeatherHolder {
      * It will automatically build a new weather instance if not activate before.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @param duration              Specify the next duration ticks. Enter -1 to ignore this modification.
-     * @return                      Success of failure when:
+     * @param duration              Specify the next duration ticks. Enter a negative value to ignore this modification.
+     * @return                      Success or failure when:
      *                              <li>- Not found in registered weather -> "notFound", id.</li>
      *                              <li>- Operate when weather are in ready or active phase -> "inUse", id.</li>
      */
@@ -267,7 +300,7 @@ public class WeatherHolder {
             CoreHanXu.LOGGER.warn("[HX] Unknown weather definition for activate: {}", id);
             return MethodResult.failure("notFound", id);
         }
-        
+
         WeatherDefinition definition = nullableDefinition.get();
 
         WeatherState state = getWeatherStateOrNew(level);
@@ -288,7 +321,7 @@ public class WeatherHolder {
      * It will automatically build a new weather instance if not activate before.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Not found in registered weather -> "notFound", id.</li>
      *                              <li>- Operate when weather are in ready or active phase -> "inUse", id.</li>
      */
@@ -300,8 +333,8 @@ public class WeatherHolder {
      * Force to activate a weather as active phase.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @param duration              Specify the next duration ticks. Enter -1 to ignore this modification.
-     * @return                      Success of failure when:
+     * @param duration              Specify the next duration ticks. Enter a negative to ignore this modification.
+     * @return                      Success or failure when:
      *                              <li>- Not found in registered weather -> "notFound", id.</li>
      */
     public static @NotNull MethodResult startWeather(ServerLevel level, String id, int duration) {
@@ -349,7 +382,7 @@ public class WeatherHolder {
      * Force to activate a weather as active phase.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Not found in registered weather -> "notFound", id.</li>
      */
     public static @NotNull MethodResult startWeather(ServerLevel level, String id) {
@@ -360,7 +393,7 @@ public class WeatherHolder {
      * Unfreeze the weather process.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param type                  The {@link WeatherType} to operate.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Weather are not initialized at the targeted world -> "notInitialized", type.</li>
      *                              <li>- This type of weather are not initialized -> "notInitialized", type.</li>
      */
@@ -397,7 +430,7 @@ public class WeatherHolder {
      * Unfreeze the weather process.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Not found in registered weather -> "notFound", id.</li>
      *                              <li>- This type of weather are not initialized -> "notInitialized", type.</li>
      */
@@ -427,7 +460,7 @@ public class WeatherHolder {
      * Freeze the weather process.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param type                  The {@link WeatherType} to operate.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Weather not found in the state with the provided type -> "notFound", type.</li>
      *                              <li>- This type of weather are not initialized -> "notInitialized", type.</li>
      */
@@ -439,7 +472,7 @@ public class WeatherHolder {
      * Freeze the weather process.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Weather not found in the state with the provided id -> "notFound", id.</li>
      *                              <li>- This type of weather are not initialized -> "notInitialized", type.</li>
      */
@@ -451,7 +484,7 @@ public class WeatherHolder {
      * Let the specific weather back to the stillness phase.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param type                  The {@link WeatherType} to operate.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Weather not found in the state with the provided type -> "notFound", type.</li>
      *                              <li>- This type of weather are not initialized -> "notInitialized", type.</li>
      */
@@ -463,7 +496,7 @@ public class WeatherHolder {
      * Let the specific weather back to the stillness phase.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Weather not found in the state with the provided id -> "notFound", id.</li>
      *                              <li>- This type of weather are not initialized -> "notInitialized", type.</li>
      */
@@ -475,7 +508,7 @@ public class WeatherHolder {
      * Change the weather to ready phase.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Not found in registered weather -> "notFound", id.</li>
      */
     public static @NotNull MethodResult prepareWeather(ServerLevel level, String id) {
@@ -646,7 +679,7 @@ public class WeatherHolder {
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
      * @return                      A nullable value that returns when:
-     *                              <li>- A level that has registered weather -> Contains a presented states.</li>
+     *                              <li>- A level that has registered weather -> Contains a presented state.</li>
      *                              <li>- A level that never run with this mod -> None.</li>
      */
     public static @NotNull NullableValue<WeatherInstance> findInstance(ServerLevel level, String id) {
@@ -663,7 +696,7 @@ public class WeatherHolder {
      * @param dimension             A resource key string for level dimension.
      * @param id                    The defined id of weather definition.
      * @return                      A nullable value that returns when:
-     *                              <li>- A level that has registered weather -> Contains a presented states.</li>
+     *                              <li>- A level that has registered weather -> Contains a presented state.</li>
      *                              <li>- A level that never run with this mod -> None.</li>
      */
     public static @NotNull NullableValue<WeatherInstance> findInstance(String dimension, String id) {
@@ -676,7 +709,7 @@ public class WeatherHolder {
      * @param dimension             A resource key for level dimension that able to found by {@link ResourceKey}.
      * @param id                    The defined id of weather definition.
      * @return                      A nullable value that returns when:
-     *                              <li>- A level that has registered weather -> Contains a presented states.</li>
+     *                              <li>- A level that has registered weather -> Contains a presented state.</li>
      *                              <li>- A level that never run with this mod -> None.</li>
      */
     public static @NotNull NullableValue<WeatherInstance> findInstance(ResourceKey<Level> dimension, String id) {
@@ -692,15 +725,15 @@ public class WeatherHolder {
      * Modify the time ticks of weather instance.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
-     * @param newTicks              Target ticks to modify.
+     * @param nextTicks             Target ticks to modify.
      * @param type                  Type of modification by {@link ModifyType}.
-     * @return                      Success of failure when:
-     *                              <li>- Instance not found -> "notFound", id.</li>
+     * @return                      Success or failure when:
+     *                              <li>- Instance not found -> "notFound", type.</li>
      */
-    public static @NotNull MethodResult modifyWeatherTime(ServerLevel level, String id, int newTicks, @NotNull ModifyType type) {
+    public static @NotNull MethodResult modifyWeatherTime(ServerLevel level, String id, int nextTicks, @NotNull ModifyType type) {
         return findInstance(level, id).matching(
                 instance -> {
-                    int modifyTicks = Math.max(0, newTicks);
+                    int modifyTicks = Math.max(0, nextTicks);
                     switch (type) {
                         case INITIAL -> instance.setInitialTicks(modifyTicks);
                         case REMAINING -> instance.setRemainingTicks(modifyTicks);
@@ -711,6 +744,30 @@ public class WeatherHolder {
                 },
                 () -> MethodResult.failure("notFound", type.name().toLowerCase())
         );
+    }
+
+    /// Parse string to {@link WeatherType}.
+    public static @NotNull WeatherType parseType(String type) {
+        return switch (type) {
+            case "fog" -> WeatherType.FOG;
+            case "colored_rain" -> WeatherType.COLORED_RAIN;
+            case "wind" -> WeatherType.WIND;
+            case "colored_moon" -> WeatherType.COLORED_MOON;
+            case "particle_storm" -> WeatherType.PARTICLE_STORM;
+            case "aurora" -> WeatherType.AURORA;
+            case "void_fog" -> WeatherType.VOID_FOG;
+            case null, default -> WeatherType.NULL;
+        };
+    }
+
+    /// Parse string to {@link WeatherPhase}.
+    public static @NotNull WeatherPhase parsePhase(String phase) {
+        return switch (phase) {
+            case "active" -> WeatherPhase.ACTIVE;
+            case "ready" -> WeatherPhase.READY;
+            case "stillness" -> WeatherPhase.STILLNESS;
+            case null, default -> WeatherPhase.IDLE;
+        };
     }
 
     public static @NotNull List<Component> readWeatherInstance(ServerLevel level, String weatherId) {
@@ -899,19 +956,6 @@ public class WeatherHolder {
                 );
 
         return stringPackage.toString();
-    }
-
-    public static @NotNull WeatherType parseStringToType(String typeString) {
-        return switch (typeString) {
-            case "fog" -> WeatherType.FOG;
-            case "colored_rain" -> WeatherType.COLORED_RAIN;
-            case "wind" -> WeatherType.WIND;
-            case "colored_moon" -> WeatherType.COLORED_MOON;
-            case "particle_storm" -> WeatherType.PARTICLE_STORM;
-            case "aurora" -> WeatherType.AURORA;
-            case "void_fog" -> WeatherType.VOID_FOG;
-            default -> WeatherType.NULL;
-        };
     }
 
     public static void initialize(ServerLevel level) {
@@ -1298,7 +1342,7 @@ public class WeatherHolder {
         ));
     }
 
-    // Update display every 5 ticks.
+    // Update display every 2 ticks.
     /// <b>INNER METHOD</b>
     public static void tickSync() {
         if (tickCounter % 2 != 0) {
@@ -1363,11 +1407,7 @@ public class WeatherHolder {
 
     /// <b>INNER METHOD</b>
     @SubscribeEvent
-    public static void onLevelTick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level)) {
-            return;
-        }
-
+    public static void onServerTick(ServerTickEvent.Post event) {
         tickCounter++;
 
         if (tickCounter > 99) {
@@ -1375,6 +1415,14 @@ public class WeatherHolder {
         }
 
         tickSync();
+    }
+
+    /// <b>INNER METHOD</b>
+    @SubscribeEvent
+    public static void onLevelTick(LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) {
+            return;
+        }
 
         NullableValue<WeatherState> nullableState = getWeatherState(level);
         if (nullableState.isNull()) {
@@ -1598,28 +1646,6 @@ public class WeatherHolder {
         }
     }
 
-    private static @NotNull WeatherType parseType(String type) {
-        return switch (type) {
-            case "fog" -> WeatherType.FOG;
-            case "colored_rain" -> WeatherType.COLORED_RAIN;
-            case "wind" -> WeatherType.WIND;
-            case "colored_moon" -> WeatherType.COLORED_MOON;
-            case "particle_storm" -> WeatherType.PARTICLE_STORM;
-            case "aurora" -> WeatherType.AURORA;
-            case "void_fog" -> WeatherType.VOID_FOG;
-            case null, default -> WeatherType.NULL;
-        };
-    }
-
-    private static @NotNull WeatherPhase parsePhase(String phase) {
-        return switch (phase) {
-            case "active" -> WeatherPhase.ACTIVE;
-            case "ready" -> WeatherPhase.READY;
-            case "stillness" -> WeatherPhase.STILLNESS;
-            case null, default -> WeatherPhase.IDLE;
-        };
-    }
-
     private static CompoundTag buildInstanceTag(WeatherInstance instance, WeatherState state) {
         CompoundTag tag = new CompoundTag();
         tag.putString("type", instance.getType().name().toLowerCase());
@@ -1660,7 +1686,7 @@ public class WeatherHolder {
     /**
      * <p><h3>
      *     Weather Definition Interface
-     * </b></h3>
+     * </h3></p>
      * <p>
      *     Only type registered at enum {@link WeatherType} can be defined by implements this definition.
      * </p>
@@ -1686,9 +1712,9 @@ public class WeatherHolder {
      *     {@link WeatherPhase}, and the necessary time parameters for operations.
      * </p>
      * <p>
-     *     Operate in actively by using methods {@link #activate()}, {@link #stillness()},
-     *     and other operation method that within the instance by hand.
-     *     It will be automatically to execute phase change when finished the setup and start a weather.
+     *     Operates actively by using methods {@link #activate()}, {@link #stillness()},
+     *     and other operation methods that within the instance by hand.
+     *     It will be automatically executed to change the weather phase when finished the setup and start a weather.
      * </p>
      */
     public static class WeatherInstance {
@@ -1870,10 +1896,12 @@ public class WeatherHolder {
                     WeatherType type = instance.getType();
 
                     instance.stillness();
-                    stillnessInstances.put(id, instance);
+                    stillnessInstances.put(instance.getId(), instance);
                     activeInstances.remove(type);
 
                     tryActivateReady(type, level);
+
+                    return;
                 }
             }
         }

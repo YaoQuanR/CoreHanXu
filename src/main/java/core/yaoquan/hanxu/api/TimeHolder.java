@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 /**
  * <p><h3>
  *     Timer system API
- * </b></h3>
+ * </h3></p>
  * <p>
  *     Timer system is a system that allows Java callback or custom behavior after timer time out.
  *     This system provides API and command side support.
@@ -114,7 +114,7 @@ public class TimeHolder {
      * You are required to define an owner of timer (or called "master") when create an instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @param durationTime      Time durations.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
@@ -161,7 +161,7 @@ public class TimeHolder {
      * You are required to define an owner of timer (or called "master") when create an instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @param durationTime      Time durations.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
@@ -179,7 +179,7 @@ public class TimeHolder {
      * Use this function to instance the template timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <ul>- Template timer not found -> "templateNotExist", timerId.</ul>
@@ -230,7 +230,7 @@ public class TimeHolder {
      * Start the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -276,7 +276,7 @@ public class TimeHolder {
      * Stop the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -303,7 +303,7 @@ public class TimeHolder {
      * Reset the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -330,7 +330,7 @@ public class TimeHolder {
      * Restart the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -348,7 +348,7 @@ public class TimeHolder {
      * Delete the instance timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
@@ -373,12 +373,12 @@ public class TimeHolder {
      * The modified timer will NOT auto stop.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
-     *                          You can by checking {@link Resolver} for details.
+     *                          You can check {@link Resolver} for details.
      * @param timerId           Unique title of timer.
      * @param newTime           The new time.
      * @param timeUnit          Flexible use by: tick/second/minute/hour.
      * @param category          Use it for identify what operation required to do:
-     *                          "initial_time" or "remaining_time".
+     *                          "INITIAL_TIME" or "REMAINING_TIME".
      * @return                  Success or failure when:
      *                          <li>- Timer master not found -> "masterNotExist", masterId.</li>
      *                          <li>- Timer not found -> "timerNotExist", timerId.</li>
@@ -429,7 +429,7 @@ public class TimeHolder {
     public static @NotNull NullableValue<String> getInstanceTitleParameter(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return NullableValue.ofNullable("Not Found");
+            return NullableValue.none();
         }
         TimerData timerData = instantiatedData.get(timerId);
         return NullableValue.ofNullable(timerData == null? null : timerData.getTitleParameter());
@@ -438,7 +438,7 @@ public class TimeHolder {
     public static @NotNull NullableValue<String> getInstanceContentParameter(UUID masterId, String timerId) {
         Map<String, TimerData> instantiatedData = instantiatedTimer.get(masterId);
         if (instantiatedData == null) {
-            return NullableValue.ofNullable("Not Found");
+            return NullableValue.none();
         }
         TimerData timerData = instantiatedData.get(timerId);
         return NullableValue.ofNullable(timerData == null? null : timerData.getContentParameter());
@@ -710,7 +710,7 @@ public class TimeHolder {
             boolean isCounting = timerTag.getBoolean("is_counting").orElse(false);
 
             String titleParameter = timerTag.getString("title_parameter").orElse("null");
-            String contentParameter = timerTag.getString("content_parameter").orElse(null);
+            String contentParameter = timerTag.getString("content_parameter").orElse("null");
             String masterGroup = timerTag.getString("master_group").orElse("core_hanxu-command");
 
             // Rebuild timer data.
@@ -722,7 +722,7 @@ public class TimeHolder {
 
             // Rebuild timer data.
             TimerData rebuildTimer = new TimerData(timerId, initialTicks, callback, titleParameter, contentParameter, masterGroup, isCounting);
-            rebuildTimer.remainingTicks = remainingTicks;
+            rebuildTimer.modify(remainingTicks, ModifyCategory.REMAINING_TIME);
 
             // Then recover.
             Map<String, TimerData> instanceTimers = instantiatedTimer.computeIfAbsent(masterId, k -> new ConcurrentHashMap<>());
@@ -739,7 +739,7 @@ public class TimeHolder {
             return nullableCallback.matching(
                     callback -> callback.createCustomCallback(timerId, titleParameter, contentParameter),
                     () -> {
-                        CoreHanXu.LOGGER.warn("[HX] Timer's callback was failed to get!");
+                        CoreHanXu.LOGGER.warn("[HX] Failed to create the timer callback: {}", timerId);
                         return null;
                     }
             );
@@ -824,14 +824,8 @@ public class TimeHolder {
 
         void modify(int newTicks, ModifyCategory category) {
             switch (category) {
-                case INITIAL_TIME:
-                    this.initialTicks = newTicks;
-                    break;
-                case REMAINING_TIME:
-                    this.remainingTicks = newTicks;
-                    break;
-                default:
-                    break;
+                case INITIAL_TIME -> this.initialTicks = newTicks;
+                case REMAINING_TIME -> this.remainingTicks = newTicks;
             }
         }
 

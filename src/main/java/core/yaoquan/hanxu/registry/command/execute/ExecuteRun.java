@@ -108,26 +108,29 @@ public class ExecuteRun {
             return 0;
         }
 
-        boolean success;
+        MethodResult result;
         if (category.equals("ignore")) {
             String ignoreItem = StringArgumentType.getString(context, "ignore_item");
-            success = LootHolder.sendItemToPlayerWithIgnoreItem(player, tableId, ignoreItem, false);
+            result = LootHolder.sendItemToPlayerWithIgnoreItem(player, tableId, ignoreItem, false);
         } else {
             CoreHanXu.LOGGER.info("[HX] --> guaranteed: {}", category.equals("guaranteed"));
-            success = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("first_item"), category.equals("guaranteed"));
+            result = LootHolder.sendItemToPlayer(player, tableId, !category.equals("with_condition"), category.equals("first_item"), category.equals("guaranteed"));
         }
 
-
-        if (!success) {
-            MessagePublisher.sendFailureMessage(context, errorComponent(LootError.tableNotExist));
-            return 0;
-        }
-
-        MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx.loot_give")
-                        .append(Component.literal(" " + tableId + " -> " + playerId))
-                        .withColor(General.Color.SUCCESS));
-        return 1;
+        String finalPlayerId = playerId;
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.loot_give")
+                                    .append(Component.literal(" " + tableId + " -> " + finalPlayerId))
+                                    .withColor(General.Color.SUCCESS));
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayLootErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 
     public static int executeLoot_Fill(CommandContext<CommandSourceStack> context, boolean ignoreCondition, String category) {
@@ -147,39 +150,34 @@ public class ExecuteRun {
             return 0;
         }
 
-        boolean success;
         boolean isSorted = false, guaranteed = false;
 
         switch (category) {
-            case "sorted":
-                isSorted = true;
-                break;
-            case "ignore":
-                ignoreItem = StringArgumentType.getString(context, "ignore_item");
-                break;
-            case "sorted-ignore":
+            case "sorted" -> isSorted = true;
+            case "ignore" -> ignoreItem = StringArgumentType.getString(context, "ignore_item");
+            case "sorted-ignore" -> {
                 isSorted = true;
                 ignoreItem = StringArgumentType.getString(context, "ignore_item");
-                break;
-            case "guaranteed":
-                guaranteed = true;
-                break;
+            }
+            case "guaranteed" -> guaranteed = true;
         }
 
-        success = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem, guaranteed);
+        MethodResult result = LootHolder.sendItemToContainer(level, position, tableId, ignoreCondition, isSorted, ignoreItem, guaranteed);
 
-        if (!success) {
-            MessagePublisher.sendFailureMessage(context, errorComponent(LootError.tableNotExist));
-            return 0;
-        }
-
-        MessagePublisher.sendSystemMessage(context,
-                Component.translatable("commands.chx.loot_fill")
-                        .append(Component.literal(" " + tableId + " -> " + "[" + containerX + ", " + containerY + ", " + containerZ + "]"))
-                        .withColor(General.Color.SUCCESS)
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.loot_fill")
+                                    .append(Component.literal(" " + tableId + " -> " + "[" + containerX + ", " + containerY + ", " + containerZ + "]"))
+                                    .withColor(General.Color.SUCCESS)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayLootErrorResult(context, error);
+                    return 0;
+                }
         );
-
-        return 1;
     }
 
     public static int executeWeather_Start(CommandContext<CommandSourceStack> context) {
@@ -237,7 +235,7 @@ public class ExecuteRun {
         }
         ServerLevel level = nullableLevel.get();
 
-        WeatherHolder.WeatherType type = WeatherHolder.parseStringToType(weatherType);
+        WeatherHolder.WeatherType type = WeatherHolder.parseType(weatherType);
 
         MethodResult result = WeatherHolder.resumeWeather(level, type);
 

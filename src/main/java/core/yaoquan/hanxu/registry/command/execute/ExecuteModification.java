@@ -114,7 +114,7 @@ public class ExecuteModification {
         boolean isApiAttribute = AttributeHolder.doesAttributeExist(attributeId, "api");
 
         AttributeHolder.ThresholdDirection thresholdDirection;
-        boolean success = false;
+        MethodResult result = MethodResult.failure("undefinedCategory");
 
         switch (direction) {
             case "point" -> thresholdDirection = AttributeHolder.ThresholdDirection.POINT;
@@ -134,14 +134,14 @@ public class ExecuteModification {
             case "set" -> {
                 if (playerId.equals("-all") || playerId.equals("-a")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
-                        success = AttributeHolder.setValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
-                        if (!success) {
+                        result = AttributeHolder.setValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
+                        if (result.isFailure()) {
                             break;
                         }
                     }
                 }
                 else {
-                    success = AttributeHolder.setValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
+                    result = AttributeHolder.setValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
                 }
             }
             case "add" -> {
@@ -151,14 +151,14 @@ public class ExecuteModification {
 
                 if (playerId.equals("-all") || playerId.equals("-a")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
-                        success = AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
-                        if (!success) {
+                        result = AttributeHolder.addValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
+                        if (result.isFailure()) {
                             break;
                         }
                     }
                 }
                 else {
-                    success = AttributeHolder.addValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
+                    result = AttributeHolder.addValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
                 }
             }
             case "reduce" -> {
@@ -171,14 +171,14 @@ public class ExecuteModification {
 
                 if (playerId.equals("-all")) {
                     for (ServerPlayer serverPlayer : context.getSource().getServer().getPlayerList().getPlayers()) {
-                        success = AttributeHolder.reduceValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
-                        if (!success) {
+                        result = AttributeHolder.reduceValue(serverPlayer.getUUID(), attributeId, value, isApiAttribute, thresholdDirection);
+                        if (result.isFailure()) {
                             break;
                         }
                     }
                 }
                 else {
-                    success = AttributeHolder.reduceValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
+                    result = AttributeHolder.reduceValue(masterId, attributeId, value, isApiAttribute, thresholdDirection);
                 }
             }
         }
@@ -191,21 +191,26 @@ public class ExecuteModification {
             return 1;
         }
 
-        if (success) {
-            MessagePublisher.sendSystemMessage(context,
-                    Component.translatable("commands.chx.attribute_modified")
-                            .withColor(General.Color.CONTENT)
-            );
-            MessagePublisher.sendSystemMessage(context,
-                    Component.literal("(" + attributeId + " -> " + playerId + "): " + category + " " + value + " (" + direction + ")")
-                            .withColor(General.Color.CONTENT)
-            );
-            return 1;
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
-            return 0;
-        }
+        String finalValue = String.valueOf(value);
+        String finalDirection = direction;
+
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.attribute_modified")
+                                    .withColor(General.Color.CONTENT)
+                    );
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.literal("(" + attributeId + " -> " + playerId + "): " + category + " " + finalValue + " (" + finalDirection + ")")
+                                    .withColor(General.Color.CONTENT)
+                    );
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayAttributeErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 
     public static int executeAttribute_Recovery(CommandContext<CommandSourceStack> context, String category) {
@@ -244,13 +249,12 @@ public class ExecuteModification {
                 direction = "point";
             }
 
-            AttributeHolder.ThresholdDirection thresholdDirection;
-            switch (direction) {
-                case "up" -> thresholdDirection = AttributeHolder.ThresholdDirection.UP;
-                case "down" -> thresholdDirection = AttributeHolder.ThresholdDirection.DOWN;
-                case "flex" -> thresholdDirection = AttributeHolder.ThresholdDirection.FLEX;
-                default -> thresholdDirection = AttributeHolder.ThresholdDirection.POINT;
-            }
+            AttributeHolder.ThresholdDirection thresholdDirection = switch (direction) {
+                case "up" -> AttributeHolder.ThresholdDirection.UP;
+                case "down" -> AttributeHolder.ThresholdDirection.DOWN;
+                case "flex" -> AttributeHolder.ThresholdDirection.FLEX;
+                default -> AttributeHolder.ThresholdDirection.POINT;
+            };
 
             String callbackId = "attribute:core_hanxu-command:" + attributeId + "-recovery";
 

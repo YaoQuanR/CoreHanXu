@@ -27,15 +27,15 @@ public class CommandMisc {
 
         // Then register.
         switch (timeUnit) {
-            case "t", "tick", "s", "second", "m", "minute", "h", "hour":
+            case "t", "tick", "s", "second", "m", "minute", "h", "hour" -> {
                 TimeHolder.createTemplateTimer(timerId, timeAmount, timeUnit, callback, titleParameter, contentParameter, "core_hanxu-command");
-                break;
-            default:
+                return 1;
+            }
+            default -> {
                 MessagePublisher.sendFailureMessage(context, Component.translatable("commands.core_hanxu.invalid_unit_argument"));
                 return 0;
+            }
         }
-
-        return 1;
     }
 
     static int commandCreateInstanceTimer(CommandContext<CommandSourceStack> context,
@@ -278,16 +278,15 @@ public class CommandMisc {
                 return 0;
             }
 
-            MethodResult result;
-            switch (action) {
-                case "set" -> result = VariableHolder.modifyVariable(targetVariableName, target);
-                case "add" -> result = VariableHolder.addNumber(targetVariableName, target);
-                case "reduce" -> result = VariableHolder.reduceNumber(targetVariableName, target);
-                case "copy_from" -> result = VariableHolder.copyVariableFromScore(targetVariableName, targetPlayerId, target);
-                case "copy_to" -> result = VariableHolder.copyScoreFromVariable(targetVariableName, targetPlayerId, target);
-                case "mask" -> result = VariableHolder.maskVariableValue(targetVariableName, target);
-                default -> result = MethodResult.failure("undefinedOperation");
-            }
+            MethodResult result = switch (action) {
+                case "set" -> VariableHolder.modifyVariable(targetVariableName, target);
+                case "add" -> VariableHolder.addNumber(targetVariableName, target);
+                case "reduce" -> VariableHolder.reduceNumber(targetVariableName, target);
+                case "copy_from" -> VariableHolder.copyVariableFromScore(targetVariableName, targetPlayerId, target);
+                case "copy_to" -> VariableHolder.copyScoreFromVariable(targetVariableName, targetPlayerId, target);
+                case "mask" -> VariableHolder.maskVariableValue(targetVariableName, target);
+                default -> MethodResult.failure("undefinedOperation");
+            };
 
             if (result.isFailure()) {
                 switch (result.getError()) {
@@ -318,7 +317,7 @@ public class CommandMisc {
                                        String infoCategory, String timerCategory) {
         if (timerCategory.equals("template")) {
             switch (infoCategory) {
-                case "remaining_time":
+                case "remaining_time" -> {
                     NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit);
                     if (nullableRemaining.isNull()) {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
@@ -331,8 +330,8 @@ public class CommandMisc {
                                     .append(Component.literal(" (" + timerId + "): " + remainingTime + " " + timeUnit))
                                     .withColor(General.Color.TITLE)
                     );
-                    break;
-                case "initial_time":
+                }
+                case "initial_time" -> {
                     NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromTemplate(timerId, timeUnit);
                     if (nullableInitial.isNull()) {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
@@ -345,8 +344,8 @@ public class CommandMisc {
                                     .append(Component.literal(" (" + timerId + "): " + initialTime + " " + timeUnit))
                                     .withColor(General.Color.TITLE)
                     );
-                    break;
-                case "state":
+                }
+                case "state" -> {
                     boolean isCounting = TimeHolder.isTemplateTimerCounting(timerId);
 
                     if (TimeHolder.getRemainingTimeFromTemplate(timerId, timeUnit).isPresent()) {
@@ -360,8 +359,8 @@ public class CommandMisc {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
-                    break;
-                case "end_behavior":
+                }
+                case "end_behavior" -> {
                     NullableValue<String> nullableTitle = TimeHolder.getTemplateTitleParameter(timerId);
                     NullableValue<String> nullableContent = TimeHolder.getTemplateContentParameter(timerId);
 
@@ -381,9 +380,10 @@ public class CommandMisc {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
-                    break;
-                default:
+                }
+                default -> {
                     return 0;
+                }
             }
             return 1;
         }
@@ -391,7 +391,7 @@ public class CommandMisc {
             UUID masterId = Resolver.resolveTargetUUID(context, masterString);
 
             switch (infoCategory) {
-                case "remaining_time":
+                case "remaining_time" -> {
                     NullableValue<Integer> nullableRemaining = TimeHolder.getRemainingTimeFromInstance(masterId, timerId, "tick");
                     if (nullableRemaining.isNull()) {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
@@ -404,9 +404,8 @@ public class CommandMisc {
                                     .append(Component.literal(" (" + timerId + " -> " + masterString + "): " + remainingTime + " " + timeUnit))
                                     .withColor(General.Color.TITLE)
                     );
-
-                    break;
-                case "initial_time":
+                }
+                case "initial_time" -> {
                     NullableValue<Integer> nullableInitial = TimeHolder.getInitialTimeFromInstance(masterId, timerId, timeUnit);
                     if (nullableInitial.isNull()) {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
@@ -419,8 +418,8 @@ public class CommandMisc {
                                     .append(Component.literal(" (" + timerId + "->" + masterString + "): " + initialTime + " " + timeUnit))
                                     .withColor(General.Color.TITLE)
                     );
-                    break;
-                case "state":
+                }
+                case "state" -> {
                     boolean isCounting = TimeHolder.isInstanceTimerCounting(masterId, timerId);
                     if (TimeHolder.getRemainingTimeFromInstance(masterId, timerId, timeUnit).isPresent()) {
                         MessagePublisher.sendSystemMessage(context,
@@ -433,8 +432,8 @@ public class CommandMisc {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
-                    break;
-                case "end_behavior":
+                }
+                case "end_behavior" -> {
                     NullableValue<String> nullableTitle = TimeHolder.getInstanceTitleParameter(masterId, timerId);
                     NullableValue<String> nullableContent = TimeHolder.getInstanceContentParameter(masterId, timerId);
                     if (nullableTitle.isNull() || nullableContent.isNull()) {
@@ -458,9 +457,10 @@ public class CommandMisc {
                         MessagePublisher.sendFailureMessage(context, errorComponent(TimerError.notExist));
                         return 0;
                     }
-                    break;
-                default:
+                }
+                default -> {
                     return 0;
+                }
             }
             return 1;
         }
@@ -494,22 +494,18 @@ public class CommandMisc {
                         .withColor(General.Color.SUCCESS)
         );
         switch (titleParameter) {
-            case "e", "execute":
+            case "e", "execute" ->
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_with_execute_behavior")
                                 .append(Component.literal(": " + contentParameter))
                                 .withColor(General.Color.SUCCESS)
                 );
-                break;
-            case "r", "remind":
+            case "r", "remind" ->
                 MessagePublisher.sendSystemMessage(context,
                         Component.translatable("commands.chx.timer_with_remind_behavior")
                                 .append(Component.literal(": " + contentParameter))
                                 .withColor(General.Color.SUCCESS)
                 );
-                break;
-            default:
-                break;
         }
     }
 
@@ -542,18 +538,16 @@ public class CommandMisc {
         return 1;
     }
 
-    static void displayAttributeCreateMessage(CommandContext<CommandSourceStack> context, String attributeId, float maximum, float defaultValue, boolean registered) {
-        if (registered) {
-            MessagePublisher.sendSystemMessage(
+    static void displayAttributeCreateMessage(CommandContext<CommandSourceStack> context, String attributeId, float maximum, float defaultValue, MethodResult result) {
+        result.ifSuccess(() ->
+                MessagePublisher.sendSystemMessage(
                 context,
                 Component.translatable("commands.chx.attribute_created")
                         .append(Component.literal(" " + attributeId + " -> " + maximum + " _ " + defaultValue))
                         .withColor(General.Color.SUCCESS)
-            );
-        }
-        else {
-            MessagePublisher.sendFailureMessage(context,errorComponent(AttributeError.sameNameFound));
-        }
+        )).ifFailure((error, info) ->
+                CommandError.displayAttributeErrorResult(context, error)
+        );
     }
 
     static int displayWeatherIdList(CommandContext<CommandSourceStack> context, String[] yamlList, String[] apiList) {

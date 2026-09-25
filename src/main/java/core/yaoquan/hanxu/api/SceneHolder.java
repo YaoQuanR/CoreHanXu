@@ -2,6 +2,7 @@ package core.yaoquan.hanxu.api;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.util.type.MethodResult;
 import core.yaoquan.hanxu.util.type.NullableValue;
 import core.yaoquan.hanxu.util.tool.Converter;
 import core.yaoquan.hanxu.util.tool.YamlReader;
@@ -23,7 +24,7 @@ import static core.yaoquan.hanxu.api.define.Error.*;
 /**
  * <p><h3>
  *     Scene system API
- * </b></h3>
+ * </h3></p>
  * <p>
  *     Scene system provides YAML format for user to easier execute chain commands and dialogs.
  * </p>
@@ -33,8 +34,8 @@ public class SceneHolder {
     // Load scene data.
     /**
      * Get the scene data from sub path "scene" for all .yaml documents.
-     * @param fileName            The file name of YAML.
-     * @return                    New scene class data: NullableValue<\Scene>.
+     * @param fileName              The file name of YAML.
+     * @return                      New scene class data: NullableValue<\Scene>.
      */
     public static @NotNull NullableValue<Scene> loadScene(String fileName) {
         try {
@@ -59,8 +60,8 @@ public class SceneHolder {
     // Play scene.
     /**
      * Scene will load from YAML file, then start playing the scene.
-     * @param player              The source player that targeted to execute scene.
-     * @param sceneName           As same as file name.
+     * @param player                The source player that targeted to execute scene.
+     * @param sceneName             As same as file name.
      */
     public static void playScene(ServerPlayer player, String sceneName) {
         NullableValue<Scene> nullableScene = loadScene(sceneName);
@@ -75,8 +76,8 @@ public class SceneHolder {
 
     /**
      * Scene will load from YAML file, then start playing the scene.
-     * @param server              The source server that targeted to play for all players.
-     * @param sceneName           As same as file name.
+     * @param server                The source server that targeted to play for all players.
+     * @param sceneName             As same as file name.
      */
     public static void playSceneToEveryone(MinecraftServer server, String sceneName) {
         NullableValue<Scene> nullableScene = loadScene(sceneName);
@@ -93,25 +94,26 @@ public class SceneHolder {
 
     /**
      * Delete scene from selected target.
-     * @param sceneName           As same as file name.
-     * @param targetPath          Storage path of YAML file.
-     *                            Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                    Does the delete success: boolean.
+     * @param sceneName             As same as file name.
+     * @param targetPath            Storage path of YAML file.
+     *                              Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Success or failure when:
+     *                              <li>- Scene not found in YAML -> "yamlNotFound", fileName.</li>
      */
-    public static boolean deleteScene(String sceneName, YamlReader.TargetPath targetPath) {
+    public static @NotNull MethodResult deleteScene(String sceneName, YamlReader.TargetPath targetPath) {
         try {
             YamlReader.delete("scene", sceneName, targetPath);
-            return true;
+            return MethodResult.success();
         }
         catch (IOException e) {
-            return false;
+            return MethodResult.failure("yamlNotFound", sceneName);
         }
     }
 
     /**
      * Check both path: global & world.
-     * @param sceneName           As same as file name.
-     * @return                    Does scene exist: boolean.
+     * @param sceneName             As same as file name.
+     * @return                      Does scene exist: boolean.
      */
     public static boolean doesSceneExist(String sceneName) {
         try {
@@ -128,10 +130,10 @@ public class SceneHolder {
 
     /**
      * Check specific path: global / world.
-     * @param sceneName           As same as file name.
-     * @param targetPath          Storage path of YAML file.
-     *                            Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                    Does scene exist: boolean.
+     * @param sceneName             As same as file name.
+     * @param targetPath            Storage path of YAML file.
+     *                              Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Does scene exist: boolean.
      */
     public static boolean doesSceneExist(String sceneName, YamlReader.TargetPath targetPath) {
         return YamlReader.doesFileExist(targetPath, "scene", sceneName);
@@ -233,13 +235,9 @@ public class SceneHolder {
                     if (scene.enabledSpeaker) {
                         List<ServerPlayer> players;
                         switch (dialogNode.speaker) {
-                            case null:
-                                message = dialogNode.text;
-                                break;
-                            case "@p", "@s":
-                                message = player.getName().getString() + ": " + dialogNode.text;
-                                break;
-                            case "@r":
+                            case null -> message = dialogNode.text;
+                            case "@p", "@s" -> message = player.getName().getString() + ": " + dialogNode.text;
+                            case "@r" -> {
                                 if (server != null) {
                                     players = server.getPlayerList().getPlayers();
                                     if (players.isEmpty()) {
@@ -250,8 +248,8 @@ public class SceneHolder {
                                         message = randomPlayer.getName().getString() + ": " + dialogNode.text;
                                     }
                                 }
-                                break;
-                            case "@a", "@e":
+                            }
+                            case "@a", "@e" -> {
                                 StringBuilder speakers = new StringBuilder();
                                 if (server != null) {
                                     players = server.getPlayerList().getPlayers();
@@ -265,10 +263,8 @@ public class SceneHolder {
                                     }
                                 }
                                 message = speakers + ": " + dialogNode.text;
-                                break;
-                            default:
-                                message = dialogNode.speaker + ": " + dialogNode.text;
-                                break;
+                            }
+                            default -> message = dialogNode.speaker + ": " + dialogNode.text;
                         }
                     }
                     else {

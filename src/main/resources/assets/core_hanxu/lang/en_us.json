@@ -242,7 +242,6 @@
 
   "commands.chx.scene_not_found": "[HX] Scene not found!",
   "commands.chx.scene_play_failed": "[HX] Scene play failed!",
-  "commands.chx.scene_failed_to_delete": "[HX] Scene has failed to delete!",
   "commands.chx.scene_already_exist": "[HX] Scene with this name are already exist!",
   "commands.chx.scene_same_name_found": "[HX] Two same name scene found! Provide specific path component and try again.",
   "commands.chx.scene_failed_to_save": "[HX] Scene has failed to save!",
@@ -276,8 +275,8 @@
 
   "commands.chx.attribute_try_to_modify_api_target": "[HX] API attribute are not allowed to modify by commands.",
   "commands.chx.attribute_not_found": "[HX] Attribute not found!",
+  "commands.chx.attribute_yaml_not_found": "[HX] Attribute not found in YAML file!",
   "commands.chx.attribute_same_name_found": "[HX] Two same name attribute found! Provide specific path component and try again.",
-  "commands.chx.attribute_failed_to_delete": "[HX] Attribute failed to delete!",
   "commands.chx.attribute_no_threshold": "[HX] This attribute has no threshold!",
   "commands.chx.attribute_no_specific_threshold": "[HX] This specific threshold has not found!",
   "commands.chx.attribute_no_zero": "[HX] This attribute has no zero threshold!",
@@ -319,9 +318,13 @@
   "commands.chx.loot_empty_table": "[HX] Not yet created any loot table in file!",
   "commands.chx.loot_table_not_exist": "[HX] This loot table does not exist!",
   "commands.chx.loot_already_exist": "[HX] Loot table with this name are already exist!",
+  "commands.chx.loot_not_block": "[HX] The target refer to the input is not a block!",
+  "commands.chx.loot_not_container": "[HX] The target refer to the input is not a container!",
+  "commands.chx.loot_yaml_not_found": "[HX] Loot table not found in YAML file!",
+  "commands.chx.loot_empty_list": "[HX] The loot table generated empty item list!",
+  "commands.chx.loot_not_enough_space": "[HX] The target container remains less or empty space to fill in item!",
   "commands.chx.loot_failed_to_save": "[HX] Loot table has failed to save!",
   "commands.chx.loot_same_name_found": "[HX] Two same name table found! Provide specific path component and try again.",
-  "commands.chx.loot_failed_to_delete": "[HX] Loot table has failed to delete!",
 
   "commands.chx.weather_yaml_list_title": "[HX] Weather list from YAML (command):",
   "commands.chx.weather_api_list_title": "[HX] Weather list from API:",

@@ -52,7 +52,7 @@ public class ExecuteStop {
         }
         ServerLevel level = nullableLevel.get();
 
-        WeatherHolder.WeatherType type = WeatherHolder.parseStringToType(weatherType);
+        WeatherHolder.WeatherType type = WeatherHolder.parseType(weatherType);
 
         MethodResult result = WeatherHolder.pauseWeather(level, type);
 

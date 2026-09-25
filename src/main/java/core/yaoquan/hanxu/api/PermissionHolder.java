@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * <p><h3>
  *     Permission system API
- * </b></h3>
+ * </h3></p>
  * <p>
  *     Permission system is used to handle user's permission level.
  * </p>

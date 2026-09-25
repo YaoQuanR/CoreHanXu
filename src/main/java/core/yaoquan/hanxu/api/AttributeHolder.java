@@ -5,6 +5,7 @@ import core.yaoquan.hanxu.api.custom.BehaviorRegistry;
 import core.yaoquan.hanxu.api.define.FilePath;
 import core.yaoquan.hanxu.api.define.General;
 import core.yaoquan.hanxu.registry.QuickSendPacket;
+import core.yaoquan.hanxu.util.type.MethodResult;
 import core.yaoquan.hanxu.util.type.NullableValue;
 import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import core.yaoquan.hanxu.util.tool.Creator;
@@ -34,7 +35,7 @@ import static core.yaoquan.hanxu.api.define.Error.*;
 /**
  * <p><h3>
  *     Attribute system API
- * </b></h3>
+ * </h3></p>
  * <p>
  *     Attribute system is a heavy system that storage value, threshold behavior,
  *     zero callback, and recovery system.
@@ -76,8 +77,8 @@ public class AttributeHolder {
 
     /**
      * For API register.
-     * @param attribute           Create a new CustomAttribute {@link CustomAttribute}
-     *                            included custom callback definitions by fluent factory.
+     * @param attribute             Create a new CustomAttribute {@link CustomAttribute}
+     *                              included custom callback definitions by fluent factory.
      */
     public static void register(CustomAttribute attribute) {
         apiAttributes.put(attribute.getAttributeId(), attribute);
@@ -92,17 +93,18 @@ public class AttributeHolder {
 
     /**
      * For command register.
-     * @param attributeId         Unique title of attribute.
-     * @param maximum             Define the maximum changeable value of attribute.
-     * @param defaultValue        Define the start value of attribute.
-     * @param targetPath          Storage path of YAML file.
-     *                            Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                    Does register success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param maximum               Define the maximum changeable value of attribute.
+     * @param defaultValue          Define the start value of attribute.
+     * @param targetPath            Storage path of YAML file.
+     *                              Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Success or failure when:
+     *                              <li>- Using duplicated attribute id to register -> "duplicated", attributeId.</li>
      */
-    public static boolean register(String attributeId, float maximum, float defaultValue, YamlReader.TargetPath targetPath) {
+    public static @NotNull MethodResult register(String attributeId, float maximum, float defaultValue, YamlReader.TargetPath targetPath) {
         if (apiAttributes.containsKey(attributeId) || commandAttributes.containsKey(attributeId)) {
             CoreHanXu.LOGGER.info("[HX] Rejected duplicate attribute: {}", attributeId);
-            return false;
+            return MethodResult.failure("duplicated", attributeId);
         }
 
         CustomAttribute attribute = new CustomAttribute(attributeId, maximum, defaultValue);
@@ -111,45 +113,51 @@ public class AttributeHolder {
         saveYamlAttributeSkeleton(attributeId, maximum, defaultValue, targetPath);
 
         CoreHanXu.LOGGER.info("[HX] Registered attribute by command: {}", attribute.getAttributeId());
-        return true;
+        return MethodResult.success();
     }
 
     /**
      * For Command source unregister.
-     * @param attributeId         Unique title of attribute.
-     * @return                    Does unregister success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in command register -> "notFound", attributeId.</li>
      */
-    public static boolean unregister(String attributeId) {
+    public static @NotNull MethodResult unregister(String attributeId) {
         if (commandAttributes.containsKey(attributeId)) {
             commandAttributes.remove(attributeId);
 
             CoreHanXu.LOGGER.info("[HX] Unregistered attribute by string: {}", attributeId);
-            return true;
+            return MethodResult.success();
         }
-        return false;
+        return MethodResult.failure("notFound", attributeId);
     }
 
     /**
      * For command unregister (delete YAML).
-     * @param attributeId         Unique title of attribute.
-     * @param targetPath          Storage path of YAML file.
-     *                            Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                    Does unregister success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param targetPath            Storage path of YAML file.
+     *                              Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in command register -> "notFound", attributeId.</li>
+     *                              <li>- YAML not found for this attribute -> "yamlNotFound", attributeId.</li>
      */
-    public static boolean unregisterAndDelete(String attributeId, YamlReader.TargetPath targetPath) {
-        boolean unregister = unregister(attributeId);
+    public static @NotNull MethodResult unregisterAndDelete(String attributeId, YamlReader.TargetPath targetPath) {
+        MethodResult unregister = unregister(attributeId);
 
-        if (unregister) {
-            try {
-                YamlReader.delete("attribute", attributeId, targetPath);
-                CoreHanXu.LOGGER.info("[HX] Deleted attribute YAML: {}", attributeId);
-                return true;
-            }
-            catch (IOException e) {
-                CoreHanXu.LOGGER.warn("[HX] Failed to unregister attribute and deleted YAML: {}", attributeId, e);
-            }
-        }
-        return false;
+        return unregister.matching(
+                () -> {
+                    try {
+                        YamlReader.delete("attribute", attributeId, targetPath);
+                        CoreHanXu.LOGGER.info("[HX] Deleted attribute YAML: {}", attributeId);
+                        return MethodResult.success();
+                    }
+                    catch (IOException e) {
+                        CoreHanXu.LOGGER.warn("[HX] Failed to unregister attribute and deleted YAML: {}", attributeId, e);
+                        return MethodResult.failure("yamlNotFound", attributeId);
+                    }
+                },
+                MethodResult::failure
+        );
     }
 
     public static @NotNull NullableValue<CustomAttribute> getAttributeDefinition(String attributeId, boolean isApiAttribute) {
@@ -179,12 +187,12 @@ public class AttributeHolder {
 
     /**
      * Get attribute value.
-     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
-     *                            You can by checking {@link Resolver} for details.
-     * @param attributeId         Unique title of attribute.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Received player value: float.
-     *                            If this player not set the value yet, return default value from definition: float.
+     * @param masterId              Use player id/"-global"/"-temporary" to define the master.
+     *                              You can check {@link Resolver} for details.
+     * @param attributeId           Unique title of attribute.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Received player value: float.
+     *                              If this player not set the value yet, return default value from definition: float.
      */
     public static float getValue(UUID masterId, String attributeId, boolean isApiAttribute) {
         return getAttributeDefinition(attributeId, isApiAttribute).matching(
@@ -205,10 +213,10 @@ public class AttributeHolder {
 
     /**
      * Get global's attribute value.
-     * @param attributeId         Unique title of attribute.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Received player value: float.
-     *                            If this player not set the value yet, return default value from definition: float.
+     * @param attributeId           Unique title of attribute.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Received player value: float.
+     *                              If this player not set the value yet, return default value from definition: float.
      */
     public static float getGlobalValue(String attributeId, boolean isApiAttribute) {
         return getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
@@ -216,20 +224,21 @@ public class AttributeHolder {
 
     /**
      * Set attribute value (Full direction trigger).
-     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
-     *                            You can by checking {@link Resolver} for details.
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @param direction           Define the trigger type for threshold callbacks.
-     *                            You can by checking {@link ThresholdDirection} for details.
-     * @return                    Does the setter success: boolean.
+     * @param masterId              Use player id/"-global"/"-temporary" to define the master.
+     *                              You can check {@link Resolver} for details.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @param direction             Define the trigger type for threshold callbacks.
+     *                              You can check {@link ThresholdDirection} for details.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+    public static @NotNull MethodResult setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         NullableValue<CustomAttribute> nullableAttribute = getAttributeDefinition(attributeId, isApiAttribute);
         if (nullableAttribute.isNull()) {
             CoreHanXu.LOGGER.warn("[HX] Unknown custom attribute for set value: {}", attributeId);
-            return false;
+            return MethodResult.failure("notFound", attributeId);
         }
 
         CustomAttribute attribute = nullableAttribute.get();
@@ -238,7 +247,7 @@ public class AttributeHolder {
         float newValue = Math.min(attribute.getMaximum(), Math.max(value, 0.0f));
 
         if (Float.compare(currentValue, newValue) == 0) {
-            return true;
+            return MethodResult.success();
         }
 
         Map<String, Float> values = attributeValues
@@ -262,152 +271,163 @@ public class AttributeHolder {
             checkAndRefreshDisplay(player, masterId, attributeId, isApiAttribute);
         }
 
-        return true;
+        return MethodResult.success();
     }
 
     /**
-     * Set player's attribute value (Default: Point trigger).
-     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
-     *                            You can by checking {@link Resolver} for details.
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Does the setter success: boolean.
+     * Set master's attribute value (Default: Point trigger).
+     * @param masterId              Use player id/"-global"/"-temporary" to define the master.
+     *                              You can check {@link Resolver} for details.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
+     public static @NotNull MethodResult setValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         return setValue(masterId, attributeId, value, isApiAttribute, ThresholdDirection.POINT);
     }
 
     /**
      * Set global's attribute value (Full direction trigger).
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @param direction           Define the trigger type for threshold callbacks.
-     *                            You can by checking {@link ThresholdDirection} for details.
-     * @return                    Does the setter success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @param direction             Define the trigger type for threshold callbacks.
+     *                              You can check {@link ThresholdDirection} for details.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean setGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+    public static @NotNull MethodResult setGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, isApiAttribute, direction);
     }
 
     /**
      * Set global's attribute value (Default: Point trigger).
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Does the setter success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean setGlobalValue(String attributeId, float value, boolean isApiAttribute) {
+    public static @NotNull MethodResult setGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, value, isApiAttribute, ThresholdDirection.POINT);
     }
 
     /**
-     * Add global's attribute value (Full direction trigger).
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @param direction           Define the trigger type for threshold callbacks.
-     *                            You can by checking {@link ThresholdDirection} for details.
-     * @return                    Does the setter success: boolean.
+     * Add master's attribute value (Full direction trigger).
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @param direction             Define the trigger type for threshold callbacks.
+     *                              You can check {@link ThresholdDirection} for details.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+    public static @NotNull MethodResult addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue + value, isApiAttribute, direction);
     }
 
     /**
-     * Add player's attribute value (Default: Point trigger).
-     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
-     *                            You can by checking {@link Resolver} for details.
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Does the setter success: boolean.
+     * Add master's attribute value (Default: Point trigger).
+     * @param masterId              Use player id/"-global"/"-temporary" to define the master.
+     *                              You can check {@link Resolver} for details.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
+    public static @NotNull MethodResult addValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue + value, isApiAttribute, ThresholdDirection.POINT);
     }
 
     /**
      * Add global's attribute value (Full direction trigger).
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @param direction           Define the trigger type for threshold callbacks.
-     *                            You can by checking {@link ThresholdDirection} for details.
-     * @return                    Does the setter success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @param direction             Define the trigger type for threshold callbacks.
+     *                              You can check {@link ThresholdDirection} for details.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+    public static @NotNull MethodResult addGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, isApiAttribute, direction);
     }
 
     /**
      * Add global's attribute value (Default: Point trigger).
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Does the setter success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean addGlobalValue(String attributeId, float value, boolean isApiAttribute) {
+    public static @NotNull MethodResult addGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue + value, isApiAttribute, ThresholdDirection.POINT);
     }
 
     /**
-     * Reduce attribute value (Full direction trigger).
-     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
-     *                            You can by checking {@link Resolver} for details.
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @param direction           Define the trigger type for threshold callbacks.
-     *                            You can by checking {@link ThresholdDirection} for details.
-     * @return                    Does the setter success: boolean.
+     * Reduce master's attribute value (Full direction trigger).
+     * @param masterId              Use player id/"-global"/"-temporary" to define the master.
+     *                              You can check {@link Resolver} for details.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @param direction             Define the trigger type for threshold callbacks.
+     *                              You can check {@link ThresholdDirection} for details.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+    public static @NotNull MethodResult reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue - Math.abs(value), isApiAttribute, direction);
     }
 
     /**
-     * Reduce player's attribute value (Default: Point trigger).
-     * @param masterId            Use player id/"-global"/"-temporary" to define the master.
-     *                            You can by checking {@link Resolver} for details.
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Does the setter success: boolean.
+     * Reduce master's attribute value (Default: Point trigger).
+     * @param masterId              Use player id/"-global"/"-temporary" to define the master.
+     *                              You can check {@link Resolver} for details.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
+    public static @NotNull MethodResult reduceValue(UUID masterId, String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(masterId, attributeId, isApiAttribute);
         return setValue(masterId, attributeId, currentValue - Math.abs(value), isApiAttribute, ThresholdDirection.POINT);
     }
 
     /**
      * Reduce global's attribute value (Full direction trigger).
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @param direction           Define the trigger type for threshold callbacks.
-     *                            You can by checking {@link ThresholdDirection} for details.
-     * @return                    Does the setter success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @param direction             Define the trigger type for threshold callbacks.
+     *                              You can check {@link ThresholdDirection} for details.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
+    public static @NotNull MethodResult reduceGlobalValue(String attributeId, float value, boolean isApiAttribute, ThresholdDirection direction) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), isApiAttribute, direction);
     }
 
     /**
      * Reduce global's attribute value (Default: Point trigger).
-     * @param attributeId         Unique title of attribute.
-     * @param value               Submit the new value for setter.
-     * @param isApiAttribute      True false that where you use this function.
-     * @return                    Does the setter success: boolean.
+     * @param attributeId           Unique title of attribute.
+     * @param value                 Submit the new value for setter.
+     * @param isApiAttribute        True false that where you use this function.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
-    public static boolean reduceGlobalValue(String attributeId, float value, boolean isApiAttribute) {
+    public static @NotNull MethodResult reduceGlobalValue(String attributeId, float value, boolean isApiAttribute) {
         float currentValue = getValue(General.TargetUUID.GLOBAL_UUID, attributeId, isApiAttribute);
         return setValue(General.TargetUUID.GLOBAL_UUID, attributeId, currentValue - Math.abs(value), isApiAttribute, ThresholdDirection.POINT);
     }
@@ -415,15 +435,21 @@ public class AttributeHolder {
     // Load YAML data for import.
     /**
      * Get the YAML attribute data from sub path "attribute" for all .yaml documents.
-     * @param fileName            The file name of YAML.
-     * @return                    New attribute class data: NullableValue<\Attribute>.
+     * @param fileName              The file name of YAML.
+     * @return                      New attribute class data: {@code NullableValue<Attribute>}.
      */
     public static NullableValue<Attribute> loadYamlAttribute(String fileName) {
         try {
             Map<String, Object> attributeData = YamlReader.read("attribute", fileName);
 
             // Check if the id equals to file name.
-            Attribute attribute = parseAttributeData(attributeData);
+            NullableValue<Attribute> nullableAttribute = parseAttributeData(attributeData);
+            if (nullableAttribute.isNull()) {
+                CoreHanXu.LOGGER.warn("[HX] Parsed null attribute data: {}", fileName);
+                return NullableValue.none();
+            }
+            Attribute attribute = nullableAttribute.get();
+
             String yamlFileName = attribute.id;
             if (yamlFileName != null && !yamlFileName.equals(fileName)) {
                 CoreHanXu.LOGGER.warn("{}{} ≠ {}", errorString(CodeError.mismatchFileElement), fileName, yamlFileName);
@@ -440,18 +466,19 @@ public class AttributeHolder {
 
     /**
      * Delete YAML attribute from selected target.
-     * @param fileName            As same as file name.
-     * @param targetPath          Storage path of YAML file.
-     *                            Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                    Does the delete success: boolean.
+     * @param fileName              As same as file name.
+     * @param targetPath            Storage path of YAML file.
+     *                              Enum path: TO_GLOBAL or TO_WORLD.
+     * @return                      Success or failure when:
+     *                              <li>- Attribute not found in YAML -> "yamlNotFound", fileName.</li>
      */
-    public static boolean deleteYamlAttribute(String fileName, YamlReader.TargetPath targetPath) {
+    public static @NotNull MethodResult deleteYamlAttribute(String fileName, YamlReader.TargetPath targetPath) {
         try {
             YamlReader.delete("attribute", fileName, targetPath);
-            return true;
+            return MethodResult.success();
         }
         catch (IOException e) {
-            return false;
+            return MethodResult.failure("yamlNotFound", fileName);
         }
     }
 
@@ -909,7 +936,7 @@ public class AttributeHolder {
     }
 
     @SuppressWarnings("unchecked")
-    private static Attribute parseAttributeData(Map<String, Object> attributeData) {
+    private static NullableValue<Attribute> parseAttributeData(Map<String, Object> attributeData) {
         // Read general.
         Attribute attribute = new Attribute();
         attribute.id = (String) attributeData.getOrDefault("id", null);
@@ -971,7 +998,7 @@ public class AttributeHolder {
             attribute.recoveryCurveBehavior = (String) recovery.getOrDefault("behavior", "simple");
             attribute.recoveryCurveValue = ((Number) recovery.getOrDefault("value", 0.0f)).floatValue();
             attribute.recoveryCurveDirection = (String) recovery.getOrDefault("direction", "point");
-            attribute.recoveryIntervalTicks = (Integer) recovery.getOrDefault("recovery_interval", 1);
+            attribute.recoveryIntervalTicks = ((Number) recovery.getOrDefault("recovery_interval", 1)).intValue();
         }
         else {
             attribute.recoveryCurveId = null;
@@ -981,7 +1008,7 @@ public class AttributeHolder {
             attribute.recoveryIntervalTicks = 1;
         }
 
-        return attribute;
+        return NullableValue.ofNullable(attribute);
     }
 
     private static CompoundTag saveAttributeData(Map.Entry<String, Float> entry) {
@@ -1004,7 +1031,12 @@ public class AttributeHolder {
     }
 
     // Register all YAML attributes.
-    private static void registerYamlAttribute(Attribute attribute) {
+    private static void registerYamlAttribute(@NotNull Attribute attribute) {
+        if (attribute.id == null) {
+            CoreHanXu.LOGGER.warn("[HX] Unable to register a YAML attribute that contains null id.");
+            return;
+        }
+
         if (apiAttributes.containsKey(attribute.id) || commandAttributes.containsKey(attribute.id)) {
             CoreHanXu.LOGGER.warn("[HX] Rejected duplicate attribute: {}", attribute.id);
             return;
@@ -1064,7 +1096,42 @@ public class AttributeHolder {
         tickRecovery();
     }
 
-    // Define values.
+    /**
+     * <p><h3>
+     *     Custom Attribute
+     * </h3></p>
+     * <p>
+     *     It defined a data set of an attribute.
+     *     To create a new attribute, you are required to provide an id, maximum value, and default value when creation.
+     *     <pre>{@code
+     *         AttributeHolder.CustomAttribute newAttribute = new AttributeHolder.CustomAttribute(
+     *             attributeId, maximum, defaultValue
+     *         );
+     *     }</pre>
+     * </p>
+     * <p>
+     *     While defining the behavior of attribute, use chain method to extend:
+     *     <pre>{@code
+     *         // Register a callback behavior, it will trigger when the threshold condition satisfied.
+     *         newAttribute.onThreshold(integer, thresholdId)
+     *                 // Optional to define when the value reach to 0.
+     *                 .onZero(zeroThresholdId)
+     *                 // Optional to register a tick event for attribute, which will used for recovery/decrease.
+     *                 .setRecovery(recoveryId)
+     *                 // Optional to define the frequency of ticking the recovery override method.
+     *                 .setRecoveryInterval(integerInterval);
+     *
+     *         // Then register this.
+     *         AttributeHolder.register(newAttribute);
+     *
+     *         // And also register the behavior.
+     *         BehaviorRegistry.register(id, (player, parameters) -> {
+     *             // Logics.
+     *         });
+     *     }</pre>
+     *     To operate with custom callback, please also refer to {@link BehaviorRegistry}.
+     * </p>
+     */
     public static class CustomAttribute {
         private final String attributeId;
         private final float maximum;

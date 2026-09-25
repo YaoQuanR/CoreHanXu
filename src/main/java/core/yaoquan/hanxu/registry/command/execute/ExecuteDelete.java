@@ -64,28 +64,25 @@ public class ExecuteDelete {
                 return 0;
             }
         }
-        switch (specifiedPath) {
-            case "world":
-                if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_WORLD)) {
-                    MessagePublisher.sendSystemMessage(context,
-                            Component.translatable("commands.chx.scene_deleted")
-                                    .withColor(General.Color.CONTENT));
-                    break;
-                }
-                MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.failedToDelete));
-                return 0;
-            case "global":
-                if (SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_GLOBAL)) {
-                    MessagePublisher.sendSystemMessage(context,
-                            Component.translatable("commands.chx.scene_deleted")
-                                    .withColor(General.Color.CONTENT));
-                    break;
-                }
-                MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.failedToDelete));
-                return 0;
-        }
 
-        return 1;
+        MethodResult result = switch (specifiedPath) {
+            case "world" -> SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_WORLD);
+            case "global" -> SceneHolder.deleteScene(sceneName, YamlReader.TargetPath.TO_GLOBAL);
+            default -> MethodResult.failure("undefinedCategory");
+        };
+
+        return result.matching(
+                () -> {
+                    MessagePublisher.sendSystemMessage(context,
+                            Component.translatable("commands.chx.scene_deleted")
+                                    .withColor(General.Color.CONTENT));
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displaySceneErrorResult(context, error);
+                    return 0;
+                }
+        );
     }
 
     public static int executeAttribute_Delete(CommandContext<CommandSourceStack> context, String specifiedPath) {
@@ -122,26 +119,31 @@ public class ExecuteDelete {
         }
 
         switch (specifiedPath) {
-            case "world":
-                if (AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_WORLD)) {
+            case "world" -> {
+                MethodResult result = AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_WORLD);
+                if (result.isSuccess()) {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.attribute_deleted")
                                     .withColor(General.Color.CONTENT)
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.failedToDelete));
+                CommandError.displayAttributeErrorResult(context, result.getError());
                 return 0;
-            case "global":
-                if (AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_GLOBAL)) {
+            }
+
+            case "global" -> {
+                MethodResult result = AttributeHolder.unregisterAndDelete(attributeId, YamlReader.TargetPath.TO_GLOBAL);
+                if (result.isSuccess()) {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.attribute_deleted")
                                     .withColor(General.Color.CONTENT)
                     );
                     break;
                 }
-                MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.failedToDelete));
+                CommandError.displayAttributeErrorResult(context, result.getError());
                 return 0;
+            }
         }
 
         return 1;
@@ -214,31 +216,26 @@ public class ExecuteDelete {
                 return 0;
             }
         }
-        switch (specifiedPath) {
-            case "world":
-                if (yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_WORLD) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_WORLD)) {
+
+        MethodResult result = switch (specifiedPath) {
+            case "world" -> yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_WORLD) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_WORLD);
+            case "global" -> yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_GLOBAL) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_GLOBAL);
+            default -> MethodResult.failure("undefinedCategory");
+        };
+
+        return result.matching(
+                () -> {
                     MessagePublisher.sendSystemMessage(context,
                             Component.translatable("commands.chx.loot_deleted")
                                     .withColor(General.Color.CONTENT)
                     );
-                    break;
+                    return 1;
+                },
+                (error, info) -> {
+                    CommandError.displayLootErrorResult(context, error);
+                    return 0;
                 }
-
-                MessagePublisher.sendFailureMessage(context, errorComponent(LootError.failedToDelete));
-                return 0;
-            case "global":
-                if (yamlFile? LootHolder.deleteFileLootTable(tableId, YamlReader.TargetPath.TO_GLOBAL) : LootHolder.deleteFileLootTable(tableId, JsonReader.TargetPath.TO_GLOBAL)) {
-                    MessagePublisher.sendSystemMessage(context,
-                            Component.translatable("commands.chx.loot_deleted")
-                                    .withColor(General.Color.CONTENT)
-                    );
-                    break;
-                }
-                MessagePublisher.sendFailureMessage(context, errorComponent(LootError.failedToDelete));
-                return 0;
-        }
-
-        return 1;
+        );
     }
 
     public static int executeWeather_Delete(CommandContext<CommandSourceStack> context, String specificPath) {

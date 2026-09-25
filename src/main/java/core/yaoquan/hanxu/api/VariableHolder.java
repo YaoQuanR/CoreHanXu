@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * <p><h3>
  *     Variable System API
- * </b></h3>
+ * </h3></p>
  * <p>
  *     Variable system is a light weighted variable storage system for cross system work.
  *     It contains variable type (As similar to Java class) and variable value.
@@ -82,7 +82,7 @@ public class VariableHolder {
      *                              which contains <b>string, integer, boolean, float, double, long</b>.
      * @param variableValue         Defined value of this variable.
      * @param override              Rewrite value when set to true.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- Using duplicated variable without force override -> "duplicated", variableName.</li>
      *                              <li>- Failed to casting the inputted string to a valid type -> "invalidCasting", variableValue.</li>
      *                              <li>- Casting to invalid type -> "invalidType", variableType.</li>
@@ -112,25 +112,19 @@ public class VariableHolder {
                 }
             }
             case "boolean", "bool", "Boolean" -> {
-                try {
-                    boolean value;
-                    if (variableValue.equalsIgnoreCase("true") || variableValue.equalsIgnoreCase("false")) {
-                        value = variableValue.equalsIgnoreCase("true");
-                    }
-                    else if (variableValue.equals("1") || variableValue.equals("0")) {
-                        value = variableValue.equalsIgnoreCase("1");
-                    }
-                    else {
-                        return MethodResult.failure("invalidCasting", variableValue);
-                    }
-
-                    registeredVariables.add(variableName);
-                    booleanVariables.put(variableName, value);
+                boolean value;
+                if (variableValue.equalsIgnoreCase("true") || variableValue.equalsIgnoreCase("false")) {
+                    value = variableValue.equalsIgnoreCase("true");
                 }
-                catch (NumberFormatException e) {
-                    CoreHanXu.LOGGER.warn("[HX] Invalid boolean variable value: {}", variableValue);
+                else if (variableValue.equals("1") || variableValue.equals("0")) {
+                    value = variableValue.equals("1");
+                }
+                else {
                     return MethodResult.failure("invalidCasting", variableValue);
                 }
+
+                registeredVariables.add(variableName);
+                booleanVariables.put(variableName, value);
             }
             case "float", "Float" -> {
                 try {
@@ -177,7 +171,7 @@ public class VariableHolder {
      * Delete variable from data.
      * @param variableName          Defined id of this variable.
      * @return                      Success or failure when:
-     *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
+     *                              <li>- This variable are not registered -> "notExist", variableName.</li>
      */
     public static @NotNull MethodResult deleteVariable(String variableName) {
         if (!registeredVariables.contains(variableName)) {
@@ -412,7 +406,7 @@ public class VariableHolder {
      * @param compareValue          The content of the reference for the string part matching.
      * @return                      A result that maybe failure:
      *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
-     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
+     *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
      *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
      */
     @CheckReturnValue
@@ -439,7 +433,6 @@ public class VariableHolder {
      * @return                      A result that maybe failure:
      *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
      *                              <li>- Invalid type from variable -> Exception: "invalidType", variableName.</li>
-     *                              <li>- This compare type is not a valid type -> Exception: "invalidType", compareType.</li>
      *                              <li>- Compare for a result within safety -> Usual: boolean.</li>
      */
     @CheckReturnValue
@@ -598,7 +591,7 @@ public class VariableHolder {
     @CheckReturnValue
     public static @NotNull Exceptionable<Boolean> doesVariableSmaller(String variableName, String compareValue, boolean includedEqual) {
         if (!registeredVariables.contains(variableName)) {
-            CoreHanXu.LOGGER.warn("[HX] Trying to compare 'greater than' unexist variable: {}", variableName);
+            CoreHanXu.LOGGER.warn("[HX] Trying to compare unexist variable 'smaller than' the compare value: {}", variableName);
             return Exceptionable.exception("notExist", variableName);
         }
 
@@ -663,7 +656,7 @@ public class VariableHolder {
     @CheckReturnValue
     public static @NotNull Exceptionable<Boolean> doesVariableGreater(String variableName, String compareValue, boolean includedEqual) {
         if (!registeredVariables.contains(variableName)) {
-            CoreHanXu.LOGGER.warn("[HX] Trying to compare 'smaller than' unexist variable: {}", variableName);
+            CoreHanXu.LOGGER.warn("[HX] Trying to compare unexist variable 'greater than' the compare value: {}", variableName);
             return Exceptionable.exception("notExist", variableName);
         }
 
@@ -901,7 +894,7 @@ public class VariableHolder {
      * @param variableName          Define id of this variable.
      * @param newValue              The new value that must within same type to old value,
      *                              which contains <b>string, integer, boolean, float, double, long</b>.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- This variable are not registered -> "notExist", variableName.</li>
      *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
      *                              <li>- Invalid type from new value -> "invalidType", variableType.</li>
@@ -925,8 +918,8 @@ public class VariableHolder {
                 case "integer" -> integerVariables.put(variableName, Integer.parseInt(newValue));
                 case "boolean" -> {
                     boolean value;
-                    if (newValue.equals("true") || newValue.equals("false")) {
-                        value = newValue.equals("true");
+                    if (newValue.equalsIgnoreCase("true") || newValue.equalsIgnoreCase("false")) {
+                        value = newValue.equalsIgnoreCase("true");
                     }
                     else if (newValue.equals("1") || newValue.equals("0")) {
                         value = newValue.equals("1");
@@ -957,11 +950,11 @@ public class VariableHolder {
      * @param variableName          Define id of this variable.
      * @param value                 The new value that must within same type to old value,
      *                              which contains <b>integer, float, double, long</b>.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- This variable are not registered -> "notExist", variableName.</li>
      *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
      *                              <li>- Invalid type from new value -> "invalidType", variableType.</li>
-     *                              <li>- Using invalid number format to modify -> "invalidCasting", newValue.</li>
+     *                              <li>- Using invalid number format to modify -> "invalidCasting", value.</li>
      */
     public static @NotNull MethodResult addNumber(String variableName, String value) {
         if (!registeredVariables.contains(variableName)) {
@@ -1013,11 +1006,11 @@ public class VariableHolder {
      * @param variableName          Define id of this variable.
      * @param value                 The absolute (positive) new value for reduce old value by same type,
      *                              which contains <b>integer, float, double, long</b>.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- This variable are not registered -> "notExist", variableName.</li>
      *                              <li>- Invalid type from variable -> "invalidType", variableName.</li>
      *                              <li>- Invalid type from new value -> "invalidType", variableType.</li>
-     *                              <li>- Using invalid number format to modify -> "invalidCasting", newValue.</li>
+     *                              <li>- Using invalid number format to modify -> "invalidCasting", value.</li>
      */
     public static @NotNull MethodResult reduceNumber(String variableName, String value) {
         if (!registeredVariables.contains(variableName)) {
@@ -1069,7 +1062,7 @@ public class VariableHolder {
      * @param variableName          Define id of this variable.
      * @param playerName            Player name for redirecting to the player by {@link ScoreHolder}.
      * @param scoreName             Score name from {@link Scoreboard}.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
      *                              <li>- Server offline -> "serverOffline", variableName.</li>
      *                              <li>- Received null score objective from score name -> "unknownScoreObjective", scoreName.</li>
@@ -1146,7 +1139,7 @@ public class VariableHolder {
      * @param variableName          Define id of this variable.
      * @param playerName            Player name for redirecting to the player by {@link ScoreHolder}.
      * @param scoreName             Score name from {@link Scoreboard}.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- This variable are not registered -> Exception: "notExist", variableName.</li>
      *                              <li>- Server offline -> "serverOffline", variableName.</li>
      *                              <li>- Received null score objective from score name -> "unknownScoreObjective", scoreName.</li>
@@ -1197,7 +1190,7 @@ public class VariableHolder {
      * Mask an exactly same value from reference to this variable.
      * @param variableName          Define id of this variable.
      * @param referenceName         Define id of the reference variable.
-     * @return                      Success of failure when:
+     * @return                      Success or failure when:
      *                              <li>- This variable are not registered -> "notExist", variableName/referenceName.</li>
      *                              <li>- Variable that target or reference is invalid type -> "invalidType", "{@code variableName} or {@code referenceName}".</li>
      *                              <li>- Different type of variable -> "mismatchType", "{@code variableType} <- {@code referenceType}".</li>
@@ -1206,7 +1199,7 @@ public class VariableHolder {
      */
     public static @NotNull MethodResult maskVariableValue(String variableName, String referenceName) {
         if (!registeredVariables.contains(variableName) || !registeredVariables.contains(referenceName)) {
-            CoreHanXu.LOGGER.warn("[HX] Trying to 'same' unexist variable: {}", variableName);
+            CoreHanXu.LOGGER.warn("[HX] Trying to 'mask' unexist variable: {}", variableName);
             return MethodResult.failure("notExist", variableName);
         }
 

@@ -22,6 +22,32 @@ public class CommandError {
         }
     }
 
+    static void displaySceneErrorResult(CommandContext<CommandSourceStack> context, String error) {
+        switch (error) {
+            case "yamlNotFound" ->
+                MessagePublisher.sendFailureMessage(context, errorComponent(SceneError.notFound));
+            case "undefinedCategory" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationCategory));
+            default ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
+        }
+    }
+
+    static void displayAttributeErrorResult(CommandContext<CommandSourceStack> context, String error) {
+        switch (error) {
+            case "duplicated" ->
+                    MessagePublisher.sendFailureMessage(context,errorComponent(AttributeError.sameNameFound));
+            case "notFound" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.notFound));
+            case "yamlNotFound" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(AttributeError.yamlNotFound));
+            case "undefinedCategory" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationCategory));
+            default ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
+        }
+    }
+
     static void displayVariableErrorResult(CommandContext<CommandSourceStack> context, String error) {
         switch (error) {
             case "duplicated" ->
@@ -40,6 +66,25 @@ public class CommandError {
                     MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.invalidScoreCasting));
             case "mismatchType" ->
                     MessagePublisher.sendFailureMessage(context, errorComponent(VariableError.mismatchType));
+            default ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
+        }
+    }
+
+    static void displayLootErrorResult(CommandContext<CommandSourceStack> context, String error) {
+        switch (error) {
+            case "notExist" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(LootError.tableNotExist));
+            case "notBlock" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(LootError.notBlock));
+            case "notContainer" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(LootError.notContainer));
+            case "yamlNotFound" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(LootError.yamlNotFound));
+            case "emptyList" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(LootError.emptyList));
+            case "notEnoughSpace" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(LootError.notEnoughSpace));
             default ->
                     MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
         }

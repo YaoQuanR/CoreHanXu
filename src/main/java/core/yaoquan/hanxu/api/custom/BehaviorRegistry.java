@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * <p><b>
+ * <p><h3>
  *     Behavior Registry
- * </b></p>
+ * </h3></p>
  * <p>
  *     Callback behavior register method.
  * </p>

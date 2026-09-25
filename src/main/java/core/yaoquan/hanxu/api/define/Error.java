@@ -14,7 +14,6 @@ public class Error {
     public enum SceneError {
         notFound,
         playFailed,
-        failedToDelete,
         alreadyExist,
         sameNameFound,
         failedToSave,
@@ -23,8 +22,8 @@ public class Error {
     public enum AttributeError {
         tryToModifyApiTarget,
         notFound,
+        yamlNotFound,
         sameNameFound,
-        failedToDelete,
         noThreshold,
         noSpecificThreshold,
         noZero,
@@ -50,9 +49,13 @@ public class Error {
         emptyTable,
         tableNotExist,
         alreadyExist,
+        notBlock,
+        notContainer,
+        yamlNotFound,
+        emptyList,
+        notEnoughSpace,
         failedToSave,
         sameNameFound,
-        failedToDelete,
     }
 
     public enum WeatherError {
@@ -119,7 +122,6 @@ public class Error {
         return switch (sceneError) {
             case notFound -> Component.translatable("commands.chx.scene_not_found");
             case playFailed -> Component.translatable("commands.chx.scene_play_failed");
-            case failedToDelete -> Component.translatable("commands.chx.scene_failed_to_delete");
             case alreadyExist -> Component.translatable("commands.chx.scene_already_exist");
             case sameNameFound -> Component.translatable("commands.chx.scene_same_name_found");
             case failedToSave ->  Component.translatable("commands.chx.scene_failed_to_save");
@@ -131,8 +133,8 @@ public class Error {
         return switch (attributeError) {
             case tryToModifyApiTarget -> Component.translatable("commands.chx.attribute_try_to_modify_api_target");
             case notFound -> Component.translatable("commands.chx.attribute_not_found");
+            case yamlNotFound -> Component.translatable("commands.chx.attribute_yaml_not_found");
             case sameNameFound -> Component.translatable("commands.chx.attribute_same_name_found");
-            case failedToDelete -> Component.translatable("commands.chx.attribute_failed_to_delete");
             case noThreshold -> Component.translatable("commands.chx.attribute_no_threshold");
             case noSpecificThreshold -> Component.translatable("commands.chx.attribute_no_specific_threshold");
             case noZero -> Component.translatable("commands.chx.attribute_no_zero");
@@ -164,9 +166,13 @@ public class Error {
             case emptyTable -> Component.translatable("commands.chx.loot_empty_table");
             case tableNotExist -> Component.translatable("commands.chx.loot_table_not_exist");
             case alreadyExist -> Component.translatable("commands.chx.loot_already_exist");
+            case notBlock -> Component.translatable("commands.chx.loot_not_block");
+            case notContainer -> Component.translatable("commands.chx.loot_not_container");
+            case yamlNotFound -> Component.translatable("commands.chx.loot_yaml_not_found");
+            case emptyList -> Component.translatable("commands.chx.loot_empty_list");
+            case notEnoughSpace -> Component.translatable("commands.chx.loot_not_enough_space");
             case failedToSave -> Component.translatable("commands.chx.loot_failed_to_save");
             case sameNameFound -> Component.translatable("commands.chx.loot_same_name_found");
-            case failedToDelete -> Component.translatable("commands.chx.loot_failed_to_delete");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

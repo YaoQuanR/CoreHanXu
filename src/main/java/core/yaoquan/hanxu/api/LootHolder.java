@@ -7,6 +7,7 @@ import com.mojang.serialization.JsonOps;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.define.Error;
 import core.yaoquan.hanxu.api.define.General;
+import core.yaoquan.hanxu.util.type.MethodResult;
 import core.yaoquan.hanxu.util.type.NullableValue;
 import core.yaoquan.hanxu.util.tool.Converter;
 import core.yaoquan.hanxu.util.tool.JsonReader;
@@ -188,6 +189,7 @@ public class LootHolder {
         return NullableValue.ofNotNull(data);
     }
 
+    /// Gain registered table ids that contains file suffix.
     public static Set<String> getRegisteredTableIds() {
         Set<String> tableIds = new HashSet<>();
 
@@ -214,8 +216,8 @@ public class LootHolder {
      * @param random                Java random generator.
      * @param luck                  Luck value that affect chance of item.
      * @param ignoreCondition       Ignore "condition" fields or not.
-     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
-     * @return                      Result of generation: List<\ItemStack>.
+     * @param guaranteed            Guaranteed all items will be generated (Skip pool logics).
+     * @return                      Result of generation: {@code List<ItemStack>}.
      */
     public static List<ItemStack> generateItemList(LootTableData data, Random random, float luck, boolean ignoreCondition, boolean guaranteed) {
         if (data == null || data.pools == null || data.pools.isEmpty()) {
@@ -301,7 +303,7 @@ public class LootHolder {
      * @param random                Java random generator.
      * @param luck                  Luck value that affect chance of item.
      * @param ignoreCondition       Ignore "condition" fields or not.
-     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
+     * @param guaranteed            Guaranteed all items will be generated (Skip pool logics).
      * @return                      Result of generation: List<\ItemStack>.
      */
     public static List<ItemStack> generateItemList(NullableValue<LootTableData> nullableData, Random random, float luck, boolean ignoreCondition, boolean guaranteed) {
@@ -316,14 +318,16 @@ public class LootHolder {
      * @param player                Player that from {@link ServerPlayer}.
      * @param tableId               Loot table id from registered or file table.
      * @param ignoreCondition       Ignore "condition" or not.
-     * @param sendFirstItem         Determine if first generated item will be sent.
-     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
-     * @return                      Does the data completed for send to player: boolean.
+     * @param sendFirstItem         Determine if only first generated item will be sent.
+     * @param guaranteed            Guaranteed all items will be generated (Skip pool logics).
+     * @return                      Success or failure when:
+     *                              <li>- Table remains nothing -> "notExist", tableId.</li>
+     *                              <li>- Table remains empty pool -> "emptyPool", tableId.</li>
      */
-    public static boolean sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem, boolean guaranteed) {
+    public static @NotNull MethodResult sendItemToPlayer(ServerPlayer player, String tableId, boolean ignoreCondition, boolean sendFirstItem, boolean guaranteed) {
         NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
         if (nullableTable.isNull()) {
-            return false;
+            return MethodResult.failure("notExist", tableId);
         }
 
         LootTableData data = nullableTable.get();
@@ -331,10 +335,14 @@ public class LootHolder {
         List<ItemStack> items = generateItemList(data, new Random(), player.getLuck(), ignoreCondition, guaranteed);
 
         if (sendFirstItem) {
+            if (items.isEmpty()) {
+                return MethodResult.failure("emptyPool", tableId);
+            }
+
             if (!player.addItem(items.getFirst())) {
                 player.drop(items.getFirst(), false);
             }
-            return true;
+            return MethodResult.success();
         }
 
         for (ItemStack item : items) {
@@ -343,7 +351,7 @@ public class LootHolder {
             }
         }
 
-        return true;
+        return MethodResult.success();
     }
 
     /**
@@ -353,13 +361,14 @@ public class LootHolder {
      * @param ignoreItemString      String that determine what item should be ignored to send for player.
      *                              Receive item id as "[item_id_n] [item_id_n+1]" which space is split sign.
      *                              If item id not contains "minecraft:", normally used "minecraft:" as prefix.
-     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
-     * @return                      Does the data completed for send to player: boolean.
+     * @param guaranteed            Guaranteed all items will be generated (Skip pool logics).
+     * @return                      Success or failure when:
+     *                              <li>- Table remains nothing -> "notExist", tableId.</li>
      */
-    public static boolean sendItemToPlayerWithIgnoreItem(ServerPlayer player, String tableId, String ignoreItemString, boolean guaranteed) {
+    public static @NotNull MethodResult sendItemToPlayerWithIgnoreItem(ServerPlayer player, String tableId, String ignoreItemString, boolean guaranteed) {
         NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
         if (nullableTable.isNull()) {
-            return false;
+            return MethodResult.failure("notExist", tableId);
         }
 
         LootTableData data = nullableTable.get();
@@ -391,7 +400,7 @@ public class LootHolder {
             }
         }
 
-        return true;
+        return MethodResult.success();
     }
 
     /**
@@ -404,25 +413,34 @@ public class LootHolder {
      * @param ignoreItemString      String that determine what item should be ignored to send for player.
      *                              Receive item id as "[item_id_n] [item_id_n+1]" which space is split sign.
      *                              If item id not contains "minecraft:", normally used "minecraft:" as prefix.
-     * @param guaranteed            Guaranteed all item will be generated (Skip pool logics).
-     * @return                      Does the data completed for send to container: boolean.
+     * @param guaranteed            Guaranteed all items will be generated (Skip pool logics).
+     * @return                      Success or failure when:
+     *                              <li>- Target is not a block -> "notBlock", "blockPos.getX(),blockPos.getY(),blockPos.getZ()"</li>
+     *                              <li>- Target block is not container -> "notContainer", blockEntity.getClass().getName().</li>
+     *                              <li>- Table remains nothing -> "notExist", tableId.</li>
+     *                              <li>- Generated empty item list -> "emptyList", tableId.</li>
+     *                              <li>- Contains remains less or empty space to fill in item -> "notEnoughSpace", "blockPos.getX(),blockPos.getY(),blockPos.getZ()"</li>
      */
-    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted, String ignoreItemString, boolean guaranteed) {
+    public static @NotNull MethodResult sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted, String ignoreItemString, boolean guaranteed) {
         BlockEntity blockEntity = level.getBlockEntity(blockPos);
+        if (blockEntity == null) {
+            return MethodResult.failure("notBlock", blockPos.getX() + "," + blockPos.getY() + "," + blockPos.getZ());
+        }
+
         if (!(blockEntity instanceof Container container)) {
-            return false;
+            return MethodResult.failure("notContainer", blockEntity.getClass().getName());
         }
 
         NullableValue<LootTableData> nullableTable = returnLootTableData(tableId);
         if (nullableTable.isNull()) {
-            return false;
+            return MethodResult.failure("notExist", tableId);
         }
 
         LootTableData data = nullableTable.get();
 
         List<ItemStack> items = generateItemList(data, new Random(), 0, ignoreCondition, guaranteed);
         if (items.isEmpty()) {
-            return true;
+            return MethodResult.failure("emptyList", tableId);
         }
 
         List<Integer> emptySlots = new ArrayList<>();
@@ -434,7 +452,7 @@ public class LootHolder {
 
         if (emptySlots.isEmpty()) {
             CoreHanXu.LOGGER.info("[HX] Container is full, no item replaced: {}", blockPos);
-            return true;
+            return MethodResult.failure("notEnoughSpace", blockPos.getX() + "," + blockPos.getY() + "," + blockPos.getZ());
         }
 
         if (!isSorted) {
@@ -475,50 +493,61 @@ public class LootHolder {
             container.setItem(slot, item);
         }
 
-        return itemIndex >= items.size();
+        return itemIndex >= items.size()? MethodResult.success() : MethodResult.failure("notEnoughSpace", blockPos.getX() + "," + blockPos.getY() + "," + blockPos.getZ());
     }
 
     /**
      * Generate loot and send item to a container. Normally considered condition,
-     * disrupt item list, nothing to ignore, and not guaranteed all item to be generated.
+     * disrupt item list, nothing to ignore, and not guaranteed all items to be generated.
      * @param level                 Level that from {@link ServerLevel}.
      * @param blockPos              Block position that using format from {@link BlockPos}.
      * @param tableId               Loot table id from registered or file table.
-     * @return                      Does the data completed for send to container: boolean.
+     * @return                      Success or failure when:
+     *                              <li>- Target is not a block -> "notBlock", "blockPos.getX(),blockPos.getY(),blockPos.getZ()"</li>
+     *                              <li>- Target block is not container -> "notContainer", blockEntity.getClass().getName().</li>
+     *                              <li>- Table remains nothing -> "notExist", tableId.</li>
      */
-    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId) {
+    public static @NotNull MethodResult sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId) {
         return sendItemToContainer(level, blockPos, tableId, false, false, null, false);
     }
 
     /**
-     * Generate loot and send item to a container. Ignored ignore item list, and not guaranteed all item to be generated.
+     * Generate loot and send item to a container. Ignored ignore item list, and not guaranteed all items to be generated.
      * @param level                 Level that from {@link ServerLevel}.
      * @param blockPos              Block position that using format from {@link BlockPos}.
      * @param tableId               Loot table id from registered or file table.
      * @param ignoreCondition       Ignore "condition" or not.
      * @param isSorted              Determine if list is sorted when push item.
-     * @return                      Does the data completed for send to container: boolean.
+     * @return                      Success or failure when:
+     *                              <li>- Target is not a block -> "notBlock", "blockPos.getX(),blockPos.getY(),blockPos.getZ()"</li>
+     *                              <li>- Target block is not container -> "notContainer", blockEntity.getClass().getName().</li>
+     *                              <li>- Table remains nothing -> "notExist", tableId.</li>
      */
-    public static boolean sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted) {
+    public static @NotNull MethodResult sendItemToContainer(ServerLevel level, BlockPos blockPos, String tableId, boolean ignoreCondition, boolean isSorted) {
         return sendItemToContainer(level, blockPos, tableId, ignoreCondition, isSorted, null, false);
     }
 
-    /// Determine if this file exists in any possible location.
-    public static boolean doesFileLootTableExists(String tableId) {
+    /**
+     * Determine if this file exists in any possible location.
+     * @param tableId               Loot table id from registered or file table.
+     * @return                      Success or failure when:
+     *                              <li>- Loot not found in YAML -> "yamlNotFound", tableId.</li>
+     */
+    public static @NotNull MethodResult doesFileLootTableExists(String tableId) {
         try {
             YamlReader.read("loot", tableId);
-            return true;
+            return MethodResult.success();
         }
         catch (FileNotFoundException e) {
             try {
                 JsonReader.read("loot", tableId);
-                return true;
+                return MethodResult.success();
             }
             catch (IOException ignored) {}
         }
         catch (IOException ignored) {}
 
-        return false;
+        return MethodResult.failure("yamlNotFound", tableId);
     }
 
     /**
@@ -545,15 +574,16 @@ public class LootHolder {
      * Delete this YAML table file.
      * @param tableId               Loot table id from registered or file table.
      * @param targetPath            Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                      Does the delete success: boolean.
+     * @return                      Success or failure when:
+     *                              <li>- Loot not found in YAML -> "yamlNotFound", tableId.</li>
      */
-    public static boolean deleteFileLootTable(String tableId, YamlReader.TargetPath targetPath) {
+    public static @NotNull MethodResult deleteFileLootTable(String tableId, YamlReader.TargetPath targetPath) {
         try {
             YamlReader.delete("loot", tableId, targetPath);
-            return true;
+            return MethodResult.success();
         }
         catch (IOException e) {
-            return false;
+            return MethodResult.failure("yamlNotFound", tableId);
         }
     }
 
@@ -561,15 +591,16 @@ public class LootHolder {
      * Delete this JSON table file.
      * @param tableId               Loot table id from registered or file table.
      * @param targetPath            Enum path: TO_GLOBAL or TO_WORLD.
-     * @return                      Does the delete success: boolean.
+     * @return                      Success or failure when:
+     *                              <li>- Loot not found in YAML -> "yamlNotFound", tableId.</li>
      */
-    public static boolean deleteFileLootTable(String tableId, JsonReader.TargetPath targetPath) {
+    public static @NotNull MethodResult deleteFileLootTable(String tableId, JsonReader.TargetPath targetPath) {
         try {
             JsonReader.delete("loot", tableId, targetPath);
-            return true;
+            return MethodResult.success();
         }
         catch (IOException e) {
-            return false;
+            return MethodResult.failure("yamlNotFound", tableId);
         }
     }
 
@@ -1700,7 +1731,7 @@ public class LootHolder {
 
         public LootItemCondition toVanillaCondition() {
             ResourceLocation resourceLocation = ResourceLocation.tryParse(condition);
-            if (condition == null) {
+            if (resourceLocation == null) {
                 return null;
             }
 

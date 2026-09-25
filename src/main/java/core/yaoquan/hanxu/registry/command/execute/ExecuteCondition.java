@@ -106,31 +106,22 @@ public class ExecuteCondition {
         scoreValue = scoreboard.getOrCreatePlayerScore(scoreHolder, objective).get();
 
         boolean success;
-        try {
-            switch (compareSign) {
-                case "=", "==" -> success = scoreValue == compareValue;
-                case "!=", "≠" -> success = scoreValue != compareValue;
-                case ">" -> success = scoreValue > compareValue;
-                case ">=", "≥" -> success = scoreValue >= compareValue;
-                case "<" -> success = scoreValue < compareValue;
-                case "<=", "≤" -> success = scoreValue <= compareValue;
-                case "instanceof" -> success = false;
-                case "contains" -> success = String.valueOf(scoreValue).contains(String.valueOf(compareValue));
-                case "length" -> success = String.valueOf(scoreValue).length() == compareValue;
-                case "starts_with" -> success = String.valueOf(scoreValue).startsWith(String.valueOf(compareValue));
-                case "ends_with" -> success = String.valueOf(scoreValue).endsWith(String.valueOf(compareValue));
-                default -> {
-                    MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.undefinedOperationCategory));
-                    return 0;
-                }
+        switch (compareSign) {
+            case "=", "==" -> success = scoreValue == compareValue;
+            case "!=", "≠" -> success = scoreValue != compareValue;
+            case ">" -> success = scoreValue > compareValue;
+            case ">=", "≥" -> success = scoreValue >= compareValue;
+            case "<" -> success = scoreValue < compareValue;
+            case "<=", "≤" -> success = scoreValue <= compareValue;
+            case "instanceof" -> success = false;
+            case "contains" -> success = String.valueOf(scoreValue).contains(String.valueOf(compareValue));
+            case "length" -> success = String.valueOf(scoreValue).length() == compareValue;
+            case "starts_with" -> success = String.valueOf(scoreValue).startsWith(String.valueOf(compareValue));
+            case "ends_with" -> success = String.valueOf(scoreValue).endsWith(String.valueOf(compareValue));
+            default -> {
+                MessagePublisher.sendFailureMessage(context, errorComponent(Error.GeneralError.undefinedOperationCategory));
+                return 0;
             }
-        }
-        catch (NullPointerException e) {
-            MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.notExist));
-            return 0;
-        } catch (NumberFormatException e) {
-            MessagePublisher.sendFailureMessage(context, errorComponent(Error.VariableError.invalidType));
-            return 0;
         }
 
         if (!success) {

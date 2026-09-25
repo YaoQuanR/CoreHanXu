@@ -304,17 +304,17 @@ public class ExecuteCreate {
 
         targetPath = toPath.equals("global")? YamlReader.TargetPath.TO_GLOBAL : YamlReader.TargetPath.TO_WORLD;
 
-        boolean registered = AttributeHolder.register(attributeId, maximum, defaultValue, targetPath);
+        MethodResult result = AttributeHolder.register(attributeId, maximum, defaultValue, targetPath);
 
-        CommandMisc.displayAttributeCreateMessage(context, attributeId, maximum, defaultValue, registered);
+        CommandMisc.displayAttributeCreateMessage(context, attributeId, maximum, defaultValue, result);
 
-        if (registered) {
-            AttributeHolder.registerAllYamlAttributes();
-            return 1;
-        }
-        else {
-            return 0;
-        }
+        return result.matching(
+                () -> {
+                    AttributeHolder.registerAllYamlAttributes();
+                    return 1;
+                },
+                (error, info) -> 0
+        );
     }
 
     public static int executeVariable_Create(CommandContext<CommandSourceStack> context, boolean override) {

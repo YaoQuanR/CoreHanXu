@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 /**
  * <p><h3>
  *     Nullable Value Type
- * </b></h3>
+ * <h3></p>
  * <p>
  *     This method aims to define null value declaration in explicitly for handle.
  *     It returns a value that may be null or exact value.
@@ -178,7 +178,7 @@ public class NullableValue<T> {
         return result;
     }
 
-    public Stream<T> stream() {
+    public @NotNull Stream<T> stream() {
         return isPresent()? Stream.of(value) : Stream.empty();
     }
 

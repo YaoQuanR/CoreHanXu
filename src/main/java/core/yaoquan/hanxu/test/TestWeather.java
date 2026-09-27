@@ -11,7 +11,7 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 import java.util.Random;
 
-public class TestWeather {
+public final class TestWeather {
     public static void testFog() {
         Random random = new Random(30000L);
 

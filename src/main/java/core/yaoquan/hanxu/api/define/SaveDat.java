@@ -6,11 +6,12 @@ import core.yaoquan.hanxu.api.WeatherHolder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerLevel;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class SaveDat {
+public final class SaveDat {
     public enum HeadKey {
         variables("core.yaoquan.hanxu.variables"),
         weathers("core.yaoquan.hanxu.weathers");
@@ -26,6 +27,15 @@ public class SaveDat {
         }
     }
 
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void saveToWorld(ServerLevel level) {
         if (level == null) {
             return;

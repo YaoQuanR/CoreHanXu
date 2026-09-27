@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 /**
  * <p><h3>
  *     Nullable Value Type
- * <h3></p>
+ * </h3></p>
  * <p>
  *     This method aims to define null value declaration in explicitly for handle.
  *     It returns a value that may be null or exact value.
@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  * @param <T> Class of the storage value.
  * @since 0.7.0 (Internal Development)
  */
-public class NullableValue<T> {
+public final class NullableValue<T> {
     private final T value;
     private final Type type;
 

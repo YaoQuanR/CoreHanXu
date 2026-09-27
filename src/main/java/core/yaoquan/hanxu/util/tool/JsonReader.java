@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
-public class JsonReader {
+public final class JsonReader {
     private static final Gson GSON = new Gson();
 
     /**

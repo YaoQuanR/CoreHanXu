@@ -11,7 +11,7 @@ import core.yaoquan.hanxu.test.TestHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
-public class BuildWeather {
+class BuildWeather {
     public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("weather")
             .then(

@@ -29,7 +29,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
-public class YamlReader {
+public final class YamlReader {
     private static final Yaml YAML = new Yaml();
 
     private static final Map<Path, Long> lastModified = new ConcurrentHashMap<>();

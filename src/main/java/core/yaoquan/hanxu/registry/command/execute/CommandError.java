@@ -102,6 +102,8 @@ public class CommandError {
                     MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.notInitialized));
             case "undefinedCategory" ->
                     MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.undefinedOperationCategory));
+            case "noUnclaims" ->
+                    MessagePublisher.sendFailureMessage(context, errorComponent(WeatherError.noUnclaims));
             default ->
                     MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.unexpected));
         }

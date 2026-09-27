@@ -10,7 +10,7 @@ import core.yaoquan.hanxu.registry.config.PermissionConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
-public class BuildVariable {
+class BuildVariable {
     public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("variable")
             .then(

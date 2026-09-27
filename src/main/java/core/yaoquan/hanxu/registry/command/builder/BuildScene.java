@@ -9,7 +9,7 @@ import core.yaoquan.hanxu.registry.config.PermissionConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
-public class BuildScene {
+class BuildScene {
     public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("scene")
             .then(

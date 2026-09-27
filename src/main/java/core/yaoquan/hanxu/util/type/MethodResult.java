@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  *
  * @since 0.7.1 (Internal Development)
  */
-public class MethodResult {
+public final class MethodResult {
     private final Type type;
     private final Failure failure;
 

@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import static core.yaoquan.hanxu.api.define.Error.errorComponent;
 
-public class Resolver {
+public final class Resolver {
     public static UUID resolveTargetUUID(CommandContext<CommandSourceStack> context, String targetString) {
         switch (targetString) {
             case "-global", "-g" -> {

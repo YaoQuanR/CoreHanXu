@@ -30,7 +30,7 @@ import static core.yaoquan.hanxu.api.define.Error.*;
  * </p>
  * @since 0.3.0 (Internal Development)
  */
-public class SceneHolder {
+public final class SceneHolder {
     // Load scene data.
     /**
      * Get the scene data from sub path "scene" for all .yaml documents.

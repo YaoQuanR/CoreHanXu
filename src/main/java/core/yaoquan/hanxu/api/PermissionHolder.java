@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  * @since 0.1ea (Internal Development)
  */
-public class PermissionHolder {
+public final class PermissionHolder {
     // Permission manager list:
     // Always level 10.
     private static final Set<String> adminList = ConcurrentHashMap.newKeySet();
@@ -122,7 +122,7 @@ public class PermissionHolder {
                 // Get player permission level.
                 int currentPlayerLevel = player.getPersistentData()
                         .getInt("core.yaoquan.hanxu.player_permission_level")
-                        .orElse(GeneralConfig.setAutoAuthorizePermissionLevel.getAsInt());
+                        .orElse(GeneralConfig.autoAuthorizePermissionLevel.getAsInt());
 
                 // Non admin must agree license for command use.
                 boolean agreedLicense = player.getPersistentData()

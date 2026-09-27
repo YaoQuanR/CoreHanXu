@@ -2,7 +2,7 @@ package core.yaoquan.hanxu.api.define;
 
 import net.minecraft.network.chat.Component;
 
-public class Error {
+public final class Error {
     public enum TimerError {
         alreadyExist,
         notExist,
@@ -69,6 +69,7 @@ public class Error {
         failedToSave,
         tryToModifyApiTarget,
         sameNameFound,
+        noUnclaims,
     }
 
     public enum GeneralError {
@@ -189,6 +190,7 @@ public class Error {
             case failedToSave -> Component.translatable("commands.chx.weather_failed_to_save");
             case tryToModifyApiTarget -> Component.translatable("commands.chx.weather_try_to_modify_api_target");
             case sameNameFound -> Component.translatable("commands.chx.weather_same_name_found");
+            case noUnclaims -> Component.translatable("commands.chx.weather_no_unclaims");
             default -> Component.translatable("commands.core_hanxu.undefined_error_type");
         };
     }

@@ -34,7 +34,7 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(CoreHanXu.MOD_ID)
-public class CoreHanXu {
+public final class CoreHanXu {
     // Define mod id in a common place for everything to reference
     public static final String MOD_ID = "core_hanxu";
     // Directly reference a slf4j logger
@@ -115,7 +115,7 @@ public class CoreHanXu {
                     .contains("core.yaoquan.hanxu.player_permission_level");
 
             // Changeable from config.
-            int autoLevel = GeneralConfig.setAutoAuthorizePermissionLevel.getAsInt();
+            int autoLevel = GeneralConfig.autoAuthorizePermissionLevel.getAsInt();
 
             if (!hasPermissionLevel) {
                 player.getPersistentData()

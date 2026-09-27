@@ -78,7 +78,7 @@ import static core.yaoquan.hanxu.api.define.Error.errorString;
  * </h3></p>
  * @since 0.6.0 (Internal Development)
  */
-public class LootHolder {
+public final class LootHolder {
     // Vanilla table cache.
     private static final Map<ResourceLocation, LootTableData> vanillaTableCache = new ConcurrentHashMap<>();
 

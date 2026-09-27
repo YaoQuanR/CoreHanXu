@@ -22,6 +22,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +45,7 @@ import java.util.function.Consumer;
  * @since 0.2.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
-public class TimeHolder {
+public final class TimeHolder {
     // Unit transform.
     public static final int TICKS_PER_SECOND = 20;
     public static final int TICKS_PER_MINUTE = 20 * 60;
@@ -509,7 +510,15 @@ public class TimeHolder {
         return count;
     }
 
-    // Display out to F4 page (info page).
+    /**
+     * Set up the display state for player in F4 info page.
+     * @param player            Server player that refer to {@link ServerPlayer}.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can check {@link Resolver} for details.
+     * @param timerId           Unique title of timer.
+     * @param state             State of display on or off.
+     */
     public static void displayToInfoPage(ServerPlayer player, UUID masterId, String timerId, boolean state) {
         if (masterId == null) {
             return;
@@ -538,7 +547,14 @@ public class TimeHolder {
         QuickSendPacket.sendRegisteredTermPacket(player);
     }
 
-    // Check if required to refresh the F4 timer display.
+    /**
+     * Refresh the F4 info page.
+     * @param player            Server player that refer to {@link ServerPlayer}.
+     * @param masterId          Required when becoming an instance timer,
+     *                          use player id/"-global"/"-temporary" to define the master.
+     *                          You can check {@link Resolver} for details.
+     * @param timerId           Unique title of timer.
+     */
     public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String timerId) {
         String key = player.getUUID() + ":" + masterId.toString() + ":" + timerId;
 
@@ -554,7 +570,15 @@ public class TimeHolder {
     }
 
     // Save and load methods:
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void registerCallback(TimerCallback callback) {
         callbacks.put(callback.getMasterGroupId(), callback);
     }
@@ -563,7 +587,15 @@ public class TimeHolder {
         return NullableValue.ofNullable(callbacks.get(modId));
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void saveInstanceTimerForPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_instance_timers";
         CompoundTag dataRoot = player.getPersistentData();
@@ -585,7 +617,15 @@ public class TimeHolder {
         dataRoot.put(headKey, allTimersTag);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void saveInstanceTimerForGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_instance_timers";
         CompoundTag dataRoot = new CompoundTag();
@@ -613,7 +653,15 @@ public class TimeHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadInstanceTimerForPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_instance_timers";
         CompoundTag dataRoot = player.getPersistentData();
@@ -622,7 +670,15 @@ public class TimeHolder {
         rebuildTimerData(allTimersTag, player.getUUID());
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadInstanceTimerForGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_instance_timers";
         Path file = FilePath.getModDataPath(level);

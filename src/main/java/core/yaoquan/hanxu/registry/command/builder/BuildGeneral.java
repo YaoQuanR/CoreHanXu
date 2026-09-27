@@ -13,7 +13,7 @@ import core.yaoquan.hanxu.registry.config.PermissionConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
-public class BuildGeneral {
+class BuildGeneral {
     public static LiteralArgumentBuilder<CommandSourceStack> help() {
         return Commands.literal("help")
             .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.guide.general.get()))

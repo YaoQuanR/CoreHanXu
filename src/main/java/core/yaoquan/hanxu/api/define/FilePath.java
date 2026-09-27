@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class FilePath {
+public final class FilePath {
     private static final String BASE_PATH = "core_hanxu";
 
     public static Path getModDataPath(ServerLevel level) {

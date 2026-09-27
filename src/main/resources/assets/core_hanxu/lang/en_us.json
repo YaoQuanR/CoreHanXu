@@ -338,7 +338,6 @@
   "commands.chx.weather_killed": "[HX] Weather has been killed!",
   "commands.chx.weather_reloaded": "[HX] Weather has been reloaded.",
   "commands.chx.weather_pickup": "[HX] Try to pickup unclaimed weather states.",
-  "commands.chx.weather_non_unclaims": "[HX] No unclaimed weather states to be picked up.",
   "commands.chx.weather_template": "[HX] Received template book:",
   "commands.chx.weather_created": "[HX] Weather created:",
   "commands.chx.weather_deleted": "[HX] Weather deleted.",
@@ -354,6 +353,7 @@
   "commands.chx.weather_failed_to_save": "[HX] Weather has failed to save!",
   "commands.chx.weather_try_to_modify_api_target": "[HX] API weather are not allowed to modify by commands.",
   "commands.chx.weather_same_name_found": "[HX] Two same name weather found! Provide specific path component and try again.",
+  "commands.chx.weather_no_unclaims": "[HX] No unclaimed weather states to be picked up.",
 
   "commands.core_hanxu.server_offline": "[HX] Server offline!",
   "commands.core_hanxu.license_already_agreed": "[HX] You are already agreed the license!",

@@ -3,10 +3,10 @@ package core.yaoquan.hanxu.registry.config;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class PermissionConfig {
-    public static class Value {
+public final class PermissionConfig {
+    public static final class Value {
         /// Define command: Help, license, origin, bare...
-        public static class Guide {
+        public static final class Guide {
             public final ModConfigSpec.IntValue general;
             public final ModConfigSpec.IntValue licenseAdvanced;
             public final ModConfigSpec.IntValue timer;
@@ -33,7 +33,7 @@ public class PermissionConfig {
         }
 
         /// Define command: List, read, state...
-        public static class Information {
+        public static final class Information {
             public final ModConfigSpec.IntValue general;
             public final ModConfigSpec.IntValue timer;
             public final ModConfigSpec.IntValue scene;
@@ -60,7 +60,7 @@ public class PermissionConfig {
         }
 
         /// Define command: agree.
-        public static class Confirmation {
+        public static final class Confirmation {
             public final ModConfigSpec.IntValue license;
 
             Confirmation(ModConfigSpec.Builder builder) {
@@ -73,7 +73,7 @@ public class PermissionConfig {
         }
 
         /// Define command: create.
-        public static class Create {
+        public static final class Create {
             public final ModConfigSpec.IntValue timerApply;
             public final ModConfigSpec.IntValue timerCreate;
             public final ModConfigSpec.IntValue scene;
@@ -98,7 +98,7 @@ public class PermissionConfig {
         }
 
         /// Define command: delete.
-        public static class Delete {
+        public static final class Delete {
             public final ModConfigSpec.IntValue timer;
             public final ModConfigSpec.IntValue scene;
             public final ModConfigSpec.IntValue attribute;
@@ -121,7 +121,7 @@ public class PermissionConfig {
         }
 
         /// Define command: start, play, give, fill, broadcast, resume...
-        public static class Run {
+        public static final class Run {
             public final ModConfigSpec.IntValue timer;
             public final ModConfigSpec.IntValue scenePlay;
             public final ModConfigSpec.IntValue sceneBroadcast;
@@ -146,7 +146,7 @@ public class PermissionConfig {
         }
 
         /// Define command: stop, pause...
-        public static class Stop {
+        public static final class Stop {
             public final ModConfigSpec.IntValue timer;
             public final ModConfigSpec.IntValue weather;
 
@@ -161,7 +161,7 @@ public class PermissionConfig {
         }
 
         /// Define command: reset, restart, ready, kill...
-        public static class Status {
+        public static final class Status {
             public final ModConfigSpec.IntValue timerReset;
             public final ModConfigSpec.IntValue timerRestart;
             public final ModConfigSpec.IntValue weatherRestart;
@@ -182,7 +182,7 @@ public class PermissionConfig {
         }
 
         /// Define command: display.
-        public static class Display {
+        public static final class Display {
             public final ModConfigSpec.IntValue timer;
             public final ModConfigSpec.IntValue attribute;
             public final ModConfigSpec.IntValue weather;
@@ -199,7 +199,7 @@ public class PermissionConfig {
         }
 
         /// Define command: template.
-        public static class Template {
+        public static final class Template {
             public final ModConfigSpec.IntValue scene;
             public final ModConfigSpec.IntValue loot;
             public final ModConfigSpec.IntValue weather;
@@ -216,7 +216,7 @@ public class PermissionConfig {
         }
 
         /// Define command: modify (set, add, reduce), string, recovery, copy...
-        public static class Modification {
+        public static final class Modification {
             public final ModConfigSpec.IntValue timerModify;
             public final ModConfigSpec.IntValue attributeModify;
             public final ModConfigSpec.IntValue attributeRecovery;
@@ -247,7 +247,7 @@ public class PermissionConfig {
         }
 
         /// Define command: if (value, margin, score).
-        public static class Condition {
+        public static final class Condition {
             public final ModConfigSpec.IntValue variable;
 
             Condition(ModConfigSpec.Builder builder) {
@@ -260,7 +260,7 @@ public class PermissionConfig {
         }
 
         /// Define command: reload.
-        public static class Reload {
+        public static final class Reload {
             public final ModConfigSpec.IntValue weather;
 
             Reload(ModConfigSpec.Builder builder) {
@@ -273,7 +273,7 @@ public class PermissionConfig {
         }
 
         /// Define command: Set of permissions.
-        public static class Permission {
+        public static final class Permission {
             public final ModConfigSpec.IntValue general;
 
             Permission(ModConfigSpec.Builder builder) {
@@ -286,7 +286,7 @@ public class PermissionConfig {
         }
     }
 
-    public static class Build {
+    public static final class Build {
         public final Value.Guide guide;
         public final Value.Information information;
         public final Value.Confirmation confirmation;

@@ -17,6 +17,7 @@ import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.CheckReturnValue;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,7 +39,7 @@ import java.util.Set;
  * </p>
  * @since 0.5.0 (Internal Development)
  */
-public class VariableHolder {
+public final class VariableHolder {
     private static final Set<String> registeredVariables = new HashSet<>();
     private static final Map<String, String> stringVariables = new HashMap<>();
     private static final Map<String, Integer> integerVariables = new HashMap<>();
@@ -606,28 +607,32 @@ public class VariableHolder {
                 case "integer" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Integer.parseInt(compareValue) >= integerVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Integer.parseInt(compareValue) > integerVariables.get(variableName));
                     }
                 }
                 case "float" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Float.parseFloat(compareValue) >= floatVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Float.parseFloat(compareValue) > floatVariables.get(variableName));
                     }
                 }
                 case "double" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Double.parseDouble(compareValue) >= doubleVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Double.parseDouble(compareValue) > doubleVariables.get(variableName));
                     }
                 }
                 case "long" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Long.parseLong(compareValue) >= longVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Long.parseLong(compareValue) > longVariables.get(variableName));
                     }
                 }
@@ -671,28 +676,32 @@ public class VariableHolder {
                 case "integer" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Integer.parseInt(compareValue) <= integerVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Integer.parseInt(compareValue) < integerVariables.get(variableName));
                     }
                 }
                 case "float" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Float.parseFloat(compareValue) <= floatVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Float.parseFloat(compareValue) < floatVariables.get(variableName));
                     }
                 }
                 case "double" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Double.parseDouble(compareValue) <= doubleVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Double.parseDouble(compareValue) < doubleVariables.get(variableName));
                     }
                 }
                 case "long" -> {
                     if (includedEqual) {
                         return Exceptionable.usual(Long.parseLong(compareValue) <= longVariables.get(variableName));
-                    } else {
+                    }
+                    else {
                         return Exceptionable.usual(Long.parseLong(compareValue) < longVariables.get(variableName));
                     }
                 }
@@ -1277,7 +1286,15 @@ public class VariableHolder {
         return MethodResult.success();
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static @NotNull NullableValue<CompoundTag> packAllVariables() {
         String headKey = SaveDat.HeadKey.variables.get();
         CompoundTag root = new CompoundTag();
@@ -1310,7 +1327,15 @@ public class VariableHolder {
         return NullableValue.ofNotNull(root);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadAllVariables(ServerLevel level) {
         String headKey = SaveDat.HeadKey.variables.get();
         Path file = FilePath.getModDataPath(level);

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /// @since 0.7.0 (Internal Development)
-public class Cast {
+public final class Cast {
     public static int toInteger(Map<String, Object> map, String key, int defaultValue) {
         Object value = map.get(key);
         return value instanceof Number? ((Number) value).intValue() : defaultValue;

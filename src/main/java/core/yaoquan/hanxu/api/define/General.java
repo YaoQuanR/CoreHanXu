@@ -4,7 +4,7 @@ import net.minecraft.nbt.NbtAccounter;
 
 import java.util.UUID;
 
-public class General {
+public final class General {
     public static class TargetUUID {
         // UUID constant.
         public static final UUID GLOBAL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
@@ -30,7 +30,7 @@ public class General {
     }
 
     public static class Version {
-        private static final String CORE_VERSION = "0.7.1id7";
+        private static final String CORE_VERSION = "0.7.1id8";
 
         public static String getCoreVersion() {
             return CORE_VERSION;

@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 import static core.yaoquan.hanxu.api.define.Error.errorComponent;
 
-public class Creator {
+public final class Creator {
     /**
      * Use this method to create callback behavior, it is same to command timer creation.
      * @param context           CommandSourceStack from command builder {@link com.mojang.brigadier.context}.

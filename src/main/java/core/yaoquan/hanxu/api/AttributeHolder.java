@@ -22,6 +22,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ import static core.yaoquan.hanxu.api.define.Error.*;
  * @since 0.5.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
-public class AttributeHolder {
+public final class AttributeHolder {
     // Storage attribute definitions.
     private static final Map<String, CustomAttribute> apiAttributes = new ConcurrentHashMap<>();
     private static final Map<String, CustomAttribute> commandAttributes = new ConcurrentHashMap<>();
@@ -508,7 +509,15 @@ public class AttributeHolder {
         };
     }
 
-    // Display out to F4 page (info page).
+    /**
+     * Set up the display state for player in F4 info page.
+     * @param player                Server player that refer to {@link ServerPlayer}.
+     * @param masterId              Use player id/"-global"/"-temporary" to define the master.
+     *                              You can check {@link Resolver} for details.
+     * @param attributeId           Unique title of attribute.
+     * @param isApiAttribute        True false that where you use this function.
+     * @param state                 State of display on or off.
+     */
     public static void displayToInfoPage(ServerPlayer player, UUID masterId, String attributeId, boolean isApiAttribute, boolean state) {
         if (masterId == null) {
             return;
@@ -528,7 +537,15 @@ public class AttributeHolder {
     }
 
     // Submit packet into F4 display.
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void syncPacketToClient(ServerPlayer player,
                                           UUID masterId,
                                           String attributeId,
@@ -546,7 +563,15 @@ public class AttributeHolder {
     }
 
     // Check if required to refresh the F4 attribute display.
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void checkAndRefreshDisplay(ServerPlayer player, UUID masterId, String attributeId, boolean isApiAttribute) {
         String key = player.getUUID() + ":" + masterId + ":" + attributeId;
 
@@ -556,7 +581,15 @@ public class AttributeHolder {
     }
 
     // Update display every 5 ticks.
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void tickSync() {
         tickCounter++;
         if (tickCounter < 5) {
@@ -596,7 +629,15 @@ public class AttributeHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void tickRecovery() {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
@@ -646,7 +687,15 @@ public class AttributeHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void saveAttributeToPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_attributes";
         CompoundTag dataRoot = player.getPersistentData();
@@ -664,7 +713,15 @@ public class AttributeHolder {
         dataRoot.put(headKey, allAttributesTag);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void saveAttributeToGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_attributes";
         CompoundTag dataRoot = new CompoundTag();
@@ -690,7 +747,15 @@ public class AttributeHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadAttributeForPlayer(ServerPlayer player) {
         String headKey = "core.yaoquan.hanxu.player_attributes";
         CompoundTag dataRoot = player.getPersistentData();
@@ -699,7 +764,15 @@ public class AttributeHolder {
         rebuildAttributeData(player.getUUID(), allAttributesTag);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadAttributeForGlobal(ServerLevel level) {
         String headKey = "core.yaoquan.hanxu.global_attributes";
         Path file = FilePath.getModDataPath(level);
@@ -725,7 +798,15 @@ public class AttributeHolder {
         rebuildAttributeData(General.TargetUUID.GLOBAL_UUID, allAttributesTag);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void registerAllYamlAttributes() {
         List<Path> files = YamlReader.listOut("attribute");
         for (Path file : files) {
@@ -737,7 +818,15 @@ public class AttributeHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     @SuppressWarnings("unchecked")
     public static void saveYamlAttribute(String attributeId, UpdateCategory updateCategory, float threshold, String callbackId, String behavior, String content) {
         Path globalFile = FilePath.getGlobalPath().resolve("attribute").resolve(attributeId + ".yaml");

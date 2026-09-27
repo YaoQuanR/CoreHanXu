@@ -14,7 +14,7 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import java.util.function.Consumer;
 
 // Define custom callback behavior.
-public class TestCallback implements TimerCallback {
+public final class TestCallback implements TimerCallback {
     @Override
     public String getMasterGroupId() {
         return "core_hanxu-test";

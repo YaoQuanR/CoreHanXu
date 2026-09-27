@@ -12,7 +12,7 @@ import core.yaoquan.hanxu.test.TestHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
-public class BuildAttribute {
+class BuildAttribute {
     public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("attribute")
             .then(

@@ -34,6 +34,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 0.7.0 (Internal Development)
  */
 @EventBusSubscriber(modid = CoreHanXu.MOD_ID)
-public class WeatherHolder {
+public final class WeatherHolder {
     public static class DefaultColor {
         public static final int RAIN = 0x4667C2;
         public static final int RAINY_SKY = 0x4D82A8;
@@ -985,7 +986,78 @@ public class WeatherHolder {
         return commandWeathers;
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * Set up the display state for player in F4 info page.
+     * @param player                Server player that refer to {@link ServerPlayer}.
+     * @param level                 Level, or called dimension. A data set that from {@link ServerLevel}.
+     * @param id                    The defined id of weather definition.
+     * @param state                 State of display on or off.
+     */
+    public static void displayToInfoPage(ServerPlayer player, ServerLevel level, String id, boolean state) {
+        if (id == null || level == null) {
+            return;
+        }
+
+        String key = level.dimension().location() + ":" + id;
+
+        if (state) {
+            refreshDisplayList.computeIfAbsent(player, k -> ConcurrentHashMap.newKeySet()).add(key);
+        }
+        else {
+            Set<String> weatherSet = refreshDisplayList.get(player);
+            if (weatherSet != null) {
+                weatherSet.remove(key);
+                if (weatherSet.isEmpty()) {
+                    refreshDisplayList.remove(player);
+                }
+            }
+
+            syncLostPacketToClient(player, id, level.dimension().location().toString(), false);
+        }
+
+        findInstance(level, id).matching(
+                instance -> {
+                    syncPacketToClient(player, instance, level.dimension().location().toString(), state);
+                    return null;
+                },
+                () -> {
+                    CoreHanXu.LOGGER.warn("[HX] Weather instance not found for display: {} -> {}", id, level.dimension().location());
+                    return null;
+                }
+        );
+    }
+
+    /**
+     * Pickup the weather state register where if the definition miss register before.
+     * @return                      Success or failure when:
+     *                              <li>- Where nothing to be reclaims -> "noUnclaims".</li>
+     */
+    public static @NotNull MethodResult pickupUnclaimedStates() {
+        if (unclaimedStates.isEmpty()) {
+            return MethodResult.failure("noUnclaims");
+        }
+
+        Set<String> unclaimedIds = new HashSet<>();
+        for (Set<String> ids : unclaimedStates.values()) {
+            unclaimedIds.addAll(ids);
+        }
+        if (unclaimedIds.isEmpty()) {
+            return MethodResult.failure("noUnclaims");
+        }
+
+        loadAllLevelStates(unclaimedIds);
+        return MethodResult.success();
+    }
+
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static NullableValue<WeatherDefinition> loadYamlWeather(String fileName) {
         try {
             Map<String, Object> rawData = YamlReader.read("weather", fileName);
@@ -1038,7 +1110,15 @@ public class WeatherHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void registerAllYamlWeathers() {
         List<Path> files = YamlReader.listOut("weather");
         for (Path file : files) {
@@ -1048,13 +1128,29 @@ public class WeatherHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void registerYamlWeather(String fileName) {
         NullableValue<WeatherDefinition> nullableDefinition = loadYamlWeather(fileName);
         nullableDefinition.ifPresent(WeatherHolder::registerYamlWeather);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static @NotNull NullableValue<CompoundTag> packSingleLevelStates(ServerLevel level) {
         if (level == null) {
             return NullableValue.none();
@@ -1092,7 +1188,15 @@ public class WeatherHolder {
         return NullableValue.ofNotNull(root);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static @NotNull NullableValue<CompoundTag> packAllLevelStates() {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
@@ -1121,7 +1225,15 @@ public class WeatherHolder {
         return NullableValue.ofNotNull(root);
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadSingleLevelStates(ServerLevel level, CompoundTag weatherTag) {
         if (level == null || weatherTag == null) {
             return;
@@ -1197,7 +1309,15 @@ public class WeatherHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadAllLevelStates(@Nullable Set<String> pickupIds) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
@@ -1248,65 +1368,29 @@ public class WeatherHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void loadAllLevelStates() {
         loadAllLevelStates(null);
     }
 
-    public static boolean pickupUnclaimedStates() {
-        if (unclaimedStates.isEmpty()) {
-            return false;
-        }
-
-        Set<String> unclaimedIds = new HashSet<>();
-        for (Set<String> ids : unclaimedStates.values()) {
-            unclaimedIds.addAll(ids);
-        }
-        if (unclaimedIds.isEmpty()) {
-            return false;
-        }
-
-        loadAllLevelStates(unclaimedIds);
-        return true;
-    }
-
-    // Display out to F4 page (info page).
-    public static void displayToInfoPage(ServerPlayer player, ServerLevel level, String weatherId, boolean state) {
-        if (weatherId == null || level == null) {
-            return;
-        }
-
-        String key = level.dimension().location() + ":" + weatherId;
-
-        if (state) {
-            refreshDisplayList.computeIfAbsent(player, k -> ConcurrentHashMap.newKeySet()).add(key);
-        }
-        else {
-            Set<String> weatherSet = refreshDisplayList.get(player);
-            if (weatherSet != null) {
-                weatherSet.remove(key);
-                if (weatherSet.isEmpty()) {
-                    refreshDisplayList.remove(player);
-                }
-            }
-
-            syncLostPacketToClient(player, weatherId, level.dimension().location().toString(), false);
-        }
-
-        findInstance(level, weatherId).matching(
-                instance -> {
-                    syncPacketToClient(player, instance, level.dimension().location().toString(), state);
-                    return null;
-                },
-                () -> {
-                    CoreHanXu.LOGGER.warn("[HX] Weather instance not found for display: {} -> {}", weatherId, level.dimension().location());
-                    return null;
-                }
-        );
-    }
-
     // Submit packet into F4 display.
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void syncPacketToClient(ServerPlayer player, WeatherInstance instance, String dimension, boolean state) {
         PacketDistributor.sendToPlayer(
                 player,
@@ -1327,7 +1411,15 @@ public class WeatherHolder {
     }
 
     // Submit packet to present lost.
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void syncLostPacketToClient(ServerPlayer player, String weatherId, String dimension, boolean state) {
         PacketDistributor.sendToPlayer(player, new GeneralPayload.WeatherF4Packet(
                 weatherId,
@@ -1343,7 +1435,15 @@ public class WeatherHolder {
     }
 
     // Update display every 2 ticks.
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     public static void tickSync() {
         if (tickCounter % 2 != 0) {
             return;
@@ -1405,7 +1505,15 @@ public class WeatherHolder {
         }
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         tickCounter++;
@@ -1417,7 +1525,15 @@ public class WeatherHolder {
         tickSync();
     }
 
-    /// <b>INNER METHOD</b>
+    /**
+     * <p><b>
+     *     Inner Method
+     * </b></p>
+     * <p>
+     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     * </p>
+     */
+    @ApiStatus.Internal
     @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level)) {

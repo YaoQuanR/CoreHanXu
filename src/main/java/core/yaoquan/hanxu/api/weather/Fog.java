@@ -94,7 +94,7 @@ public class Fog implements WeatherHolder.WeatherDefinition {
             return;
         }
 
-        float transition = ((Number) GeneralConfig.setFogTransitionRatio.getAsDouble()).floatValue();
+        float transition = ((Number) GeneralConfig.fogTransitionRatio.getAsDouble()).floatValue();
 
         float progress = (float) instance.getRemainingTicks() / instance.getInitialTicks();
         float minimumDistance = getMinimumDistance();

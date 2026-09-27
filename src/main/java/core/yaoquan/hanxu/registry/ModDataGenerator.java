@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ModDataGenerator {
+public final class ModDataGenerator {
     public static class ModModelProvider extends ModelProvider {
         public ModModelProvider(PackOutput packOutput) {
             super(packOutput, CoreHanXu.MOD_ID);

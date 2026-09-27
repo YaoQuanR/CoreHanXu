@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 
 import static core.yaoquan.hanxu.api.define.Error.*;
 
-public class TestHolder {
+public final class TestHolder {
     private static final Set<String> privateTestList = ConcurrentHashMap.newKeySet();
 
     static {

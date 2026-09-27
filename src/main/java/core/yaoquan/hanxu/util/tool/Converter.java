@@ -9,7 +9,7 @@ import net.minecraft.network.chat.ComponentSerialization;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Converter {
+public final class Converter {
     // Tool method.
     public static int convertToTicks(int durationTime, String timeUnit) {
         return switch (timeUnit) {

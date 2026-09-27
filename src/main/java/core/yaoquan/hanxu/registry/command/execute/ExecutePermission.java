@@ -61,7 +61,7 @@ public class ExecutePermission {
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + commandblockPermissionLevel).withColor(General.Color.TITLE));
             }
             case "player_first_grant" -> {
-                int autoAuthorizedPermissionLevel = GeneralConfig.setAutoAuthorizePermissionLevel.getAsInt();
+                int autoAuthorizedPermissionLevel = GeneralConfig.autoAuthorizePermissionLevel.getAsInt();
                 MessagePublisher.sendSystemMessage(context, Component.literal("[HX] " + autoAuthorizedPermissionLevel).withColor(General.Color.TITLE));
             }
             default -> {
@@ -104,7 +104,7 @@ public class ExecutePermission {
             return 0;
         }
 
-        boolean editable = GeneralConfig.setEditablePlayerPermission.getAsBoolean();
+        boolean editable = GeneralConfig.editablePlayerPermission.getAsBoolean();
 
         if (!editable) {
             MessagePublisher.sendFailureMessage(context, errorComponent(GeneralError.uneditablePlayerPermission));

@@ -36,7 +36,7 @@ import java.util.function.*;
  * @param <T> Class of usual value.
  * @since 0.7.1 (Internal Development)
  */
-public class Exceptionable<T> {
+public final class Exceptionable<T> {
     private final Type type;
     private final T value;
     private final Failure failure;

@@ -7,7 +7,7 @@ import core.yaoquan.hanxu.registry.event.payload.GeneralPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class QuickSendPacket {
+public final class QuickSendPacket {
     public static void sendRegisteredTermPacket(ServerPlayer player) {
         int timerCount = TimeHolder.getTotalInstanceCount();
         int attributeCount = AttributeHolder.getApiAttributes().size() + AttributeHolder.getCommandAttributes().size();

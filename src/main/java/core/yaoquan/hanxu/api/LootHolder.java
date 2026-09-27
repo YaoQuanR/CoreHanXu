@@ -1300,15 +1300,14 @@ public final class LootHolder {
                             default -> modifierOperation = AttributeModifier.Operation.ADD_VALUE;
                         }
 
-                        EquipmentSlotGroup slotGroup;
-                        switch (slot) {
-                            case "offhand" -> slotGroup = EquipmentSlotGroup.OFFHAND;
-                            case "head" -> slotGroup = EquipmentSlotGroup.HEAD;
-                            case "chest" -> slotGroup = EquipmentSlotGroup.CHEST;
-                            case "legs" -> slotGroup = EquipmentSlotGroup.LEGS;
-                            case "feet" -> slotGroup = EquipmentSlotGroup.FEET;
-                            default -> slotGroup = EquipmentSlotGroup.MAINHAND;
-                        }
+                        EquipmentSlotGroup slotGroup = switch (slot) {
+                            case "offhand" -> EquipmentSlotGroup.OFFHAND;
+                            case "head" -> EquipmentSlotGroup.HEAD;
+                            case "chest" -> EquipmentSlotGroup.CHEST;
+                            case "legs" -> EquipmentSlotGroup.LEGS;
+                            case "feet" -> EquipmentSlotGroup.FEET;
+                            default -> EquipmentSlotGroup.MAINHAND;
+                        };
 
                         ResourceKey<Attribute> resourceKey = ResourceKey.create(Registries.ATTRIBUTE, attributeLocation);
                         Optional<Holder.Reference<Attribute>> reference = registry.get(resourceKey);
@@ -1448,15 +1447,14 @@ public final class LootHolder {
                         continue;
                     }
 
-                    EquipmentSlot slot;
-                    switch (String.valueOf(slotObject)) {
-                        case "offhand" -> slot = EquipmentSlot.OFFHAND;
-                        case "head" -> slot = EquipmentSlot.HEAD;
-                        case "chest" -> slot = EquipmentSlot.CHEST;
-                        case "legs" -> slot = EquipmentSlot.LEGS;
-                        case "feet" -> slot = EquipmentSlot.FEET;
-                        default -> slot = EquipmentSlot.MAINHAND;
-                    }
+                    EquipmentSlot slot = switch (String.valueOf(slotObject)) {
+                        case "offhand" -> EquipmentSlot.OFFHAND;
+                        case "head" -> EquipmentSlot.HEAD;
+                        case "chest" -> EquipmentSlot.CHEST;
+                        case "legs" -> EquipmentSlot.LEGS;
+                        case "feet" -> EquipmentSlot.FEET;
+                        default -> EquipmentSlot.MAINHAND;
+                    };
 
                     Equippable equippable = Equippable.builder(slot).build();
                     item.set(DataComponents.EQUIPPABLE, equippable);
@@ -1511,14 +1509,13 @@ public final class LootHolder {
                         Map<String, Object> explosionMap = (Map<String, Object>) rawExplosion;
 
                         String shapeString = String.valueOf(explosionMap.getOrDefault("shape", "small_ball"));
-                        FireworkExplosion.Shape shape;
-                        switch (shapeString) {
-                            case "large_ball" -> shape = FireworkExplosion.Shape.LARGE_BALL;
-                            case "star" -> shape = FireworkExplosion.Shape.STAR;
-                            case "creeper" -> shape = FireworkExplosion.Shape.CREEPER;
-                            case "burst" -> shape = FireworkExplosion.Shape.BURST;
-                            default -> shape = FireworkExplosion.Shape.SMALL_BALL;
-                        }
+                        FireworkExplosion.Shape shape = switch (shapeString) {
+                            case "large_ball" -> FireworkExplosion.Shape.LARGE_BALL;
+                            case "star" -> FireworkExplosion.Shape.STAR;
+                            case "creeper" -> FireworkExplosion.Shape.CREEPER;
+                            case "burst" -> FireworkExplosion.Shape.BURST;
+                            default -> FireworkExplosion.Shape.SMALL_BALL;
+                        };
 
                         IntList colors = new IntArrayList();
                         Object colorObject = explosionMap.getOrDefault("colors", null);

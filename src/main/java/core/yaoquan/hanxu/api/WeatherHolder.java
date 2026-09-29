@@ -2044,7 +2044,7 @@ public final class WeatherHolder {
             }
         }
 
-        private void tryActivateReady(WeatherType type, ServerLevel level) {
+        public void tryActivateReady(WeatherType type, ServerLevel level) {
             if (activeInstances.containsKey(type)) {
                 return;
             }

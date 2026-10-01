@@ -285,7 +285,7 @@ public final class WeatherHolder {
     }
 
     /**
-     * Restart as the initial state of weather.
+     * Restart the weather as initial state.
      * It will automatically build a new weather instance if not activate before.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
@@ -318,7 +318,7 @@ public final class WeatherHolder {
     }
 
     /**
-     * Restart as the initial state of weather.
+     * Restart the weather as initial state.
      * It will automatically build a new weather instance if not activate before.
      * @param level                 The targeted level to operate. A data set that from {@link ServerLevel}.
      * @param id                    The defined id of weather definition.
@@ -865,6 +865,41 @@ public final class WeatherHolder {
                                         .withColor(General.Color.CONTENT)
                                 );
                             }
+                            else if (definition instanceof ColoredRain coloredRain) {
+                                lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.title")
+                                        .withColor(General.Color.TITLE)
+                                );
+
+                                lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.sky_color")
+                                        .append(Component.literal(" " + coloredRain.getSkyColor()))
+                                        .withColor(General.Color.CONTENT)
+                                );
+
+                                lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.rain_color")
+                                        .append(Component.literal(" " + coloredRain.getRainColor()))
+                                        .withColor(General.Color.CONTENT)
+                                );
+
+                                lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.snow_color")
+                                        .append(Component.literal(" " + coloredRain.getSnowColor()))
+                                        .withColor(General.Color.CONTENT)
+                                );
+
+                                lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.rain_biomes")
+                                        .append(Component.literal(" " + coloredRain.getRainBiomes()))
+                                        .withColor(General.Color.CONTENT)
+                                );
+
+                                lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.snow_biomes")
+                                        .append(Component.literal(" " + coloredRain.getSnowColor()))
+                                        .withColor(General.Color.CONTENT)
+                                );
+
+                                lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.dry_biomes")
+                                        .append(Component.literal(" " + coloredRain.getDryBiomes()))
+                                        .withColor(General.Color.CONTENT)
+                                );
+                            }
                         }
                 )
                 .ifNull(
@@ -945,6 +980,21 @@ public final class WeatherHolder {
                                 stringPackage.append("- Color: ").append(String.format("%06X", fog.getColor())).append("\n");
 
                                 stringPackage.append("- Distance: ").append(fog.getMinimumDistance()).append(" ~ ").append(fog.getMaximumDistance()).append("\n");
+                            }
+                            else if (definition instanceof ColoredRain coloredRain) {
+                                stringPackage.append("-> Colored Rain: ").append("\n");
+
+                                stringPackage.append("-> Sky Color: ").append(coloredRain.getSkyColor()).append("\n");
+
+                                stringPackage.append("-> Rain Color: ").append(coloredRain.getRainColor()).append("\n");
+
+                                stringPackage.append("-> Snow Color: ").append(coloredRain.getSnowColor()).append("\n");
+
+                                stringPackage.append("-> Rain Type of Rain Biomes: ").append(coloredRain.getRainBiomes()).append("\n");
+
+                                stringPackage.append("-> Rain Type of Snow Biomes: ").append(coloredRain.getSnowBiomes()).append("\n");
+
+                                stringPackage.append("-> Rain Type of Dry Biomes: ").append(coloredRain.getDryBiomes()).append("\n");
                             }
                         }
                 )

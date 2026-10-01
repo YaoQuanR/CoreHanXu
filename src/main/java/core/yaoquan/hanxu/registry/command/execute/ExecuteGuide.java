@@ -283,7 +283,26 @@ public class ExecuteGuide {
     }
 
     public static int executeWeather_Help(CommandContext<CommandSourceStack> context) {
-        MessagePublisher.sendFailureMessage(context, Component.literal("[HX] This function is not yet finished!"));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_title").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_introduction").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.fixed.available_commands").withColor(General.Color.TITLE));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext1").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext2").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext3").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext4").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext5").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext6").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext7").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext8").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext9").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext10").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext11").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext12").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext13").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext14").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_modify_argument").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext15").withColor(General.Color.CONTENT));
+        MessagePublisher.sendSystemMessage(context, Component.translatable("commands.chx.weather_help_innertext16").withColor(General.Color.CONTENT));
         return 0;
     }
 }

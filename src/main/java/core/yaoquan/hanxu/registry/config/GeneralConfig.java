@@ -34,10 +34,22 @@ public final class GeneralConfig {
             .defineInRange("fog_transition_ratio", 0.1, 0.01, 0.5);
 
     private static final String comment5 = " Define the percentage of colored rain gradient between active phase:";
+    private static final String comment5_1 = " Instance change when set to 0.";
+    private static final String comment5_2 = " Otherwise, in active phase [ [transition: ratio/2] [static: defined color] [transition: ratio/2] ]";
     public static final ModConfigSpec.DoubleValue coloredRainTransitionRatio = CONFIG
             .comment(comment5)
+            .comment(comment5_1)
+            .comment(comment5_2)
             .translation("config.core_hanxu.colored_rain_transition_ratio")
-            .defineInRange("colored_rain_transition_ratio", 0.1, 0.01, 0.5);
+            .defineInRange("colored_rain_transition_ratio", 0.1, 0, 0.5);
+
+    private static final String comment6 = " Define the brightness factor of environment fog at activated colored rain:";
+    private static final String comment6_1 = " In brightness: [1.0 sky brightness] | [x environment brightness]";
+    public static final ModConfigSpec.DoubleValue coloredRainEnvironmentFogBrightness = CONFIG
+            .comment(comment6)
+            .comment(comment6_1)
+            .translation("config.core_hanxu.colored_rain_environment_fog_brightness")
+            .defineInRange("colored_rain_environment_fog_brightness", 0.85, 0.1, 2.0);
 
     public static final ModConfigSpec SPEC_GENERAL = CONFIG.build();
 }

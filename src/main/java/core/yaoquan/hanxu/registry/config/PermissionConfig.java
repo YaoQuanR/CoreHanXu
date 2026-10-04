@@ -333,6 +333,7 @@ public final class PermissionConfig {
 
     private static ModConfigSpec.IntValue define(ModConfigSpec.Builder builder, String path, int defaultValue) {
         return builder.comment("-> Define permission level requirement: " + path + ".")
+                .translation("config.core_hanxu.configuration." + path)
                 .defineInRange(path, defaultValue, 0, 10);
     }
 }

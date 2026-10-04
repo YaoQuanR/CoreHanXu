@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu.api.weather;
 
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,7 +20,7 @@ import java.util.Random;
  * @since 0.7.1 (Internal Development)
  */
 public class ColoredRain implements WeatherHolder.WeatherDefinition {
-    // Define what behavior should override when player enter a specific climate (Biome set).
+    /// Define what behavior should override when player enter a specific climate (Biome set).
     public enum RainType {
         DEFAULT, RAIN, SNOW, DRY
     }
@@ -102,6 +103,8 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
         if (player == null || instance == null) {
             return;
         }
+
+        double transition = GeneralConfig.coloredRainTransitionRatio.getAsDouble();
 
         switch (instance.getPhase()) {
             case ACTIVE, STILLNESS -> {

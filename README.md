@@ -13,7 +13,7 @@ For any glitches or improvement suggestions, please push a new issue.
 This repository where included codes and resources are under the terms of
 the license in text: "License.txt", "Assistant.txt"
 
-### Doucmentation
+### Documentation
 
 If you wish to start for using this mod, 
 you may refer to the documentation file "documentation/..."

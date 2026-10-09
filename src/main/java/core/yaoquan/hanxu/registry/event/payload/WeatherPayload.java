@@ -2,6 +2,7 @@ package core.yaoquan.hanxu.registry.event.payload;
 
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.api.weather.ColoredRain;
 import core.yaoquan.hanxu.render.data.WeatherClient;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -58,7 +59,10 @@ public class WeatherPayload {
             String dimension,
             int skyColor,
             int rainColor,
-            int snowColor
+            int snowColor,
+            int fogColor,
+            float intensity,
+            ColoredRain.RainTypeData rainTypeData
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ColoredRainPacket> TYPE =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "colored_rain_packet"));
@@ -78,6 +82,12 @@ public class WeatherPayload {
                 ByteBufCodecs.INT, ColoredRainPacket::skyColor,
                 ByteBufCodecs.INT, ColoredRainPacket::rainColor,
                 ByteBufCodecs.INT, ColoredRainPacket::snowColor,
+                ByteBufCodecs.INT, ColoredRainPacket::fogColor,
+                ByteBufCodecs.FLOAT, ColoredRainPacket::intensity,
+                ByteBufCodecs.STRING_UTF8.map(
+                        ColoredRain.RainTypeData::decode,
+                        ColoredRain.RainTypeData::encode
+                ), ColoredRainPacket::rainTypeData,
                 ColoredRainPacket::new
         );
 

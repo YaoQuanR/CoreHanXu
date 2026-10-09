@@ -3,9 +3,12 @@ package core.yaoquan.hanxu.api.weather;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
+import core.yaoquan.hanxu.util.tool.Cast;
+import core.yaoquan.hanxu.util.tool.ColorHSV;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
@@ -23,6 +26,53 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
     /// Define what behavior should override when player enter a specific climate (Biome set).
     public enum RainType {
         DEFAULT, RAIN, SNOW, DRY
+    }
+
+    /// Data set for networking.
+    public static class RainTypeData {
+        private final String rainBiomes;
+        private final String snowBiomes;
+        private final String dryBiomes;
+
+        public RainTypeData(@NotNull RainType rainBiomes, @NotNull RainType snowBiomes, @NotNull RainType dryBiomes) {
+            this.rainBiomes = rainBiomes.name();
+            this.snowBiomes = snowBiomes.name();
+            this.dryBiomes = dryBiomes.name();
+        }
+
+        public @NotNull RainType rainBiomes() {
+            return RainType.valueOf(rainBiomes);
+        }
+
+        public @NotNull RainType snowBiomes() {
+            return RainType.valueOf(snowBiomes);
+        }
+
+        public @NotNull RainType dryBiomes() {
+            return RainType.valueOf(dryBiomes);
+        }
+
+        public String encode() {
+            return rainBiomes + ":" + snowBiomes + ":" + dryBiomes;
+        }
+
+        public static @NotNull RainTypeData decode(@NotNull String encoded) {
+            String[] types = encoded.split(":", 3);
+            return new RainTypeData(
+                    castToType(types[0]),
+                    castToType(types[1]),
+                    castToType(types[2])
+            );
+        }
+
+        public static @NotNull RainType castToType(@NotNull String type) {
+            try {
+                return RainType.valueOf(type);
+            }
+            catch (IllegalArgumentException e) {
+                return RainType.DEFAULT;
+            }
+        }
     }
 
     private final String id;
@@ -104,16 +154,36 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
             return;
         }
 
-        double transition = GeneralConfig.coloredRainTransitionRatio.getAsDouble();
-
         switch (instance.getPhase()) {
             case ACTIVE, STILLNESS -> {
+                float fogBrightness = ((Number) GeneralConfig.coloredRainEnvironmentFogBrightness.getAsDouble()).floatValue();
+                int fogColor = ColorHSV.adjustBrightness(skyColor, fogBrightness);
+
+                // Calculate the transition for color.
+                float colorTransition = transitionProgress(instance);
+
+                // Calculate the intensity for biome transition.
+                float intensity = transitionIntensity(instance);
+
+                // Set plains default color as the starting point.
+                int transitionSky = ColorHSV.interpolate(WeatherHolder.DefaultColor.RAINY_SKY, skyColor, colorTransition);
+                int transitionRain = ColorHSV.interpolate(WeatherHolder.DefaultColor.RAIN, rainColor, colorTransition);
+                int transitionSnow = ColorHSV.interpolate(WeatherHolder.DefaultColor.SNOW, snowColor, colorTransition);
+                int transitionFog = ColorHSV.interpolate(WeatherHolder.DefaultColor.RAINY_FOG, fogColor, colorTransition);
+
                 WeatherPayload.ColoredRainPacket packet = new WeatherPayload.ColoredRainPacket(
                         instance.getPhase(),
                         dimension,
-                        skyColor,
-                        rainColor,
-                        snowColor
+                        transitionSky,
+                        transitionRain,
+                        transitionSnow,
+                        transitionFog,
+                        intensity,
+                        new ColoredRain.RainTypeData(
+                                rainBiomes,
+                                snowBiomes,
+                                dryBiomes
+                        )
                 );
 
                 PacketDistributor.sendToPlayer(player, packet);
@@ -201,5 +271,46 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
                 ", stillness=" + minimumStillness +
                 "~" + maximumStillness +
                 "}";
+    }
+
+    private float transitionProgress(WeatherHolder.WeatherInstance instance) {
+        float transition = Cast.toFloat(GeneralConfig.coloredRainTransitionRatio.getAsDouble(), 0.1f);
+
+        if (instance.getInitialTicks() <= 0 || transition <= 0.0f) {
+            return 1.0f;
+        }
+
+        float progress = (float) instance.getRemainingTicks() / instance.getInitialTicks();
+        float activeProgress = 1.0f - progress;
+
+        if (instance.getPhase() == WeatherHolder.WeatherPhase.ACTIVE) {
+            if (activeProgress < transition) {
+                return activeProgress / transition;
+            }
+            else if (activeProgress < (1.0f - transition)) {
+                return 1.0f;
+            }
+            else {
+                return (1.0f - activeProgress) / transition;
+            }
+        }
+
+        return 0.0f;
+    }
+
+    private float transitionIntensity(WeatherHolder.WeatherInstance instance) {
+        int initialTicks = instance.getInitialTicks();
+        int remainingTicks = instance.getRemainingTicks();
+
+        if (initialTicks <= 0 || remainingTicks <= 0) {
+            return 1.0f;
+        }
+
+        int progressTicks = initialTicks - remainingTicks;
+
+        float raiseIntensity = Math.min(1.0f, progressTicks * 0.01f);
+        float fallIntensity = Math.min(1.0f, remainingTicks * 0.01f);
+
+        return Math.min(raiseIntensity, fallIntensity);
     }
 }

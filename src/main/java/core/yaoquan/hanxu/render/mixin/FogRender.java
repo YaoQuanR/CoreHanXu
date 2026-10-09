@@ -4,7 +4,9 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.render.data.WeatherClient;
+import core.yaoquan.hanxu.util.tool.ColorHSV;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -117,11 +119,12 @@ public class FogRender {
 
     @Unique
     private void applyToColoredRain(Camera camera, int renderDistance, boolean isFoggy, DeltaTracker deltaTracker, ClientLevel level, WeatherClient.ColoredRainInfo coloredRain, CallbackInfoReturnable<Vector4f> cir) {
-        int color = coloredRain.skyColor();
-        float colorR = ((color >> 16) & 0xFF) / 255.0f;
-        float colorG = ((color >> 8) & 0xFF) / 255.0f;
-        float colorB = (color & 0xFF) / 255.0f;
-        Vector4f fogColor = new Vector4f(colorR, colorG, colorB, 1.0f);
+        int fogColor = coloredRain.fogColor();
+
+        float colorR = ((fogColor >> 16) & 0xFF) / 255.0f;
+        float colorG = ((fogColor >> 8) & 0xFF) / 255.0f;
+        float colorB = (fogColor & 0xFF) / 255.0f;
+        Vector4f fogVector = new Vector4f(colorR, colorG, colorB, 1.0f);
         Vector4f returnColor = cir.getReturnValue();
         if (returnColor != null) {
             returnColor.x = colorR;
@@ -151,7 +154,7 @@ public class FogRender {
             this.updateBuffer(
                     mappedView.data(),
                     0,
-                    fogColor,
+                    fogVector,
                     fogData.environmentalStart,
                     fogData.environmentalEnd,
                     fogData.renderDistanceStart,

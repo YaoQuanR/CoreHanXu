@@ -1,6 +1,7 @@
 package core.yaoquan.hanxu.render.data;
 
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.api.weather.ColoredRain;
 import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 
 import java.util.Map;
@@ -32,13 +33,19 @@ public class WeatherClient {
             coloredRainCache.remove(packet.dimension());
         }
         else {
+            ColoredRain.RainTypeData type = packet.rainTypeData();
             coloredRainCache.put(
                     packet.dimension(),
                     new ColoredRainInfo(
                             packet.phase(),
                             packet.skyColor(),
                             packet.rainColor(),
-                            packet.snowColor()
+                            packet.snowColor(),
+                            packet.fogColor(),
+                            packet.intensity(),
+                            type.rainBiomes(),
+                            type.snowBiomes(),
+                            type.dryBiomes()
                     )
             );
         }
@@ -85,7 +92,12 @@ public class WeatherClient {
             WeatherHolder.WeatherPhase phase,
             int skyColor,
             int rainColor,
-            int snowColor
+            int snowColor,
+            int fogColor,
+            float intensity,
+            ColoredRain.RainType rainBiomes,
+            ColoredRain.RainType snowBiomes,
+            ColoredRain.RainType dryBiomes
     ) {}
 
     public record WindInfo(

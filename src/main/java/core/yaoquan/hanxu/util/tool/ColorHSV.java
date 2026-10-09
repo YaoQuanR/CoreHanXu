@@ -157,4 +157,9 @@ public final class ColorHSV {
 
         return new ColorHSV(newH, newS, newV).toRGB();
     }
+
+    public static int adjustBrightness(int rgb, float brightness) {
+        ColorHSV colorHSV = fromRGB(rgb);
+        return toRGB(colorHSV.h, colorHSV.s, colorHSV.v * brightness);
+    }
 }

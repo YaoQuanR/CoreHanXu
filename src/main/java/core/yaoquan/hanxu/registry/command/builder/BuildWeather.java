@@ -231,6 +231,10 @@ class BuildWeather {
                         Commands.literal("fog")
                             .executes(cs -> ExecuteTemplate.executeWeather_Template(cs, "fog"))
                     )
+                    .then(
+                        Commands.literal("colored_rain")
+                            .executes(cs -> ExecuteTemplate.executeWeather_Template(cs, "colored_rain"))
+                    )
                     .requires(cs -> PermissionHolder.Verify.hasPermission(cs, PermissionConfig.VALUE.template.weather.get()))
             )
             .then(

@@ -154,6 +154,33 @@ public class ExecuteTemplate {
                   128: 1
                   192: 0.5
                 """;
+            case "colored_rain" -> """
+                # The register name of a weather.
+                id: "SIMPLE_RAIN"
+                # Base on the support of weather type.
+                # Vanilla mod support: fog | colored_rain | wind | ...
+                type: colored_rain
+                
+                # General arguments.
+                duration:
+                  min: 200
+                  max: 400
+                stillness:
+                  min: 200
+                  max: 400
+                
+                # Overrides of color.
+                # Core feature.
+                sky_color: 0x657089
+                rain_color: 0x4667C2
+                snow_color: 0xFFFFFF
+                
+                # Overrides of rain type by biome set.
+                # Optional. You can choose: "rain" | "snow“ | "dry" | "default"
+                rain_biomes: "rain"
+                snow_biomes: "snow"
+                dry_biomes: "dry"
+                """;
             default -> "";
         };
     }

@@ -145,6 +145,12 @@ public final class NullableValue<T> {
         return this;
     }
 
+    /// Execute function and return value if the value is not null.
+    @NotNull
+    public <R> R matchPresent(Function<? super T, ? extends R> mapper, R defaultValue) {
+        return isPresent()? mapper.apply(value) : defaultValue;
+    }
+
     /// Execute function that if the value is null.
     @NotNull
     public NullableValue<T> ifNull(Runnable runnable) {
@@ -152,6 +158,12 @@ public final class NullableValue<T> {
             runnable.run();
         }
         return this;
+    }
+
+    /// Execute function and return value if the value is null.
+    @NotNull
+    public <R> R matchNull(Supplier<? extends R> supplier, R defaultValue) {
+        return isNull()? supplier.get() : defaultValue;
     }
 
     /// A predicate that accept boolean for selecting target value.

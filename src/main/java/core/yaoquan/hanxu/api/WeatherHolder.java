@@ -53,8 +53,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class WeatherHolder {
     public static class DefaultColor {
         public static final int RAIN = 0x4667C2;
-        public static final int RAINY_SKY = 0x4D82A8;
-        public static final int SNOW = 0xEDF8FF;
+        public static final int RAINY_SKY = 0x657089;
+        public static final int RAINY_FOG = 0x5B6691;
+        public static final int SNOW = 0xFFFFFF;
         public static final int FOG = 0xCCDDEE;
     }
 
@@ -871,17 +872,17 @@ public final class WeatherHolder {
                                 );
 
                                 lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.sky_color")
-                                        .append(Component.literal(" " + coloredRain.getSkyColor()))
+                                        .append(Component.literal(" " + String.format("%06X", coloredRain.getSkyColor())))
                                         .withColor(General.Color.CONTENT)
                                 );
 
                                 lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.rain_color")
-                                        .append(Component.literal(" " + coloredRain.getRainColor()))
+                                        .append(Component.literal(" " + String.format("%06X", coloredRain.getRainColor())))
                                         .withColor(General.Color.CONTENT)
                                 );
 
                                 lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.snow_color")
-                                        .append(Component.literal(" " + coloredRain.getSnowColor()))
+                                        .append(Component.literal(" " + String.format("%06X", coloredRain.getSnowColor())))
                                         .withColor(General.Color.CONTENT)
                                 );
 
@@ -891,7 +892,7 @@ public final class WeatherHolder {
                                 );
 
                                 lines.add(Component.translatable("api.core_hanxu.weather.colored_rain.snow_biomes")
-                                        .append(Component.literal(" " + coloredRain.getSnowColor()))
+                                        .append(Component.literal(" " + coloredRain.getSnowBiomes()))
                                         .withColor(General.Color.CONTENT)
                                 );
 
@@ -984,11 +985,11 @@ public final class WeatherHolder {
                             else if (definition instanceof ColoredRain coloredRain) {
                                 stringPackage.append("-> Colored Rain: ").append("\n");
 
-                                stringPackage.append("-> Sky Color: ").append(coloredRain.getSkyColor()).append("\n");
+                                stringPackage.append("-> Sky Color: ").append(String.format("%06X", coloredRain.getSkyColor())).append("\n");
 
-                                stringPackage.append("-> Rain Color: ").append(coloredRain.getRainColor()).append("\n");
+                                stringPackage.append("-> Rain Color: ").append(String.format("%06X", coloredRain.getRainColor())).append("\n");
 
-                                stringPackage.append("-> Snow Color: ").append(coloredRain.getSnowColor()).append("\n");
+                                stringPackage.append("-> Snow Color: ").append(String.format("%06X", coloredRain.getSnowColor())).append("\n");
 
                                 stringPackage.append("-> Rain Type of Rain Biomes: ").append(coloredRain.getRainBiomes()).append("\n");
 

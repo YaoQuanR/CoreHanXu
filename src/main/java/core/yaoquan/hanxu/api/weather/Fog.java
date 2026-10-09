@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.api.weather;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
+import core.yaoquan.hanxu.util.tool.Cast;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -42,7 +43,7 @@ public class Fog implements WeatherHolder.WeatherDefinition {
     }
 
     public Fog distance(float minimum, float maximum) {
-        this.minimumDistance = Math.min(minimum, maximum);
+        this.minimumDistance = Math.max(2.0f, Math.min(minimum, maximum));
         this.maximumDistance = Math.max(minimum, maximum);
         return this;
     }
@@ -71,7 +72,7 @@ public class Fog implements WeatherHolder.WeatherDefinition {
             offset = offsetInterpolation(height);
         }
 
-        return Math.min(Math.max(minimumDistance + offset, 0f), maximumDistance);
+        return Math.clamp(minimumDistance + offset, 2.0f, maximumDistance);
     }
 
     @Override
@@ -94,41 +95,15 @@ public class Fog implements WeatherHolder.WeatherDefinition {
             return;
         }
 
-        float transition = ((Number) GeneralConfig.fogTransitionRatio.getAsDouble()).floatValue();
-
-        float progress = (float) instance.getRemainingTicks() / instance.getInitialTicks();
-        float minimumDistance = getMinimumDistance();
-        float maximumDistance = getMaximumDistance();
-
-        float playerY = ((Number) player.getY()).floatValue();
-        float baseDistance = getDistance(playerY);
-
-        baseDistance = Math.max(minimumDistance, Math.min(maximumDistance, baseDistance));
-
         float currentDistance;
 
         switch (instance.getPhase()) {
-            case ACTIVE -> {
-                float activeProgress = 1.0f - progress;
-                if (activeProgress < transition) {
-                    float ratio = activeProgress / transition;
-                    currentDistance = maximumDistance - (maximumDistance - baseDistance) * ratio;
-                }
-                else if (activeProgress < (1.0f - transition)) {
-                    currentDistance = baseDistance;
-                }
-                else {
-                    float ratio = (activeProgress - (1.0f - transition)) / transition;
-                    currentDistance = baseDistance + (maximumDistance - baseDistance) * ratio;
-                }
-            }
+            case ACTIVE -> currentDistance = transitionDistance(player, instance);
             case STILLNESS -> currentDistance = -1;
             case null, default -> {
                 return;
             }
         }
-
-        currentDistance = currentDistance != -1? Math.max(currentDistance, 2.0f) : -1;
 
         WeatherPayload.FogPacket packet = new WeatherPayload.FogPacket(
                 instance.getPhase(),
@@ -246,5 +221,32 @@ public class Fog implements WeatherHolder.WeatherDefinition {
 
         float delta = (height - nearestLowerHeight) / (nearestUpperHeight - nearestLowerHeight);
         return nearestLowerOffset + delta * (nearestUpperOffset - nearestLowerOffset);
+    }
+
+    private float transitionDistance(ServerPlayer player, WeatherHolder.WeatherInstance instance) {
+        float currentDistance;
+        float transition = Cast.toFloat(GeneralConfig.fogTransitionRatio.getAsDouble(), 0.1f);
+
+        float progress = (float) instance.getRemainingTicks() / instance.getInitialTicks();
+        float maximumDistance = getMaximumDistance();
+
+        float playerY = ((Number) player.getY()).floatValue();
+        // Clamped.
+        float baseDistance = getDistance(playerY);
+
+        float activeProgress = 1.0f - progress;
+        if (activeProgress < transition) {
+            float ratio = activeProgress / transition;
+            currentDistance = maximumDistance - (maximumDistance - baseDistance) * ratio;
+        }
+        else if (activeProgress < (1.0f - transition)) {
+            currentDistance = baseDistance;
+        }
+        else {
+            float ratio = (activeProgress - (1.0f - transition)) / transition;
+            currentDistance = baseDistance + (maximumDistance - baseDistance) * ratio;
+        }
+
+        return Math.max(2.0f, currentDistance);
     }
 }

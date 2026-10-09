@@ -26,7 +26,7 @@ public final class GeneralConfig {
             .define("enabled_deploy_sound", true);
 
     private static final String comment4 = " Define the percentage of fog gradient between active phase:";
-    private static final String comment4_1 = " In active phase: [ [transition: ratio/2] [static: min. distance] [transition: ratio/2] ]";
+    private static final String comment4_1 = " In active phase: [ [transition: ratio] [static: min. distance (1-ratio*2)] [transition: ratio] ]";
     public static final ModConfigSpec.DoubleValue fogTransitionRatio = CONFIG
             .comment(comment4)
             .comment(comment4_1)
@@ -35,7 +35,7 @@ public final class GeneralConfig {
 
     private static final String comment5 = " Define the percentage of colored rain gradient between active phase:";
     private static final String comment5_1 = " Instance change when set to 0.";
-    private static final String comment5_2 = " Otherwise, in active phase [ [transition: ratio/2] [static: defined color] [transition: ratio/2] ]";
+    private static final String comment5_2 = " Otherwise, in active phase [ [transition: ratio] [static: defined color (1-ratio*2)] [transition: ratio] ]";
     public static final ModConfigSpec.DoubleValue coloredRainTransitionRatio = CONFIG
             .comment(comment5)
             .comment(comment5_1)

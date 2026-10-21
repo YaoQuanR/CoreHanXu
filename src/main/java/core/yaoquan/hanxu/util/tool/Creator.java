@@ -21,7 +21,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static core.yaoquan.hanxu.api.define.Error.errorComponent;
@@ -299,9 +298,7 @@ public final class Creator {
                         .rainColor(rainColor)
                         .snowColor(snowColor)
                         .duration(minimumDuration, maximumDuration)
-                        .stillness(minimumStillness, maximumStillness);
-
-                coloredRain
+                        .stillness(minimumStillness, maximumStillness)
                         .rainBiomes(getRainType(parameters, "rain_biomes"))
                         .snowBiomes(getRainType(parameters, "snow_biomes"))
                         .dryBiomes(getRainType(parameters, "dry_biomes"));
@@ -309,90 +306,94 @@ public final class Creator {
                 return Exceptionable.usual(coloredRain);
             }
             case WIND -> {
-                Wind wind = new Wind(id, random)
-                        .duration(minimumDuration, maximumDuration)
-                        .stillness(minimumStillness, maximumStillness);
-
-                String windType = Cast.toString(parameters, "wind_type");
-
-                if (windType == null) {
+                String windTypeString = Cast.toString(parameters, "wind_type");
+                if (windTypeString == null) {
                     CoreHanXu.LOGGER.warn("[HX] Received null wind type for: {}", id);
                     return Exceptionable.exception("missingField", "windType");
                 }
 
-                windType = windType.toLowerCase();
-
-                Object vectorObject = parameters.get("vector");
-
-                if (!(vectorObject instanceof Map)) {
-                    CoreHanXu.LOGGER.warn("[HX] Received null vector for: {}", id);
-                    return Exceptionable.exception("missingField", "windVector");
+                switch (windTypeString.toUpperCase()) {
+                    case "STATIC", "DYNAMIC" -> {}
+                    default -> {
+                        CoreHanXu.LOGGER.warn("[HX] Received unknown wind type for: {}", id);
+                        return Exceptionable.exception("unknownWindType", windTypeString);
+                    }
                 }
 
-                @SuppressWarnings("unchecked")
-                Map<String, Object> vector = (Map<String, Object>) vectorObject;
+                Wind.WindType windType = Wind.WindType.valueOf(windTypeString.toUpperCase());
+                Wind wind = new Wind(id, random, windType);
                 switch (windType) {
-                    case "static" -> wind.staticVector(
-                            Cast.toDouble(vector, "x", 0),
-                            Cast.toDouble(vector, "y", 0),
-                            Cast.toDouble(vector, "z", 0)
-                    );
-                    case "static_range" -> wind.staticVector(
-                            Cast.toDouble(vector, "x_min", 0),
-                            Cast.toDouble(vector, "x_max", 0),
-                            Cast.toDouble(vector, "y_min", 0),
-                            Cast.toDouble(vector, "y_max", 0),
-                            Cast.toDouble(vector, "z_min", 0),
-                            Cast.toDouble(vector, "z_max", 0)
-                    );
-                    case "dynamic" -> wind.dynamicVector(
-                            Cast.toDouble(vector, "x_min", 0),
-                            Cast.toDouble(vector, "x_max", 0),
-                            Cast.toDouble(vector, "y_min", 0),
-                            Cast.toDouble(vector, "y_max", 0),
-                            Cast.toDouble(vector, "z_min", 0),
-                            Cast.toDouble(vector, "z_max", 0)
-                    );
-                    default -> CoreHanXu.LOGGER.warn("[HX] Received unknown wind type for: {}", id);
+                    case STATIC -> {
+                        Object vectorObject = parameters.get("vector");
+                        if (!(vectorObject instanceof Map)) {
+                            CoreHanXu.LOGGER.warn("[HX] Received null static vector for: {}", id);
+                            return Exceptionable.exception("missingField", "vector");
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> vector = (Map<String, Object>) vectorObject;
+
+                        wind.staticVector(
+                                Cast.toDouble(vector, "x", 0),
+                                Cast.toDouble(vector, "y", 0),
+                                Cast.toDouble(vector, "z", 0)
+                        ).velocity(Cast.toFloat(parameters, "velocity", 0));
+                    }
+                    case DYNAMIC -> {
+                        Object vectorObject = parameters.get("vector");
+                        if (!(vectorObject instanceof Map)) {
+                            CoreHanXu.LOGGER.warn("[HX] Received null dynamic vector for: {}", id);
+                            return Exceptionable.exception("missingField", "vector");
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> vector = (Map<String, Object>) vectorObject;
+
+                        Object vectorXObject = vector.get("x");
+                        Object vectorYObject = vector.get("y");
+                        Object vectorZObject = vector.get("z");
+
+                        if (!(vectorXObject instanceof Map) || !(vectorYObject instanceof Map) || !(vectorZObject instanceof Map)) {
+                            CoreHanXu.LOGGER.warn("[HX] Received null dynamic vector in range of each coordinate: {}", id);
+                            return Exceptionable.exception("missingField", "vectorRange");
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> vectorX = (Map<String, Object>) vectorXObject;
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> vectorY = (Map<String, Object>) vectorYObject;
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> vectorZ = (Map<String, Object>) vectorZObject;
+
+                        Object velocityObject = parameters.get("velocity");
+                        if (!(velocityObject instanceof Map)) {
+                            CoreHanXu.LOGGER.warn("[HX] Received null dynamic velocity for: {}", id);
+                            return Exceptionable.exception("missingField", "velocity");
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> velocity = (Map<String, Object>) velocityObject;
+
+                        wind.dynamicVector(
+                                Cast.toDouble(vectorX, "min", 0),
+                                Cast.toDouble(vectorY, "min", 0),
+                                Cast.toDouble(vectorZ, "min", 0),
+                                Cast.toDouble(vectorX, "max", 0),
+                                Cast.toDouble(vectorY, "max", 0),
+                                Cast.toDouble(vectorZ, "max", 0)
+                        ).velocityRange(
+                                Cast.toFloat(velocity, "min", 0),
+                                Cast.toFloat(velocity, "max", 0)
+                        ).dynamicSpeedChange(
+                                Cast.toFloat(parameters, "dynamic_speed_change", 0.02f)
+                        );
+                    }
                 }
 
-                Object speedReductionObject = parameters.get("speed_reduction");
-                if (!(speedReductionObject instanceof Map)) {
-                    CoreHanXu.LOGGER.warn("[HX] Received null speed reduction for: {}", id);
-                    speedReductionObject = new ConcurrentHashMap<>(
-                            Map.of(
-                                    "min", 0,
-                                    "max", 0
-                            )
-                    );
-                }
-
-                @SuppressWarnings("unchecked")
-                Map<String, Object> speedReduction = (Map<String, Object>) speedReductionObject;
-                float minimumSpeedReduction = Cast.toFloat(speedReduction, "min", 0);
-                float maximumSpeedReduction = Cast.toFloat(speedReduction, "max", 0);
-                wind.speedReduction(minimumSpeedReduction, maximumSpeedReduction);
-
-                Object draftDistanceObject = parameters.get("draft_distance");
-                if (!(draftDistanceObject instanceof Map)) {
-                    CoreHanXu.LOGGER.warn("[HX] Received null draft distance for: {}", id);
-                    draftDistanceObject = new ConcurrentHashMap<>(
-                            Map.of(
-                                    "min", 0,
-                                    "max", 0
-                            )
-                    );
-                }
-
-                @SuppressWarnings("unchecked")
-                Map<String, Object> draftDistance = (Map<String, Object>) draftDistanceObject;
-                float minimumDriftDistance = Cast.toFloat(draftDistance, "min", 0);
-                float maximumDriftDistance = Cast.toFloat(draftDistance, "max", 0);
-                wind.driftDistance(minimumDriftDistance, maximumDriftDistance);
-
-                boolean affectRain = Cast.toBoolean(parameters, "affect_rain", true);
-                float dynamicSpeedChange = Cast.toFloat(parameters, "dynamic_speed_change", 0);
-                wind.affectRain(affectRain).dynamicSpeedChange(dynamicSpeedChange);
+                wind.driftIntensityRatio(Cast.toFloat(parameters, "drift_intensity_ratio", 0))
+                        .affectRain(Cast.toBoolean(parameters, "affect_rain", true))
+                        .duration(minimumDuration, maximumDuration)
+                        .stillness(minimumStillness, maximumStillness);
 
                 return Exceptionable.usual(wind);
             }

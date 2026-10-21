@@ -54,7 +54,6 @@ public final class WeatherHolder {
     public static class DefaultColor {
         public static final int RAIN = 0x4667C2;
         public static final int RAINY_SKY = 0x657089;
-        public static final int RAINY_FOG = 0x5B6691;
         public static final int SNOW = 0xFFFFFF;
         public static final int FOG = 0xCCDDEE;
     }
@@ -539,17 +538,13 @@ public final class WeatherHolder {
     }
 
     public static void clearReady(ServerLevel level, WeatherType type) {
-        NullableValue<WeatherState> nullableState = getWeatherState(level);
-
-        nullableState.ifPresent(
+        getWeatherState(level).ifPresent(
             state -> state.fallReadyToStillness(type)
         );
     }
 
     public static void clearAllReady(ServerLevel level, WeatherType type) {
-        NullableValue<WeatherState> nullableState = getWeatherState(level);
-
-        nullableState.ifPresent(
+        getWeatherState(level).ifPresent(
             state -> state.fallAllReadyToStillness(type)
         );
     }
@@ -649,15 +644,10 @@ public final class WeatherHolder {
     }
 
     public static boolean doesWeatherStateExist(ServerLevel level, String id) {
-        NullableValue<WeatherState> nullableState = getWeatherState(level);
-
-        return switch (nullableState.situation()) {
-            case NULL -> false;
-            case SOME -> {
-                WeatherState state = nullableState.get();
-                yield state.doesActive(id) || state.doesReady(id) || state.doesStillness(id);
-            }
-        };
+        return getWeatherState(level).matching(
+                state -> state.doesActive(id) || state.doesReady(id) || state.doesStillness(id),
+                () -> false
+        );
     }
 
     public static boolean doesWeatherInstanceExist(String id, String category) {
@@ -669,11 +659,7 @@ public final class WeatherHolder {
     }
 
     public static boolean doesWeatherDefinitionExist(String id) {
-        NullableValue<WeatherDefinition> nullableDefinition = WeatherHolder.getWeatherDefinition(id);
-        return switch (nullableDefinition.situation()) {
-            case NULL -> false;
-            case SOME -> true;
-        };
+        return getWeatherDefinition(id).isPresent();
     }
 
     /**
@@ -685,12 +671,10 @@ public final class WeatherHolder {
      *                              <li>- A level that never run with this mod -> None.</li>
      */
     public static @NotNull NullableValue<WeatherInstance> findInstance(ServerLevel level, String id) {
-        NullableValue<WeatherState> nullableState = getWeatherState(level);
-
-        return switch (nullableState.situation()) {
-            case NULL -> NullableValue.none();
-            case SOME -> findInstance(nullableState.get(), id);
-        };
+        return getWeatherState(level).matching(
+                state -> findInstance(state, id),
+                NullableValue::none
+        );
     }
 
     /**
@@ -715,12 +699,10 @@ public final class WeatherHolder {
      *                              <li>- A level that never run with this mod -> None.</li>
      */
     public static @NotNull NullableValue<WeatherInstance> findInstance(ResourceKey<Level> dimension, String id) {
-        NullableValue<WeatherState> nullableState = getWeatherState(dimension);
-
-        return switch (nullableState.situation()) {
-            case NULL -> NullableValue.none();
-            case SOME -> findInstance(nullableState.get(), id);
-        };
+        return getWeatherState(dimension).matching(
+                state -> findInstance(state, id),
+                NullableValue::none
+        );
     }
 
     /**

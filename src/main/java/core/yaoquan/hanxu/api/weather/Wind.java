@@ -1,9 +1,12 @@
 package core.yaoquan.hanxu.api.weather;
 
 import core.yaoquan.hanxu.api.WeatherHolder;
+import core.yaoquan.hanxu.registry.config.GeneralConfig;
+import core.yaoquan.hanxu.registry.event.payload.WeatherPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Random;
 
@@ -20,95 +23,108 @@ import java.util.Random;
 public class Wind implements WeatherHolder.WeatherDefinition {
     // Determine how the direction change.
     public enum WindType {
-        STATIC, STATIC_RANGE, DYNAMIC
+        STATIC, DYNAMIC
     }
 
     private final String id;
     private final Random random;
-    private Vec3 staticVector = Vec3.ZERO;
-    private Vec3 minimumVector = Vec3.ZERO;
-    private Vec3 maximumVector = Vec3.ZERO;
-    private WindType type = WindType.STATIC;
-    private float minimumSpeedReduction = 0f;
-    private float maximumSpeedReduction = 0f;
-    private float minimumDriftDistance = 0f;
-    private float maximumDriftDistance = 0f;
+    private Vec3 unitVector = Vec3.ZERO;
+    private float velocity = 0f;
+    private Vec3 minimumDeltaDirection = Vec3.ZERO;
+    private Vec3 maximumDeltaDirection = Vec3.ZERO;
+    private float minimumDeltaVelocity = 0f;
+    private float maximumDeltaVelocity = 0f;
+    private double dynamicSpeedChange = 0.02f;
     private boolean affectRain = true;
-    private float dynamicSpeedChange = 0.02f;
-    private double dynamicPhaseChangeX, dynamicPhaseChangeY, dynamicPhaseChangeZ;
+    private float driftIntensityRatio = 0f;
+    private final double initialPhaseX, initialPhaseY, initialPhaseZ, initialPhaseV;
+    private final WindType type;
+
     private int minimumDuration = 1200;
     private int maximumDuration = 6000;
     private int minimumStillness = 1200;
     private int maximumStillness = 6000;
 
-    public Wind(String id, Random random) {
+    public Wind(String id, Random random, WindType type) {
         this.id = id;
         this.random = random;
+        this.type = type;
 
-        this.dynamicPhaseChangeX = random.nextDouble() * 2 * Math.PI;
-        this.dynamicPhaseChangeY = random.nextDouble() * 2 * Math.PI;
-        this.dynamicPhaseChangeZ = random.nextDouble() * 2 * Math.PI;
+        this.initialPhaseX = random.nextDouble() * 2 * Math.PI;
+        this.initialPhaseY = random.nextDouble() * 2 * Math.PI;
+        this.initialPhaseZ = random.nextDouble() * 2 * Math.PI;
+        this.initialPhaseV = random.nextDouble() * 2 * Math.PI;
     }
 
-    public Wind staticVector(double x, double y, double z) {
-        this.type = WindType.STATIC;
-        this.staticVector = new Vec3(x, y, z);
+    public Wind staticVector(Vec3 unitVector) {
+        if (!this.type.equals(WindType.STATIC)) {
+            return this;
+        }
+
+        this.unitVector = unitVector.normalize();
         return this;
     }
 
-    public Wind staticVector(Vec3 vector) {
-        this.type = WindType.STATIC;
-        this.staticVector = vector;
+    public Wind staticVector(double vectorX, double vectorY, double vectorZ) {
+        if (!this.type.equals(WindType.STATIC)) {
+            return this;
+        }
+
+        this.unitVector = new Vec3(vectorX, vectorY, vectorZ).normalize();
         return this;
     }
 
-    public Wind staticVector(double minimumX, double maximumX, double minimumY, double maximumY, double minimumZ, double maximumZ) {
-        this.type = WindType.STATIC_RANGE;
-        this.minimumVector = new Vec3(minimumX, minimumY, minimumZ);
-        this.maximumVector = new Vec3(maximumX, maximumY, maximumZ);
+    public Wind dynamicVector(Vec3 minVector, Vec3 maxVector) {
+        if (!this.type.equals(WindType.DYNAMIC)) {
+            return this;
+        }
+
+        this.unitVector = minVector.normalize();
+        this.minimumDeltaDirection = minVector.normalize();
+        this.maximumDeltaDirection = maxVector.normalize();
         return this;
     }
 
-    public Wind staticVector(Vec3 minimumVector, Vec3 maximumVector) {
-        this.type = WindType.STATIC_RANGE;
-        this.minimumVector = minimumVector;
-        this.maximumVector = maximumVector;
+    public Wind dynamicVector(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        if (!this.type.equals(WindType.DYNAMIC)) {
+            return this;
+        }
+
+        this.unitVector = new Vec3(minX, minY, minZ).normalize();
+        this.minimumDeltaDirection = new Vec3(minX, minY, minZ).normalize();
+        this.maximumDeltaDirection = new Vec3(maxX, maxY, maxZ).normalize();
         return this;
     }
 
-    public Wind dynamicVector(double minimumX, double maximumX, double minimumY, double maximumY, double minimumZ, double maximumZ) {
-        this.type = WindType.DYNAMIC;
-        this.minimumVector = new Vec3(minimumX, minimumY, minimumZ);
-        this.maximumVector = new Vec3(maximumX, maximumY, maximumZ);
+    public Wind velocity(float velocity) {
+        this.velocity = velocity;
+        this.minimumDeltaVelocity = velocity;
+        this.maximumDeltaVelocity = velocity;
         return this;
     }
 
-    public Wind dynamicVector(Vec3 minimumVector, Vec3 maximumVector) {
-        this.type = WindType.DYNAMIC;
-        this.minimumVector = minimumVector;
-        this.maximumVector = maximumVector;
+    public Wind velocityRange(float minVelocity, float maxVelocity) {
+        if (!this.type.equals(WindType.DYNAMIC)) {
+            return this;
+        }
+
+        this.minimumDeltaVelocity = minVelocity;
+        this.maximumDeltaVelocity = maxVelocity;
         return this;
     }
 
-    public Wind speedReduction(float minimum, float maximum) {
-        this.minimumSpeedReduction = Math.min(minimum, maximum);
-        this.maximumSpeedReduction = Math.max(minimum, maximum);
+    public Wind dynamicSpeedChange(float change) {
+        this.dynamicSpeedChange = change;
         return this;
     }
 
-    public Wind driftDistance(float minimum, float maximum) {
-        this.minimumDriftDistance = Math.min(minimum, maximum);
-        this.maximumDriftDistance = Math.max(minimum, maximum);
+    public Wind driftIntensityRatio(float ratio) {
+        this.driftIntensityRatio = ratio;
         return this;
     }
 
     public Wind affectRain(boolean effect) {
         this.affectRain = effect;
-        return this;
-    }
-
-    public Wind dynamicSpeedChange(float value) {
-        this.dynamicSpeedChange = value;
         return this;
     }
 
@@ -124,46 +140,36 @@ public class Wind implements WeatherHolder.WeatherDefinition {
         return this;
     }
 
-    public void tickDynamic(Random random) {
-        if (type != WindType.DYNAMIC) {
-            return;
-        }
-
-        dynamicPhaseChangeX = dynamicSpeedChange * (0.5 + 0.5 * random.nextDouble());
-        dynamicPhaseChangeY = dynamicSpeedChange * (0.5 + 0.5 * random.nextDouble());
-        dynamicPhaseChangeZ = dynamicSpeedChange * (0.5 + 0.5 * random.nextDouble());
-    }
-
-    public Vec3 getVector() {
+    public Vec3 getUnitVector(WeatherHolder.WeatherInstance instance) {
         return switch (type) {
-            case STATIC -> staticVector;
-            case STATIC_RANGE -> new Vec3(
-                    minimumVector.x + random.nextDouble() * (maximumVector.x - minimumVector.x),
-                    minimumVector.y + random.nextDouble() * (maximumVector.y - minimumVector.y),
-                    minimumVector.z + random.nextDouble() * (maximumVector.z - minimumVector.z)
-            );
+            case STATIC -> unitVector;
             case DYNAMIC -> new Vec3(
-                    minimumVector.x + (maximumVector.x - minimumVector.x) * (0.5 + 0.5 * Math.sin(dynamicPhaseChangeX)),
-                    minimumVector.y + (maximumVector.y - minimumVector.y) * (0.5 + 0.5 * Math.sin(dynamicPhaseChangeY)),
-                    minimumVector.z + (maximumVector.z - minimumVector.z) * (0.5 + 0.5 * Math.sin(dynamicPhaseChangeZ))
-            );
+                    minimumDeltaDirection.x + (maximumDeltaDirection.x - minimumDeltaDirection.x) * (0.5 + 0.5 * Math.sin(currentPhaseX(instance))),
+                    minimumDeltaDirection.y + (maximumDeltaDirection.y - minimumDeltaDirection.y) * (0.5 + 0.5 * Math.sin(currentPhaseY(instance))),
+                    minimumDeltaDirection.z + (maximumDeltaDirection.z - minimumDeltaDirection.z) * (0.5 + 0.5 * Math.sin(currentPhaseZ(instance)))
+            ).normalize();
         };
     }
 
-    public float getSpeedReduction(Random random) {
-        if (minimumSpeedReduction == maximumSpeedReduction) {
-            return minimumSpeedReduction;
-        }
-
-        return minimumSpeedReduction + random.nextFloat() * (maximumSpeedReduction - minimumSpeedReduction);
+    public float getVelocity(WeatherHolder.WeatherInstance instance) {
+        return switch (type) {
+            case STATIC -> velocity;
+            case DYNAMIC -> (float) (minimumDeltaVelocity + (maximumDeltaVelocity - minimumDeltaVelocity) * (0.5 + 0.5 * Math.sin(currentPhaseV(instance))));
+        };
     }
 
-    public float getDriftDistance(Random random) {
-        if (minimumDriftDistance == maximumDriftDistance) {
-            return minimumDriftDistance;
-        }
+    public float getIntensity(WeatherHolder.WeatherInstance instance) {
+        float transition = transitionSpeed(instance);
 
-        return minimumDriftDistance + random.nextFloat() * (maximumDriftDistance - minimumDriftDistance);
+        return switch (type) {
+            case STATIC -> 1.0f;
+            case DYNAMIC -> {
+                if (maximumDeltaVelocity <= 0f) {
+                    yield 0f;
+                }
+                yield Math.min(1.0f, getVelocity(instance) / maximumDeltaVelocity) * transition;
+            }
+        };
     }
 
     @Override
@@ -181,7 +187,32 @@ public class Wind implements WeatherHolder.WeatherDefinition {
 
     @Override
     public void sendToPlayer(ServerPlayer player, WeatherHolder.WeatherInstance instance, String dimension) {
+        if (player == null || instance == null) {
+            return;
+        }
 
+        switch (instance.getPhase()) {
+            case ACTIVE, STILLNESS -> {
+                Vec3 unitVector = getUnitVector(instance);
+                float velocity = getVelocity(instance);
+                float intensity = getIntensity(instance);
+
+                WeatherPayload.WindPacket packet = new WeatherPayload.WindPacket(
+                        instance.getPhase(),
+                        dimension,
+                        unitVector.x(),
+                        unitVector.y(),
+                        unitVector.z(),
+                        velocity,
+                        intensity,
+                        driftIntensityRatio,
+                        affectRain
+                );
+
+                PacketDistributor.sendToPlayer(player, packet);
+            }
+            default -> {}
+        }
     }
 
     @Override
@@ -225,78 +256,102 @@ public class Wind implements WeatherHolder.WeatherDefinition {
         return WeatherHolder.WeatherType.WIND;
     }
 
-    public Vec3 getStaticVector() {
-        return staticVector;
-    }
-
-    public Vec3 getMinimumVector() {
-        return minimumVector;
-    }
-
-    public Vec3 getMaximumVector() {
-        return maximumVector;
-    }
-
     public WindType getWindType() {
         return type;
     }
 
-    public float getMinimumSpeedReduction() {
-        return minimumSpeedReduction;
+    public Vec3 getUnitVector() {
+        return unitVector;
     }
 
-    public float getMaximumSpeedReduction() {
-        return maximumSpeedReduction;
+    public float getVelocity() {
+        return velocity;
     }
 
-    public float getMinimumDriftDistance() {
-        return minimumDriftDistance;
+    public Vec3 getMinimumDeltaDirection() {
+        return minimumDeltaDirection;
     }
 
-    public float getMaximumDriftDistance() {
-        return maximumDriftDistance;
+    public Vec3 getMaximumDeltaDirection() {
+        return maximumDeltaDirection;
     }
 
-    public boolean doesAffectRain() {
-        return affectRain;
+    public float getMinimumDeltaVelocity() {
+        return minimumDeltaVelocity;
     }
 
-    public float getDynamicSpeedChange() {
+    public float getMaximumDeltaVelocity() {
+        return maximumDeltaVelocity;
+    }
+
+    public double getDynamicSpeedChange() {
         return dynamicSpeedChange;
     }
 
-    public double getDynamicPhaseChangeX() {
-        return dynamicPhaseChangeX;
-    }
-
-    public double getDynamicPhaseChangeY() {
-        return dynamicPhaseChangeY;
-    }
-
-    public double getDynamicPhaseChangeZ() {
-        return dynamicPhaseChangeZ;
+    public float getDriftIntensityRatio() {
+        return driftIntensityRatio;
     }
 
     @Override
     public String toString() {
         return "HanXu(Core):WeatherHolder-Definitions:{id=" + id +
-                ", staticVector=" + staticVector +
-                ", minimumVector=" + minimumVector +
-                ", maximumVector=" + maximumVector +
-                ", windType=" + type +
-                ", speedReduction=" + minimumSpeedReduction +
-                "~" + maximumSpeedReduction +
-                ", driftDistance=" + minimumDriftDistance +
-                "~" + maximumDriftDistance +
-                ", affectRain=" + affectRain +
+                ", unitVector=" + unitVector +
+                ", velocity=" + velocity +
+                ", deltaDirection=" + minimumDeltaDirection +
+                "~" + maximumDeltaDirection +
+                ", deltaVelocity=" + minimumDeltaVelocity +
+                "~" + maximumDeltaVelocity +
                 ", dynamicSpeedChange=" + dynamicSpeedChange +
-                ", dynamicPhaseChange=[" + dynamicPhaseChangeX +
-                "," + dynamicPhaseChangeY +
-                "," + dynamicPhaseChangeZ +
-                "], duration=" + minimumDuration +
+                ", driftIntensityRatio=" + driftIntensityRatio +
+                ", initialPhase={" + initialPhaseX +
+                ", " + initialPhaseY +
+                ", " + initialPhaseZ +
+                "}, affectedRain=" + affectRain +
+                ", duration=" + minimumDuration +
                 "~" + maximumDuration +
                 ", stillness=" + minimumStillness +
                 "~" + maximumStillness +
                 "}";
+    }
+
+    private int elapsedTicks(WeatherHolder.WeatherInstance instance) {
+        return instance.getInitialTicks() - instance.getRemainingTicks();
+    }
+
+    private double currentPhaseX(WeatherHolder.WeatherInstance instance) {
+        return initialPhaseX + elapsedTicks(instance) * dynamicSpeedChange;
+    }
+
+    private double currentPhaseY(WeatherHolder.WeatherInstance instance) {
+        return initialPhaseY + elapsedTicks(instance) * dynamicSpeedChange;
+    }
+
+    private double currentPhaseZ(WeatherHolder.WeatherInstance instance) {
+        return initialPhaseZ + elapsedTicks(instance) * dynamicSpeedChange;
+    }
+
+    private double currentPhaseV(WeatherHolder.WeatherInstance instance) {
+        return initialPhaseV + elapsedTicks(instance) * dynamicSpeedChange;
+    }
+
+    private float transitionSpeed(WeatherHolder.WeatherInstance instance) {
+        int transitionSecond = GeneralConfig.windTransitionSecond.getAsInt();
+
+        if (transitionSecond <= 0) {
+            return 1.0f;
+        }
+
+        if (instance.getInitialTicks() <= 0) {
+            return 1.0f;
+        }
+
+        float transitionTicks = transitionSecond * 20;
+        int elapsedTicks = instance.getInitialTicks() - instance.getRemainingTicks();
+        int remainingTicks = instance.getRemainingTicks();
+
+        float raise = Math.min(1.0f, elapsedTicks / transitionTicks);
+        float fall = Math.min(1.0f, remainingTicks / transitionTicks);
+
+        return Math.min(raise, fall);
     }
 }

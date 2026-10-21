@@ -51,5 +51,25 @@ public final class GeneralConfig {
             .translation("config.core_hanxu.colored_rain_environment_fog_brightness")
             .defineInRange("colored_rain_environment_fog_brightness", 0.85, 0.1, 2.0);
 
+    private static final String comment7 = " Define the maximum tilt of wind affect rain:";
+    public static final ModConfigSpec.IntValue windAffectRainTiltMaximum = CONFIG
+            .comment(comment7)
+            .translation("config.core_hanxu.wind_affect_rain_tilt_maximum")
+            .defineInRange("wind_affect_rain_tilt_maximum", 60, 0, 80);
+
+    private static final String comment8 = " Define the threshold of high ground to switch wind sound type:";
+    public static final ModConfigSpec.IntValue windSoundSwitchThreshold = CONFIG
+            .comment(comment8)
+            .translation("config.core_hanxu.wind_sound_switch_threshold")
+            .defineInRange("wind_sound_switch_threshold", 20, 1, 100);
+
+    private static final String comment9 = " Define the wind transition speed between stillness and active phase:";
+    private static final String comment9_1 = " In active phase: [ [transition: second] [static] [transition: second] ]";
+    public static final ModConfigSpec.IntValue windTransitionSecond = CONFIG
+            .comment(comment9)
+            .comment(comment9_1)
+            .translation("config.core_hanxu.wind_transition_speed")
+            .defineInRange("wind_transition_speed", 3, 0, 60);
+
     public static final ModConfigSpec SPEC_GENERAL = CONFIG.build();
 }

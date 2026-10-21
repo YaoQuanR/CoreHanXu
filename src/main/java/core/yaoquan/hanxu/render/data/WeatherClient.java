@@ -45,7 +45,8 @@ public class WeatherClient {
                             packet.intensity(),
                             type.rainBiomes(),
                             type.snowBiomes(),
-                            type.dryBiomes()
+                            type.dryBiomes(),
+                            packet.progress()
                     )
             );
         }
@@ -63,7 +64,9 @@ public class WeatherClient {
                             packet.vectorX(),
                             packet.vectorY(),
                             packet.vectorZ(),
+                            packet.velocity(),
                             packet.intensity(),
+                            packet.driftIntensityRatio(),
                             packet.affectRain()
                     )
             );
@@ -97,7 +100,8 @@ public class WeatherClient {
             float intensity,
             ColoredRain.RainType rainBiomes,
             ColoredRain.RainType snowBiomes,
-            ColoredRain.RainType dryBiomes
+            ColoredRain.RainType dryBiomes,
+            float progress
     ) {}
 
     public record WindInfo(
@@ -105,7 +109,9 @@ public class WeatherClient {
             double vectorX,
             double vectorY,
             double vectorZ,
+            float velocity,
             float intensity,
+            float driftIntensityRatio,
             boolean affectRain
     ) {}
 }

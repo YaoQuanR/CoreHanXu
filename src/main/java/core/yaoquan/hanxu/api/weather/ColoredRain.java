@@ -160,30 +160,25 @@ public class ColoredRain implements WeatherHolder.WeatherDefinition {
                 int fogColor = ColorHSV.adjustBrightness(skyColor, fogBrightness);
 
                 // Calculate the transition for color.
-                float colorTransition = transitionProgress(instance);
+                float transitionProgress = transitionProgress(instance);
 
                 // Calculate the intensity for biome transition.
                 float intensity = transitionIntensity(instance);
 
-                // Set plains default color as the starting point.
-                int transitionSky = ColorHSV.interpolate(WeatherHolder.DefaultColor.RAINY_SKY, skyColor, colorTransition);
-                int transitionRain = ColorHSV.interpolate(WeatherHolder.DefaultColor.RAIN, rainColor, colorTransition);
-                int transitionSnow = ColorHSV.interpolate(WeatherHolder.DefaultColor.SNOW, snowColor, colorTransition);
-                int transitionFog = ColorHSV.interpolate(WeatherHolder.DefaultColor.RAINY_FOG, fogColor, colorTransition);
-
                 WeatherPayload.ColoredRainPacket packet = new WeatherPayload.ColoredRainPacket(
                         instance.getPhase(),
                         dimension,
-                        transitionSky,
-                        transitionRain,
-                        transitionSnow,
-                        transitionFog,
+                        skyColor,
+                        rainColor,
+                        snowColor,
+                        fogColor,
                         intensity,
                         new ColoredRain.RainTypeData(
                                 rainBiomes,
                                 snowBiomes,
                                 dryBiomes
-                        )
+                        ),
+                        transitionProgress
                 );
 
                 PacketDistributor.sendToPlayer(player, packet);

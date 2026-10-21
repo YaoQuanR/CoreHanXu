@@ -8,6 +8,9 @@
   "config.core_hanxu.fog_transition_ratio": "Set Transition Ratio of Fog (Weather)",
   "config.core_hanxu.colored_rain_transition_ratio": "Set Transition Ratio of Colored Rain (Weather)",
   "config.core_hanxu.colored_rain_environment_fog_brightness": "Set Brightness of Environment Fog in Colored Rain",
+  "config.core_hanxu.wind_affect_rain_tilt_maximum": "Set the Maximum Tilt of Wind Affect Rain",
+  "config.core_hanxu.wind_sound_switch_threshold": "Set the Threshold of High Ground to Switch Wind Sound Type",
+  "config.core_hanxu.wind_transition_speed": "Set the Wind Transition Speed Between Stillness and Active Phase",
 
   "config.core_hanxu.permission.guide": "Permission Group: Guide",
   "config.core_hanxu.permission.information": "Permission Group: Information",

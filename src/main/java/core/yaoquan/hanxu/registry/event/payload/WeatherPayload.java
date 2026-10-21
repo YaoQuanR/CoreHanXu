@@ -62,7 +62,8 @@ public class WeatherPayload {
             int snowColor,
             int fogColor,
             float intensity,
-            ColoredRain.RainTypeData rainTypeData
+            ColoredRain.RainTypeData rainTypeData,
+            float progress
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ColoredRainPacket> TYPE =
                 new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(CoreHanXu.MOD_ID, "colored_rain_packet"));
@@ -88,6 +89,7 @@ public class WeatherPayload {
                         ColoredRain.RainTypeData::decode,
                         ColoredRain.RainTypeData::encode
                 ), ColoredRainPacket::rainTypeData,
+                ByteBufCodecs.FLOAT, ColoredRainPacket::progress,
                 ColoredRainPacket::new
         );
 
@@ -112,7 +114,9 @@ public class WeatherPayload {
             double vectorX,
             double vectorY,
             double vectorZ,
+            float velocity,
             float intensity,
+            float driftIntensityRatio,
             boolean affectRain
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<WindPacket> TYPE =
@@ -133,7 +137,9 @@ public class WeatherPayload {
                 ByteBufCodecs.DOUBLE, WindPacket::vectorX,
                 ByteBufCodecs.DOUBLE, WindPacket::vectorY,
                 ByteBufCodecs.DOUBLE, WindPacket::vectorZ,
+                ByteBufCodecs.FLOAT, WindPacket::velocity,
                 ByteBufCodecs.FLOAT, WindPacket::intensity,
+                ByteBufCodecs.FLOAT, WindPacket::driftIntensityRatio,
                 ByteBufCodecs.BOOL, WindPacket::affectRain,
                 WindPacket::new
         );
@@ -144,7 +150,12 @@ public class WeatherPayload {
         }
 
         public static void handleClient(WindPacket packet, IPayloadContext context) {
-            // TODO
+            context.enqueueWork(
+                    () -> WeatherClient.updateWind(packet)
+            ).exceptionally(e -> {
+                CoreHanXu.LOGGER.error("[HX] Failed to handle wind packet: ", e);
+                return null;
+            });
         }
     }
 }

@@ -3,6 +3,7 @@ package core.yaoquan.hanxu.render.mixin;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.render.data.WeatherClient;
+import core.yaoquan.hanxu.util.tool.ColorHSV;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,6 +33,12 @@ public class ColoredRainSky {
             return;
         }
 
-        cir.setReturnValue(coloredRain.skyColor());
+        // Get the current vanilla color, then modify with day brightness for color fixing, and transition with the process:
+        int currentSky = cir.getReturnValue();
+        float dayBrightness = Math.max(1.0f - ((level.getSkyDarken() - 3.0f) / (11.0f - 3.0f)), 0.2f);
+        int transitionedSky = ColorHSV.adjustBrightness(coloredRain.skyColor(), dayBrightness);
+        transitionedSky = ColorHSV.interpolate(currentSky, transitionedSky, coloredRain.progress());
+
+        cir.setReturnValue(transitionedSky);
     }
 }

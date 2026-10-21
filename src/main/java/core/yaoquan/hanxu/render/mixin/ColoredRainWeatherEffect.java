@@ -5,6 +5,7 @@ import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
 import core.yaoquan.hanxu.api.weather.ColoredRain;
 import core.yaoquan.hanxu.render.data.WeatherClient;
+import core.yaoquan.hanxu.util.tool.ColorHSV;
 import core.yaoquan.hanxu.util.type.NullableValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -331,7 +332,10 @@ public class ColoredRainWeatherEffect {
             boolean isRain) {
         ResourceLocation textureLocation = isRain? RAIN_LOCATION : SNOW_LOCATION;
 
-        int color = isRain? coloredRain.rainColor() : coloredRain.snowColor();
+        // Get color by interpolate the transition during phase change.
+        int color = isRain?
+                ColorHSV.interpolate(WeatherHolder.DefaultColor.RAIN, coloredRain.rainColor(), coloredRain.progress()) :
+                ColorHSV.interpolate(WeatherHolder.DefaultColor.SNOW, coloredRain.snowColor(), coloredRain.progress());
 
         float colorR = ((color >> 16) & 0xFF) / 255.0f;
         float colorG = ((color >> 8) & 0xFF) / 255.0f;

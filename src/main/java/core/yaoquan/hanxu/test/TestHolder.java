@@ -504,9 +504,7 @@ public final class TestHolder {
         }
 
         MessagePublisher.sendSystemMessage(context, Component.literal("[HX] Not register test weather and show in F4 page.").withColor(General.Color.TEST));
-
-        TestWeather.testFog();
-        TestWeather.displayTestFog();
+        TestWeather.runTest();
         return 1;
     }
 }

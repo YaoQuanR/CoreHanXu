@@ -4,7 +4,6 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import core.yaoquan.hanxu.CoreHanXu;
 import core.yaoquan.hanxu.api.WeatherHolder;
-import core.yaoquan.hanxu.registry.config.GeneralConfig;
 import core.yaoquan.hanxu.render.data.WeatherClient;
 import core.yaoquan.hanxu.util.tool.ColorHSV;
 import net.minecraft.client.Camera;
@@ -71,7 +70,7 @@ public class FogRender {
         WeatherClient.ColoredRainInfo coloredRain = WeatherClient.getColoredRain(dimension);
 
         if (fog != null && fog.phase() == WeatherHolder.WeatherPhase.ACTIVE) {
-            applyToFog(fog, cir);
+            applyToFog(fog, cir, level);
             return;
         }
 
@@ -81,19 +80,26 @@ public class FogRender {
     }
 
     @Unique
-    private void applyToFog(WeatherClient.FogInfo fog, CallbackInfoReturnable<Vector4f> cir) {
+    private void applyToFog(WeatherClient.FogInfo fog, CallbackInfoReturnable<Vector4f> cir, ClientLevel level) {
         int color = fog.color();
-        float colorR = ((color >> 16) & 0xFF) / 255.0f;
-        float colorG = ((color >> 8) & 0xFF) / 255.0f;
-        float colorB = (color & 0xFF) / 255.0f;
+
+        // Determines the darkness of fog color:
+        float dayBrightness = Math.max(1.0f - ((level.getSkyDarken() - 3.0f) / (11.0f - 3.0f)), 0.5f);
+        int modifiedColor = ColorHSV.adjustBrightness(color, dayBrightness);
+
+        float colorR = ((modifiedColor >> 16) & 0xFF) / 255.0f;
+        float colorG = ((modifiedColor >> 8) & 0xFF) / 255.0f;
+        float colorB = (modifiedColor & 0xFF) / 255.0f;
         Vector4f fogColor = new Vector4f(colorR, colorG, colorB, 1.0f);
-        Vector4f returnColor = cir.getReturnValue();
-        if (returnColor != null) {
-            returnColor.x = colorR;
-            returnColor.y = colorG;
-            returnColor.z = colorB;
-            returnColor.w = 1.0f;
+        Vector4f currentFog = cir.getReturnValue();
+        if (currentFog == null) {
+            return;
         }
+
+        currentFog.x = colorR;
+        currentFog.y = colorG;
+        currentFog.z = colorB;
+        currentFog.w = 1.0f;
 
         float currentDistance = fog.currentDistance();
         float start = currentDistance * 0.15f;
@@ -119,19 +125,26 @@ public class FogRender {
 
     @Unique
     private void applyToColoredRain(Camera camera, int renderDistance, boolean isFoggy, DeltaTracker deltaTracker, ClientLevel level, WeatherClient.ColoredRainInfo coloredRain, CallbackInfoReturnable<Vector4f> cir) {
-        int fogColor = coloredRain.fogColor();
-
-        float colorR = ((fogColor >> 16) & 0xFF) / 255.0f;
-        float colorG = ((fogColor >> 8) & 0xFF) / 255.0f;
-        float colorB = (fogColor & 0xFF) / 255.0f;
-        Vector4f fogVector = new Vector4f(colorR, colorG, colorB, 1.0f);
-        Vector4f returnColor = cir.getReturnValue();
-        if (returnColor != null) {
-            returnColor.x = colorR;
-            returnColor.y = colorG;
-            returnColor.z = colorB;
-            returnColor.w = 1.0f;
+        Vector4f currentFog = cir.getReturnValue();
+        if (currentFog == null) {
+            return;
         }
+
+        // Get the current vanilla color, then modify with day brightness for color fixing, and transition with the process:
+        int currentFogColor = ((int) (currentFog.x * 255) << 16) | ((int) (currentFog.y * 255) << 8) | (int) (currentFog.z * 255);
+        float dayBrightness = Math.max(1.0f - ((level.getSkyDarken() - 3.0f) / (11.0f - 3.0f)), 0.2f);
+        int transitionedColor = ColorHSV.adjustBrightness(coloredRain.fogColor(), dayBrightness);
+        transitionedColor = ColorHSV.interpolate(currentFogColor, transitionedColor, coloredRain.progress());
+
+        float colorR = ((transitionedColor >> 16) & 0xFF) / 255.0f;
+        float colorG = ((transitionedColor >> 8) & 0xFF) / 255.0f;
+        float colorB = (transitionedColor & 0xFF) / 255.0f;
+        Vector4f fogVector = new Vector4f(colorR, colorG, colorB, 1.0f);
+
+        currentFog.x = colorR;
+        currentFog.y = colorG;
+        currentFog.z = colorB;
+        currentFog.w = 1.0f;
 
         float renderDistanceBlocks = (float) (renderDistance * 16);
         FogType fogType = isFoggy? FogType.DIMENSION_OR_BOSS : FogType.ATMOSPHERIC;

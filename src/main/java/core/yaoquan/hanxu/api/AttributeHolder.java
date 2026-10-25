@@ -191,7 +191,7 @@ public final class AttributeHolder {
      * @param masterId              Use player id/"-global"/"-temporary" to define the master.
      *                              You can check {@link Resolver} for details.
      * @param attributeId           Unique title of attribute.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Received player value: float.
      *                              If this player not set the value yet, return default value from definition: float.
      */
@@ -215,7 +215,7 @@ public final class AttributeHolder {
     /**
      * Get global's attribute value.
      * @param attributeId           Unique title of attribute.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Received player value: float.
      *                              If this player not set the value yet, return default value from definition: float.
      */
@@ -229,7 +229,7 @@ public final class AttributeHolder {
      *                              You can check {@link Resolver} for details.
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @param direction             Define the trigger type for threshold callbacks.
      *                              You can check {@link ThresholdDirection} for details.
      * @return                      Success or failure when:
@@ -281,7 +281,7 @@ public final class AttributeHolder {
      *                              You can check {@link Resolver} for details.
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Success or failure when:
      *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
@@ -293,7 +293,7 @@ public final class AttributeHolder {
      * Set global's attribute value (Full direction trigger).
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @param direction             Define the trigger type for threshold callbacks.
      *                              You can check {@link ThresholdDirection} for details.
      * @return                      Success or failure when:
@@ -307,7 +307,7 @@ public final class AttributeHolder {
      * Set global's attribute value (Default: Point trigger).
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Success or failure when:
      *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
@@ -319,7 +319,7 @@ public final class AttributeHolder {
      * Add master's attribute value (Full direction trigger).
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @param direction             Define the trigger type for threshold callbacks.
      *                              You can check {@link ThresholdDirection} for details.
      * @return                      Success or failure when:
@@ -336,7 +336,7 @@ public final class AttributeHolder {
      *                              You can check {@link Resolver} for details.
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Success or failure when:
      *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
@@ -349,7 +349,7 @@ public final class AttributeHolder {
      * Add global's attribute value (Full direction trigger).
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @param direction             Define the trigger type for threshold callbacks.
      *                              You can check {@link ThresholdDirection} for details.
      * @return                      Success or failure when:
@@ -364,7 +364,7 @@ public final class AttributeHolder {
      * Add global's attribute value (Default: Point trigger).
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Success or failure when:
      *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
@@ -379,7 +379,7 @@ public final class AttributeHolder {
      *                              You can check {@link Resolver} for details.
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @param direction             Define the trigger type for threshold callbacks.
      *                              You can check {@link ThresholdDirection} for details.
      * @return                      Success or failure when:
@@ -396,7 +396,7 @@ public final class AttributeHolder {
      *                              You can check {@link Resolver} for details.
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Success or failure when:
      *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
@@ -409,7 +409,7 @@ public final class AttributeHolder {
      * Reduce global's attribute value (Full direction trigger).
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @param direction             Define the trigger type for threshold callbacks.
      *                              You can check {@link ThresholdDirection} for details.
      * @return                      Success or failure when:
@@ -424,7 +424,7 @@ public final class AttributeHolder {
      * Reduce global's attribute value (Default: Point trigger).
      * @param attributeId           Unique title of attribute.
      * @param value                 Submit the new value for setter.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @return                      Success or failure when:
      *                              <li>- Attribute not found in register -> "notFound", attributeId.</li>
      */
@@ -515,7 +515,7 @@ public final class AttributeHolder {
      * @param masterId              Use player id/"-global"/"-temporary" to define the master.
      *                              You can check {@link Resolver} for details.
      * @param attributeId           Unique title of attribute.
-     * @param isApiAttribute        True false that where you use this function.
+     * @param isApiAttribute        True false that where you use this method.
      * @param state                 State of display on or off.
      */
     public static void displayToInfoPage(ServerPlayer player, UUID masterId, String attributeId, boolean isApiAttribute, boolean state) {
@@ -542,7 +542,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -568,7 +568,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -586,7 +586,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -634,7 +634,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -692,7 +692,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -718,7 +718,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -752,7 +752,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -769,7 +769,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -803,7 +803,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -823,7 +823,7 @@ public final class AttributeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal

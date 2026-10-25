@@ -177,7 +177,7 @@ public final class TimeHolder {
 
     // Register your timer to instance set.
     /**
-     * Use this function to instance the template timer.
+     * Use this method to instance the template timer.
      * @param masterId          Required when becoming an instance timer,
      *                          use player id/"-global"/"-temporary" to define the master.
      *                          You can check {@link Resolver} for details.
@@ -575,7 +575,7 @@ public final class TimeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -592,7 +592,7 @@ public final class TimeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -622,7 +622,7 @@ public final class TimeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -658,7 +658,7 @@ public final class TimeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -675,7 +675,7 @@ public final class TimeHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal

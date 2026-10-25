@@ -1087,7 +1087,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1148,7 +1148,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1166,7 +1166,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1180,7 +1180,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1226,7 +1226,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1263,7 +1263,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1347,7 +1347,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1406,7 +1406,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1420,7 +1420,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1449,7 +1449,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1473,7 +1473,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1543,7 +1543,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
@@ -1563,7 +1563,7 @@ public final class WeatherHolder {
      *     Inner Method
      * </b></p>
      * <p>
-     *     Pay for your own risk while using this function out of HanXu (Core) Powered Engine.
+     *     Pay for your own risk while using this method out of HanXu (Core) Powered Engine.
      * </p>
      */
     @ApiStatus.Internal
